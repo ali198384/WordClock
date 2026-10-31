@@ -1,0 +1,54 @@
+package com.ghazarian.wordclock.di
+
+import android.content.Context
+import com.ghazarian.wordclock.shared.data.repository.createAndroidWordClockRepository
+import com.ghazarian.wordclock.shared.domain.repository.WordClockRepository
+import com.ghazarian.wordclock.shared.domain.usecase.AddWordClockDevice
+import com.ghazarian.wordclock.shared.domain.usecase.GetDevices
+import com.ghazarian.wordclock.shared.domain.usecase.GetWordClockState
+import com.ghazarian.wordclock.shared.domain.usecase.SetWordClockBrightness
+import com.ghazarian.wordclock.shared.domain.usecase.SetWordClockColor
+import com.ghazarian.wordclock.shared.domain.usecase.SetWordClockPower
+import dagger.Module
+import dagger.Provides
+import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
+import dagger.hilt.components.SingletonComponent
+import javax.inject.Singleton
+
+@Module
+@InstallIn(SingletonComponent::class)
+object WordClockModule {
+
+    @Provides
+    @Singleton
+    fun provideWordClockRepository(
+        @ApplicationContext context: Context,
+    ): WordClockRepository = createAndroidWordClockRepository(context)
+
+    @Provides
+    fun provideGetDevices(repository: WordClockRepository): GetDevices =
+        GetDevices(repository)
+
+    @Provides
+    fun provideAddWordClockDevice(repository: WordClockRepository): AddWordClockDevice =
+        AddWordClockDevice(repository)
+
+    @Provides
+    fun provideGetWordClockState(repository: WordClockRepository): GetWordClockState =
+        GetWordClockState(repository)
+
+    @Provides
+    fun provideSetWordClockPower(repository: WordClockRepository): SetWordClockPower =
+        SetWordClockPower(repository)
+
+    @Provides
+    fun provideSetWordClockBrightness(
+        repository: WordClockRepository,
+    ): SetWordClockBrightness =
+        SetWordClockBrightness(repository)
+
+    @Provides
+    fun provideSetWordClockColor(repository: WordClockRepository): SetWordClockColor =
+        SetWordClockColor(repository)
+}
