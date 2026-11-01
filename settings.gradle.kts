@@ -32,10 +32,7 @@ include(
     ":core:data",
     ":core:designsystem",
     ":core:ui",
-    ":core:navigation",
-    ":feature:devices:api",
-    ":feature:devices:impl",
-    ":feature:control:api",
-    ":feature:control:impl",
+    ":feature:devices",
+    ":feature:control",
 )
  
