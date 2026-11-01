@@ -39,7 +39,12 @@ android {
 }
 
 dependencies {
-    implementation(project(":shared"))
+    implementation(projects.core.data)
+    implementation(projects.core.domain)
+    implementation(projects.core.designsystem)
+    implementation(projects.core.navigation)
+    implementation(projects.feature.devices.impl)
+    implementation(projects.feature.control.impl)
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
     implementation(platform(libs.androidx.compose.bom))

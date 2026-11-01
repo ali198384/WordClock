@@ -9,6 +9,8 @@ pluginManagement {
 plugins {
     id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
 }
+enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
+
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
@@ -18,6 +20,22 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Word Clock"
-include(":app", ":shared")
+rootProject.name = "WordClock"
+include(
+    ":app",
+    ":shared",
+    ":core:common",
+    ":core:model",
+    ":core:domain",
+    ":core:network",
+    ":core:storage",
+    ":core:data",
+    ":core:designsystem",
+    ":core:ui",
+    ":core:navigation",
+    ":feature:devices:api",
+    ":feature:devices:impl",
+    ":feature:control:api",
+    ":feature:control:impl",
+)
  

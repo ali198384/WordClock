@@ -70,7 +70,6 @@ gen/
 /captures
 
 # Current unversioned non-Markdown artifacts
-/ROADMAP.docx
 /doc/photo_30942253836_x.jpg
 /doc/photo_30942455347_x.jpg
 /doc/photo_30942455411_x.jpg
@@ -78,4 +77,3 @@ gen/
 /doc/photo_30942516636_x.jpg
 /doc/sketch_oct05.ino
 /doc/wordClockRoadmap.docx
-/doc/wordClockRoadmap_phase0_complete.docx

@@ -1,14 +1,14 @@
 package com.ghazarian.wordclock.di
 
 import android.content.Context
-import com.ghazarian.wordclock.shared.data.repository.createAndroidWordClockRepository
-import com.ghazarian.wordclock.shared.domain.repository.WordClockRepository
-import com.ghazarian.wordclock.shared.domain.usecase.AddWordClockDevice
-import com.ghazarian.wordclock.shared.domain.usecase.GetDevices
-import com.ghazarian.wordclock.shared.domain.usecase.GetWordClockState
-import com.ghazarian.wordclock.shared.domain.usecase.SetWordClockBrightness
-import com.ghazarian.wordclock.shared.domain.usecase.SetWordClockColor
-import com.ghazarian.wordclock.shared.domain.usecase.SetWordClockPower
+import com.ghazarian.wordclock.core.data.repository.createAndroidWordClockRepository
+import com.ghazarian.wordclock.core.domain.repository.WordClockRepository
+import com.ghazarian.wordclock.core.domain.usecase.AddWordClockDevice
+import com.ghazarian.wordclock.core.domain.usecase.GetDevices
+import com.ghazarian.wordclock.core.domain.usecase.GetWordClockState
+import com.ghazarian.wordclock.core.domain.usecase.SetWordClockBrightness
+import com.ghazarian.wordclock.core.domain.usecase.SetWordClockColor
+import com.ghazarian.wordclock.core.domain.usecase.SetWordClockPower
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

@@ -1,6 +1,5 @@
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
-    alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.android.kotlin.multiplatform.library)
 }
 
@@ -16,11 +15,12 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
-            implementation(libs.ktor.client.core)
-            implementation(libs.kotlinx.serialization.json)
-        }
-        androidMain.dependencies {
-            implementation(libs.ktor.client.android)
+            api(projects.core.common)
+            api(projects.core.model)
+            api(projects.core.domain)
+            api(projects.core.network)
+            api(projects.core.storage)
+            api(projects.core.data)
         }
     }
 }
