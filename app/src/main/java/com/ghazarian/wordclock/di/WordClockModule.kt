@@ -2,6 +2,7 @@ package com.ghazarian.wordclock.di
 
 import android.content.Context
 import com.ghazarian.wordclock.core.data.repository.createAndroidWordClockRepository
+import com.ghazarian.wordclock.core.domain.connectivity.WifiAvailabilityMonitor
 import com.ghazarian.wordclock.core.domain.repository.WordClockRepository
 import com.ghazarian.wordclock.core.domain.usecase.AddWordClockDevice
 import com.ghazarian.wordclock.core.domain.usecase.GetDevices
@@ -12,6 +13,7 @@ import com.ghazarian.wordclock.core.domain.usecase.RenameWordClockDevice
 import com.ghazarian.wordclock.core.domain.usecase.SetWordClockBrightness
 import com.ghazarian.wordclock.core.domain.usecase.SetWordClockColor
 import com.ghazarian.wordclock.core.domain.usecase.SetWordClockPower
+import com.ghazarian.wordclock.network.AndroidWifiAvailabilityMonitor
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -28,6 +30,12 @@ object WordClockModule {
     fun provideWordClockRepository(
         @ApplicationContext context: Context,
     ): WordClockRepository = createAndroidWordClockRepository(context)
+
+    @Provides
+    @Singleton
+    fun provideWifiAvailabilityMonitor(
+        @ApplicationContext context: Context,
+    ): WifiAvailabilityMonitor = AndroidWifiAvailabilityMonitor(context)
 
     @Provides
     fun provideGetDevices(repository: WordClockRepository): GetDevices =

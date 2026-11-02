@@ -2,6 +2,7 @@ package com.ghazarian.wordclock.feature.devices.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ghazarian.wordclock.core.domain.connectivity.WifiAvailabilityMonitor
 import com.ghazarian.wordclock.core.domain.error.InvalidWordClockDeviceResponseException
 import com.ghazarian.wordclock.core.domain.error.WordClockDeviceAlreadyAddedException
 import com.ghazarian.wordclock.core.domain.error.WordClockDeviceConnectionException
@@ -17,6 +18,8 @@ import com.ghazarian.wordclock.core.model.DeviceAddress
 import com.ghazarian.wordclock.core.model.WordClockDevice
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -32,11 +35,26 @@ class DevicesViewModel @Inject constructor(
     private val refreshWordClockDevice: RefreshWordClockDevice,
     private val getWordClockState: GetWordClockState,
     private val setWordClockPower: SetWordClockPower,
+    private val wifiAvailabilityMonitor: WifiAvailabilityMonitor,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(DevicesUiState())
     val uiState = _uiState.asStateFlow()
+    private var refreshJob: Job? = null
+    private var wifiReconnectJob: Job? = null
+    private var refreshGeneration = 0L
+    private var refreshPending = false
 
     init {
+        viewModelScope.launch {
+            var isInitialValue = true
+            wifiAvailabilityMonitor.isWifiAvailable.collect { isAvailable ->
+                if (isInitialValue) {
+                    isInitialValue = false
+                } else {
+                    onWifiAvailabilityChanged(isAvailable)
+                }
+            }
+        }
         refresh()
     }
 
@@ -96,7 +114,11 @@ class DevicesViewModel @Inject constructor(
                     _uiState.update { state ->
                         state.copy(
                             connectionStatus = state.connectionStatus +
-                                    (device.id to DeviceConnectionStatus.ONLINE),
+                                    (device.id to if (wifiAvailabilityMonitor.isWifiAvailable.value) {
+                                        DeviceConnectionStatus.ONLINE
+                                    } else {
+                                        DeviceConnectionStatus.OFFLINE
+                                    }),
                             devicePower = state.devicePower +
                                     (device.id to wordClockState.isOn),
                             successMessage = "${device.name} با موفقیت اضافه شد.",
@@ -108,7 +130,11 @@ class DevicesViewModel @Inject constructor(
                     _uiState.update { state ->
                         state.copy(
                             connectionStatus = state.connectionStatus +
-                                    (device.id to DeviceConnectionStatus.ONLINE),
+                                    (device.id to if (wifiAvailabilityMonitor.isWifiAvailable.value) {
+                                        DeviceConnectionStatus.ONLINE
+                                    } else {
+                                        DeviceConnectionStatus.OFFLINE
+                                    }),
                             actionErrorMessage = "دستگاه اضافه شد، اما وضعیت روشن/خاموش خوانده نشد.",
                             successMessage = "${device.name} با موفقیت اضافه شد.",
                         )
@@ -131,82 +157,164 @@ class DevicesViewModel @Inject constructor(
 
     fun refresh() {
         val current = _uiState.value
-        if (current.isLoading || current.isRefreshing) return
-
-        viewModelScope.launch {
-            _uiState.update {
-                it.copy(
-                    isLoading = it.devices.isEmpty(),
-                    isRefreshing = it.devices.isNotEmpty(),
-                    listErrorMessage = null,
-                    actionErrorMessage = null,
-                    successMessage = null,
-                )
+        if (current.isLoading || current.isRefreshing) {
+            if (wifiAvailabilityMonitor.isWifiAvailable.value) {
+                refreshPending = true
             }
+            return
+        }
 
-            val devices = try {
-                getDevices()
-            } catch (cancellation: CancellationException) {
-                throw cancellation
-            } catch (exception: Exception) {
+        val generation = ++refreshGeneration
+        refreshJob = viewModelScope.launch {
+            try {
                 _uiState.update {
                     it.copy(
-                        isLoading = false,
-                        isRefreshing = false,
-                        listErrorMessage = "خواندن فهرست دستگاه‌ها ناموفق بود.",
+                        isLoading = it.devices.isEmpty(),
+                        isRefreshing = it.devices.isNotEmpty(),
+                        listErrorMessage = null,
+                        actionErrorMessage = null,
+                        successMessage = null,
                     )
                 }
-                return@launch
-            }
 
-            _uiState.update {
-                it.copy(
-                    devices = devices,
-                    connectionStatus = devices.associate {
-                        it.id to DeviceConnectionStatus.CHECKING
-                    },
-                    isLoading = false,
-                    isRefreshing = devices.isNotEmpty(),
-                    listErrorMessage = null,
-                )
-            }
-
-            devices.forEach { device ->
-                try {
-                    val refreshed = refreshWordClockDevice(device.id)
-                    val wordClockState = getWordClockState(device.id)
-                    _uiState.update { state ->
-                        state.copy(
-                            devices = state.devices.map {
-                                if (it.id == refreshed.id) refreshed else it
-                            },
-                            connectionStatus = state.connectionStatus +
-                                    (device.id to DeviceConnectionStatus.ONLINE),
-                            devicePower = state.devicePower +
-                                    (device.id to wordClockState.isOn),
-                        )
-                    }
+                val devices = try {
+                    getDevices()
                 } catch (cancellation: CancellationException) {
                     throw cancellation
                 } catch (_: Exception) {
                     _uiState.update {
                         it.copy(
-                            connectionStatus = it.connectionStatus +
-                                    (device.id to DeviceConnectionStatus.OFFLINE),
+                            isLoading = false,
+                            isRefreshing = false,
+                            listErrorMessage = "خواندن فهرست دستگاه‌ها ناموفق بود.",
                         )
+                    }
+                    return@launch
+                }
+
+                val wifiAvailable = wifiAvailabilityMonitor.isWifiAvailable.value
+                _uiState.update {
+                    it.copy(
+                        devices = devices,
+                        connectionStatus = devices.associate { device ->
+                            device.id to if (wifiAvailable) {
+                                DeviceConnectionStatus.CHECKING
+                            } else {
+                                DeviceConnectionStatus.OFFLINE
+                            }
+                        },
+                        isLoading = false,
+                        isRefreshing = devices.isNotEmpty() && wifiAvailable,
+                        listErrorMessage = null,
+                    )
+                }
+                if (!wifiAvailable) return@launch
+
+                devices.forEach { device ->
+                    if (!wifiAvailabilityMonitor.isWifiAvailable.value) {
+                        _uiState.update { state ->
+                            state.copy(
+                                connectionStatus = state.devices.associate {
+                                    it.id to DeviceConnectionStatus.OFFLINE
+                                },
+                            )
+                        }
+                        return@launch
+                    }
+
+                    try {
+                        val refreshed = refreshWordClockDevice(device.id)
+                        val wordClockState = getWordClockState(device.id)
+                        val isWifiAvailable = wifiAvailabilityMonitor.isWifiAvailable.value
+                        _uiState.update { state ->
+                            state.copy(
+                                devices = state.devices.map {
+                                    if (it.id == refreshed.id) refreshed else it
+                                },
+                                connectionStatus = state.connectionStatus +
+                                        (device.id to if (isWifiAvailable) {
+                                            DeviceConnectionStatus.ONLINE
+                                        } else {
+                                            DeviceConnectionStatus.OFFLINE
+                                        }),
+                                devicePower = if (isWifiAvailable) {
+                                    state.devicePower + (device.id to wordClockState.isOn)
+                                } else {
+                                    state.devicePower
+                                },
+                            )
+                        }
+                    } catch (cancellation: CancellationException) {
+                        throw cancellation
+                    } catch (_: Exception) {
+                        _uiState.update {
+                            it.copy(
+                                connectionStatus = it.connectionStatus +
+                                        (device.id to DeviceConnectionStatus.OFFLINE),
+                            )
+                        }
+                    }
+                }
+            } finally {
+                if (generation == refreshGeneration) {
+                    _uiState.update { it.copy(isRefreshing = false, isLoading = false) }
+                    val shouldRefreshAgain = refreshPending
+                    refreshPending = false
+                    if (shouldRefreshAgain && wifiAvailabilityMonitor.isWifiAvailable.value) {
+                        refresh()
                     }
                 }
             }
+        }
+    }
 
-            _uiState.update { it.copy(isRefreshing = false, isLoading = false) }
+    private fun onWifiAvailabilityChanged(isAvailable: Boolean) {
+        if (!isAvailable) {
+            wifiReconnectJob?.cancel()
+            refreshPending = false
+            val loadingStoredDevices =
+                _uiState.value.isLoading && _uiState.value.devices.isEmpty()
+            if (!loadingStoredDevices) {
+                refreshGeneration += 1
+                refreshJob?.cancel()
+            }
+            _uiState.update { state ->
+                state.copy(
+                    connectionStatus = state.devices.associate {
+                        it.id to DeviceConnectionStatus.OFFLINE
+                    },
+                    isLoading = if (loadingStoredDevices) state.isLoading else false,
+                    isRefreshing = false,
+                )
+            }
+            return
+        }
+
+        wifiReconnectJob?.cancel()
+        wifiReconnectJob = viewModelScope.launch {
+            // Wait for Android to finish switching routes before probing the devices.
+            delay(750)
+            if (wifiAvailabilityMonitor.isWifiAvailable.value) refresh()
+
+            // A probe started during route handover can fail after it has already
+            // completed. Recheck once more if any device is still not confirmed online.
+            delay(1_500)
+            val latest = _uiState.value
+            val needsAnotherCheck = latest.isLoading || latest.isRefreshing ||
+                    latest.devices.any {
+                        latest.connectionStatus[it.id] != DeviceConnectionStatus.ONLINE
+                    }
+            if (wifiAvailabilityMonitor.isWifiAvailable.value && needsAnotherCheck) {
+                refresh()
+            }
         }
     }
 
     fun togglePower(deviceId: String) {
         val current = _uiState.value
-        val isOn = current.devicePower[deviceId] ?: return
         if (deviceId in current.powerUpdatingDeviceIds ||
-            current.connectionStatus[deviceId] != DeviceConnectionStatus.ONLINE
+            (current.connectionStatus[deviceId] ?: DeviceConnectionStatus.OFFLINE) ==
+            DeviceConnectionStatus.OFFLINE
         ) return
 
         _uiState.update {
@@ -218,12 +326,17 @@ class DevicesViewModel @Inject constructor(
         }
         viewModelScope.launch {
             try {
+                val isOn = current.devicePower[deviceId] ?: getWordClockState(deviceId).isOn
                 val updatedState = setWordClockPower(deviceId, !isOn)
                 _uiState.update { state ->
                     state.copy(
                         devicePower = state.devicePower + (deviceId to updatedState.isOn),
                         connectionStatus = state.connectionStatus +
-                                (deviceId to DeviceConnectionStatus.ONLINE),
+                                (deviceId to if (wifiAvailabilityMonitor.isWifiAvailable.value) {
+                                    DeviceConnectionStatus.ONLINE
+                                } else {
+                                    DeviceConnectionStatus.OFFLINE
+                                }),
                     )
                 }
             } catch (cancellation: CancellationException) {

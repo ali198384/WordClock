@@ -174,11 +174,14 @@ private fun DevicesScreen(
                             }
                         }
                         items(state.devices, key = WordClockDevice::id) { device ->
+                            val connectionStatus = state.connectionStatus[device.id]
+                                ?: DeviceConnectionStatus.OFFLINE
                             DeviceCard(
                                 device = device,
-                                connectionStatus = state.connectionStatus[device.id]
-                                    ?: DeviceConnectionStatus.OFFLINE,
-                                isOn = state.devicePower[device.id],
+                                connectionStatus = connectionStatus,
+                                isOn = state.devicePower[device.id].takeIf {
+                                    connectionStatus != DeviceConnectionStatus.OFFLINE
+                                },
                                 isPowerUpdating = device.id in state.powerUpdatingDeviceIds,
                                 onClick = { onDeviceSelected(device.id) },
                                 onPowerToggled = { onPowerToggled(device.id) },
@@ -444,6 +447,7 @@ private fun DeviceCard(
                 modifier = Modifier
                     .weight(1f)
                     .clickable(
+                        enabled = connectionStatus != DeviceConnectionStatus.OFFLINE,
                         role = Role.Button,
                         onClick = onClick,
                     )
@@ -475,6 +479,17 @@ private fun DeviceCard(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     DeviceStatusBadge(connectionStatus)
+                    isOn?.let { powerIsOn ->
+                        Text(
+                            text = if (powerIsOn) "روشن" else "خاموش",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = if (powerIsOn) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                            },
+                        )
+                    }
                     device.physicalLedCount?.let { count ->
                         Text(
                             text = "$count LED",
@@ -491,7 +506,7 @@ private fun DeviceCard(
                 DevicePowerButton(
                     deviceName = device.name,
                     isOn = isOn,
-                    isEnabled = connectionStatus == DeviceConnectionStatus.ONLINE,
+                    isEnabled = connectionStatus != DeviceConnectionStatus.OFFLINE,
                     isUpdating = isPowerUpdating,
                     onClick = onPowerToggled,
                 )
@@ -537,21 +552,22 @@ private fun DevicePowerButton(
     isUpdating: Boolean,
     onClick: () -> Unit,
 ) {
-    val isAvailable = isEnabled && isOn != null && !isUpdating
+    val isAvailable = isEnabled && !isUpdating
     val containerColor = when {
         !isAvailable -> MaterialTheme.colorScheme.surfaceVariant
-        isOn -> MaterialTheme.colorScheme.primaryContainer
+        isOn == true -> MaterialTheme.colorScheme.primaryContainer
         else -> MaterialTheme.colorScheme.surfaceVariant
     }
     val contentColor = when {
         !isAvailable -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f)
-        isOn -> MaterialTheme.colorScheme.onPrimaryContainer
+        isOn == true -> MaterialTheme.colorScheme.onPrimaryContainer
         else -> MaterialTheme.colorScheme.onSurfaceVariant
     }
     val description = when {
         isUpdating -> "در حال تغییر وضعیت برق $deviceName"
-        !isEnabled || isOn == null -> "وضعیت برق $deviceName در دسترس نیست"
-        isOn -> "خاموش کردن $deviceName"
+        !isEnabled -> "کنترل برق $deviceName غیرفعال است"
+        isOn == null -> "تغییر وضعیت برق $deviceName"
+        isOn == true -> "خاموش کردن $deviceName"
         else -> "روشن کردن $deviceName"
     }
 
