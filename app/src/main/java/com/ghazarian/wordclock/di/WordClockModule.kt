@@ -6,6 +6,9 @@ import com.ghazarian.wordclock.core.domain.repository.WordClockRepository
 import com.ghazarian.wordclock.core.domain.usecase.AddWordClockDevice
 import com.ghazarian.wordclock.core.domain.usecase.GetDevices
 import com.ghazarian.wordclock.core.domain.usecase.GetWordClockState
+import com.ghazarian.wordclock.core.domain.usecase.RefreshWordClockDevice
+import com.ghazarian.wordclock.core.domain.usecase.RemoveWordClockDevice
+import com.ghazarian.wordclock.core.domain.usecase.RenameWordClockDevice
 import com.ghazarian.wordclock.core.domain.usecase.SetWordClockBrightness
 import com.ghazarian.wordclock.core.domain.usecase.SetWordClockColor
 import com.ghazarian.wordclock.core.domain.usecase.SetWordClockPower
@@ -33,6 +36,18 @@ object WordClockModule {
     @Provides
     fun provideAddWordClockDevice(repository: WordClockRepository): AddWordClockDevice =
         AddWordClockDevice(repository)
+
+    @Provides
+    fun provideRenameWordClockDevice(repository: WordClockRepository): RenameWordClockDevice =
+        RenameWordClockDevice(repository)
+
+    @Provides
+    fun provideRemoveWordClockDevice(repository: WordClockRepository): RemoveWordClockDevice =
+        RemoveWordClockDevice(repository)
+
+    @Provides
+    fun provideRefreshWordClockDevice(repository: WordClockRepository): RefreshWordClockDevice =
+        RefreshWordClockDevice(repository)
 
     @Provides
     fun provideGetWordClockState(repository: WordClockRepository): GetWordClockState =

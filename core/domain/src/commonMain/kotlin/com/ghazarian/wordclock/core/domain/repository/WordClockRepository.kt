@@ -13,6 +13,10 @@ interface WordClockRepository {
         name: String? = null,
     ): WordClockDevice
 
+    suspend fun renameDevice(deviceId: String, name: String): WordClockDevice
+
+    suspend fun refreshDevice(deviceId: String): WordClockDevice
+
     suspend fun removeDevice(deviceId: String)
 
     suspend fun getState(deviceId: String): WordClockState

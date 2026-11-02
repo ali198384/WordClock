@@ -1,8 +1,19 @@
 package com.ghazarian.wordclock.navigation
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -17,6 +28,7 @@ import com.ghazarian.wordclock.feature.devices.presentation.DevicesViewModel
 @Composable
 fun AppNavHost() {
     val navController = rememberNavController()
+    val context = LocalContext.current
 
     NavHost(
         navController = navController,
@@ -25,8 +37,44 @@ fun AppNavHost() {
     ) {
         composable(AppRoute.DevicesRoute.route) {
             val viewModel: DevicesViewModel = hiltViewModel()
+            var permissionMessage by remember { mutableStateOf<String?>(null) }
+            val localNetworkPermissionLauncher = rememberLauncherForActivityResult(
+                contract = ActivityResultContracts.RequestPermission(),
+            ) { isGranted ->
+                if (isGranted) {
+                    permissionMessage = null
+                    viewModel.addDevice()
+                } else {
+                    permissionMessage =
+                        "برای اتصال به Word Clock، دسترسی شبکهٔ محلی را فعال کن."
+                }
+            }
             DevicesRoute(
                 viewModel = viewModel,
+                permissionMessage = permissionMessage,
+                onAddDevice = {
+                    if (viewModel.validateIpAddress()) {
+                        val needsLocalNetworkPermission =
+                            Build.VERSION.SDK_INT >= Build.VERSION_CODES.CINNAMON_BUN &&
+                                    ContextCompat.checkSelfPermission(
+                                        context,
+                                        Manifest.permission.ACCESS_LOCAL_NETWORK,
+                                    ) != PackageManager.PERMISSION_GRANTED
+
+                        if (needsLocalNetworkPermission) {
+                            localNetworkPermissionLauncher.launch(
+                                Manifest.permission.ACCESS_LOCAL_NETWORK,
+                            )
+                        } else {
+                            permissionMessage = null
+                            viewModel.addDevice()
+                        }
+                    }
+                },
+                onIpAddressChanged = { value ->
+                    permissionMessage = null
+                    viewModel.onIpAddressChanged(value)
+                },
                 onDeviceSelected = { deviceId ->
                     navController.navigate(AppRoute.ControlRoute.routeFor(deviceId))
                 }

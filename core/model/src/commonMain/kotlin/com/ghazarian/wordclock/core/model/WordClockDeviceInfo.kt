@@ -5,4 +5,5 @@ data class WordClockDeviceInfo(
     val macAddress: String?,
     val physicalLedCount: Int?,
     val segmentCount: Int,
+    val firmwareVersion: String? = null,
 )

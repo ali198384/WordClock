@@ -36,19 +36,42 @@ class WledApi(
     }
 
     suspend fun getInfo(address: DeviceAddress): WordClockDeviceInfo {
-        val root = json.parseToJsonElement(
-            getText(address, "/json/info"),
-        ).jsonObject
-        val leds = root["leds"]?.jsonObject
+        val responseText = getText(address, "/json/info")
+        val root = try {
+            json.parseToJsonElement(responseText) as? JsonObject
+                ?: throw invalidDeviceInfo()
+        } catch (exception: WledApiException) {
+            throw exception
+        } catch (exception: Exception) {
+            throw invalidDeviceInfo(exception)
+        }
+        val leds = root["leds"] as? JsonObject ?: throw invalidDeviceInfo()
+        val name = (root["name"] as? JsonPrimitive)
+            ?.contentOrNull
+            ?.trim()
+            ?.takeIf { it.isNotEmpty() }
+            ?: throw invalidDeviceInfo()
+        val physicalLedCount = (leds["count"] as? JsonPrimitive)
+            ?.intOrNull
+            ?.takeIf { it > 0 }
+            ?: throw invalidDeviceInfo()
+        val segmentCount = (leds["maxseg"] as? JsonPrimitive)
+            ?.intOrNull
+            ?.takeIf { it > 0 }
+            ?: throw invalidDeviceInfo()
 
         return WordClockDeviceInfo(
-            name = root["name"]?.jsonPrimitive?.contentOrNull
-                ?.takeIf { it.isNotBlank() }
-                ?: "Word Clock",
-            macAddress = root["mac"]?.jsonPrimitive?.contentOrNull
-                ?.takeIf { it.isNotBlank() },
-            physicalLedCount = leds?.get("count")?.jsonPrimitive?.intOrNull,
-            segmentCount = leds?.get("maxseg")?.jsonPrimitive?.intOrNull ?: 1
+            name = name,
+            macAddress = (root["mac"] as? JsonPrimitive)
+                ?.contentOrNull
+                ?.trim()
+                ?.takeIf { it.isNotEmpty() },
+            physicalLedCount = physicalLedCount,
+            segmentCount = segmentCount,
+            firmwareVersion = (root["ver"] as? JsonPrimitive)
+                ?.contentOrNull
+                ?.trim()
+                ?.takeIf { it.isNotEmpty() },
         )
     }
 
@@ -164,6 +187,17 @@ class WledApi(
             segmentCount = root["seg"]?.jsonArray?.size ?: 1,
         )
     }
+
+    private fun invalidDeviceInfo(cause: Throwable? = null) =
+        WledApiException(
+            message = "The endpoint did not return valid Word Clock device information.",
+            isInvalidResponse = true,
+            cause = cause,
+        )
 }
 
-class WledApiException(message: String) : Exception(message)
+class WledApiException(
+    message: String,
+    val isInvalidResponse: Boolean = false,
+    cause: Throwable? = null,
+) : Exception(message, cause)

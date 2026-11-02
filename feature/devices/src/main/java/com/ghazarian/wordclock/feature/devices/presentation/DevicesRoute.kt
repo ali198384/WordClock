@@ -1,95 +1,527 @@
 package com.ghazarian.wordclock.feature.devices.presentation
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDirection
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ghazarian.wordclock.core.model.WordClockDevice
 
 @Composable
 fun DevicesRoute(
     viewModel: DevicesViewModel,
+    permissionMessage: String?,
+    onAddDevice: () -> Unit,
+    onIpAddressChanged: (String) -> Unit,
     onDeviceSelected: (String) -> Unit,
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     DevicesScreen(
         state = state,
+        onIpAddressChanged = onIpAddressChanged,
+        onDeviceNameChanged = viewModel::onDeviceNameChanged,
+        permissionMessage = permissionMessage,
+        onAddDevice = onAddDevice,
         onRefresh = viewModel::refresh,
-        onDeviceSelected = onDeviceSelected
+        onDeviceSelected = onDeviceSelected,
+        onPowerToggled = viewModel::togglePower,
+        onRenameRequested = viewModel::requestRename,
+        onRemoveRequested = viewModel::requestRemove,
+        onEditingNameChanged = viewModel::onEditingNameChanged,
+        onRenameConfirmed = viewModel::confirmRename,
+        onRenameDismissed = viewModel::dismissRename,
+        onRemoveConfirmed = viewModel::confirmRemove,
+        onRemoveDismissed = viewModel::dismissRemove,
     )
 }
 
 @Composable
 private fun DevicesScreen(
     state: DevicesUiState,
+    permissionMessage: String?,
+    onIpAddressChanged: (String) -> Unit,
+    onDeviceNameChanged: (String) -> Unit,
+    onAddDevice: () -> Unit,
     onRefresh: () -> Unit,
     onDeviceSelected: (String) -> Unit,
+    onPowerToggled: (String) -> Unit,
+    onRenameRequested: (WordClockDevice) -> Unit,
+    onRemoveRequested: (WordClockDevice) -> Unit,
+    onEditingNameChanged: (String) -> Unit,
+    onRenameConfirmed: () -> Unit,
+    onRenameDismissed: () -> Unit,
+    onRemoveConfirmed: () -> Unit,
+    onRemoveDismissed: () -> Unit,
 ) {
-    Scaffold { contentPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(contentPadding)
-                .padding(horizontal = 24.dp, vertical = 20.dp),
-        ) {
-            Text(
-                text = "دستگاه‌های Word Clock",
-                style = MaterialTheme.typography.headlineMedium,
-            )
-            Spacer(Modifier.height(8.dp))
-            Text(
-                text = "دستگاه موردنظرت را برای مشاهدهٔ وضعیت انتخاب کن.",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Spacer(Modifier.height(24.dp))
-
-            when {
-                state.isLoading && state.devices.isEmpty() -> LoadingContent()
-                state.devices.isEmpty() && state.errorMessage != null -> ErrorContent(
-                    message = state.errorMessage,
-                    onRetry = onRefresh,
-                )
-
-                state.devices.isEmpty() -> EmptyDevicesContent()
-                else -> {
-                    state.errorMessage?.let { message ->
-                        Text(
-                            text = "به‌روزرسانی فهرست ناموفق بود: $message",
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodyMedium,
-                        )
-                        Spacer(Modifier.height(12.dp))
+    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+        Scaffold(containerColor = MaterialTheme.colorScheme.background) { contentPadding ->
+            BoxWithConstraints(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(contentPadding),
+                contentAlignment = Alignment.TopCenter,
+            ) {
+                val compactLayout = maxWidth < 640.dp
+                LazyVerticalGrid(
+                    columns = GridCells.Adaptive(minSize = 320.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .widthIn(max = 960.dp),
+                    contentPadding = PaddingValues(
+                        horizontal = if (compactLayout) 18.dp else 28.dp,
+                        vertical = 22.dp,
+                    ),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp),
+                ) {
+                    item(span = { GridItemSpan(maxLineSpan) }) {
+                        ScreenHeading()
                     }
-                    LazyColumn(
-                        contentPadding = PaddingValues(bottom = 24.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
-                    ) {
+                    item(span = { GridItemSpan(maxLineSpan) }) {
+                        AddDeviceCard(
+                            state = state,
+                            permissionMessage = permissionMessage,
+                            compactLayout = compactLayout,
+                            onIpAddressChanged = onIpAddressChanged,
+                            onDeviceNameChanged = onDeviceNameChanged,
+                            onAddDevice = onAddDevice,
+                        )
+                    }
+                    item(span = { GridItemSpan(maxLineSpan) }) {
+                        DeviceListHeading(
+                            deviceCount = state.devices.size,
+                            isRefreshing = state.isRefreshing,
+                            onRefresh = onRefresh,
+                        )
+                    }
+                    if (state.successMessage != null) {
+                        item(span = { GridItemSpan(maxLineSpan) }) {
+                            SuccessNotice(state.successMessage)
+                        }
+                    }
+                    if (state.isLoading && state.devices.isEmpty()) {
+                        item(span = { GridItemSpan(maxLineSpan) }) {
+                            LoadingDevices()
+                        }
+                    } else if (state.listErrorMessage != null && state.devices.isEmpty()) {
+                        item(span = { GridItemSpan(maxLineSpan) }) {
+                            ListErrorCard(
+                                message = state.listErrorMessage,
+                                onRetry = onRefresh,
+                            )
+                        }
+                    } else if (state.devices.isEmpty()) {
+                        item(span = { GridItemSpan(maxLineSpan) }) {
+                            EmptyDevicesCard()
+                        }
+                    } else {
+                        if (state.listErrorMessage != null || state.actionErrorMessage != null) {
+                            item(span = { GridItemSpan(maxLineSpan) }) {
+                                ErrorNotice(
+                                    state.listErrorMessage ?: state.actionErrorMessage.orEmpty(),
+                                )
+                            }
+                        }
                         items(state.devices, key = WordClockDevice::id) { device ->
                             DeviceCard(
                                 device = device,
+                                connectionStatus = state.connectionStatus[device.id]
+                                    ?: DeviceConnectionStatus.OFFLINE,
+                                isOn = state.devicePower[device.id],
+                                isPowerUpdating = device.id in state.powerUpdatingDeviceIds,
                                 onClick = { onDeviceSelected(device.id) },
+                                onPowerToggled = { onPowerToggled(device.id) },
+                                onRename = { onRenameRequested(device) },
+                                onRemove = { onRemoveRequested(device) },
                             )
                         }
+                    }
+                }
+            }
+        }
+    }
+
+    val editingDevice = state.devices.firstOrNull { it.id == state.editingDeviceId }
+    if (editingDevice != null) {
+        RenameDeviceDialog(
+            name = state.editingName,
+            errorMessage = state.actionErrorMessage,
+            isSaving = state.isRenaming,
+            onNameChanged = onEditingNameChanged,
+            onConfirm = onRenameConfirmed,
+            onDismiss = onRenameDismissed,
+        )
+    }
+
+    val pendingRemoval = state.devices.firstOrNull { it.id == state.pendingRemovalId }
+    if (pendingRemoval != null) {
+        RemoveDeviceDialog(
+            deviceName = pendingRemoval.name,
+            isRemoving = state.isRemoving,
+            onConfirm = onRemoveConfirmed,
+            onDismiss = onRemoveDismissed,
+        )
+    }
+}
+
+@Composable
+private fun ScreenHeading() {
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Text(
+            text = "WORD CLOCK",
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.primary,
+        )
+    }
+}
+
+@Composable
+private fun AddDeviceCard(
+    state: DevicesUiState,
+    permissionMessage: String?,
+    compactLayout: Boolean,
+    onIpAddressChanged: (String) -> Unit,
+    onDeviceNameChanged: (String) -> Unit,
+    onAddDevice: () -> Unit,
+) {
+    Card(
+        shape = RoundedCornerShape(26.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
+        ),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Surface(
+                    modifier = Modifier.size(46.dp),
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Text("WC", style = MaterialTheme.typography.labelLarge)
+                    }
+                }
+                Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                    Text("افزودن ساعت", style = MaterialTheme.typography.titleLarge)
+                    Text(
+                        "IP دستگاه روی Wi-Fi محلی را وارد کن.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+
+            if (compactLayout) {
+                IpAddressField(
+                    value = state.ipAddress,
+                    onValueChange = onIpAddressChanged,
+                )
+                DeviceNameField(
+                    value = state.deviceName,
+                    onValueChange = onDeviceNameChanged,
+                )
+            } else {
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    IpAddressField(
+                        value = state.ipAddress,
+                        onValueChange = onIpAddressChanged,
+                        modifier = Modifier.weight(1f),
+                    )
+                    DeviceNameField(
+                        value = state.deviceName,
+                        onValueChange = onDeviceNameChanged,
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+            }
+
+            permissionMessage?.let { ErrorNotice(it) }
+            state.formErrorMessage?.let { ErrorNotice(it) }
+            Button(
+                onClick = onAddDevice,
+                enabled = !state.isAdding && state.ipAddress.isNotBlank(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(54.dp),
+                shape = RoundedCornerShape(16.dp),
+            ) {
+                if (state.isAdding) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        strokeWidth = 2.dp,
+                    )
+                    Spacer(Modifier.size(10.dp))
+                    Text("در حال اتصال به دستگاه…")
+                } else {
+                    Text("＋  افزودن دستگاه", style = MaterialTheme.typography.titleMedium)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun IpAddressField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+        OutlinedTextField(
+            value = value,
+            onValueChange = { input -> onValueChange(input.normalizeIpDigits()) },
+            modifier = modifier.fillMaxWidth(),
+            label = { Text("IP address") },
+            placeholder = { Text("192.168.1.100") },
+            singleLine = true,
+            textStyle = LocalTextStyle.current.copy(
+                textDirection = TextDirection.Ltr,
+                textAlign = TextAlign.Start,
+            ),
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Decimal,
+                imeAction = ImeAction.Done,
+            ),
+            shape = RoundedCornerShape(16.dp),
+        )
+    }
+}
+
+private fun String.normalizeIpDigits(): String = map { character ->
+    when (character) {
+        in '\u06F0'..'\u06F9' -> ('0'.code + character.code - '\u06F0'.code).toChar()
+        in '\u0660'..'\u0669' -> ('0'.code + character.code - '\u0660'.code).toChar()
+        else -> character
+    }
+}.joinToString(separator = "")
+
+@Composable
+private fun DeviceNameField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        modifier = modifier.fillMaxWidth(),
+        label = { Text("نام دلخواه (اختیاری)") },
+        placeholder = { Text("مثلاً ساعت پذیرایی") },
+        singleLine = true,
+        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+        shape = RoundedCornerShape(16.dp),
+    )
+}
+
+@Composable
+private fun DeviceListHeading(
+    deviceCount: Int,
+    isRefreshing: Boolean,
+    onRefresh: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text("دستگاه‌های اضافه‌شده", style = MaterialTheme.typography.titleLarge)
+            Text(
+                text = if (deviceCount == 0) "هنوز دستگاهی ثبت نشده" else "$deviceCount دستگاه",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        TextButton(onClick = onRefresh, enabled = !isRefreshing) {
+            if (isRefreshing) {
+                CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
+                Spacer(Modifier.size(8.dp))
+            }
+            Text("تازه‌سازی")
+        }
+    }
+}
+
+@Composable
+private fun DeviceCard(
+    device: WordClockDevice,
+    connectionStatus: DeviceConnectionStatus,
+    isOn: Boolean?,
+    isPowerUpdating: Boolean,
+    onClick: () -> Unit,
+    onPowerToggled: () -> Unit,
+    onRename: () -> Unit,
+    onRemove: () -> Unit,
+) {
+    var menuExpanded by remember(device.id) { mutableStateOf(false) }
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(22.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
+        ),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 14.dp, top = 14.dp, bottom = 14.dp, end = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Surface(
+                modifier = Modifier.size(48.dp),
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Text("WC", style = MaterialTheme.typography.labelLarge)
+                }
+            }
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .clickable(
+                        role = Role.Button,
+                        onClick = onClick,
+                    )
+                    .padding(vertical = 2.dp),
+                verticalArrangement = Arrangement.spacedBy(5.dp),
+            ) {
+                Text(
+                    text = device.name,
+                    style = MaterialTheme.typography.titleMedium,
+                )
+                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                    Text(
+                        text = "IP: ${device.address.host}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Start,
+                    )
+                    device.firmwareVersion?.let { version ->
+                        Text(
+                            text = "Firmware: $version",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Start,
+                        )
+                    }
+                }
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    DeviceStatusBadge(connectionStatus)
+                    device.physicalLedCount?.let { count ->
+                        Text(
+                            text = "$count LED",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+            }
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(2.dp),
+            ) {
+                DevicePowerButton(
+                    deviceName = device.name,
+                    isOn = isOn,
+                    isEnabled = connectionStatus == DeviceConnectionStatus.ONLINE,
+                    isUpdating = isPowerUpdating,
+                    onClick = onPowerToggled,
+                )
+                Box {
+                    IconButton(
+                        onClick = { menuExpanded = true },
+                        modifier = Modifier.semantics {
+                            contentDescription = "مدیریت ${device.name}"
+                        },
+                    ) {
+                        Text("⋮", fontSize = 26.sp)
+                    }
+                    DropdownMenu(
+                        expanded = menuExpanded,
+                        onDismissRequest = { menuExpanded = false },
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("تغییر نام") },
+                            onClick = {
+                                menuExpanded = false
+                                onRename()
+                            },
+                        )
+                        DropdownMenuItem(
+                            text = { Text("حذف دستگاه") },
+                            onClick = {
+                                menuExpanded = false
+                                onRemove()
+                            },
+                        )
                     }
                 }
             }
@@ -98,62 +530,214 @@ private fun DevicesScreen(
 }
 
 @Composable
-private fun LoadingContent() {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(32.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        CircularProgressIndicator()
-    }
-}
-
-@Composable
-private fun EmptyDevicesContent() {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 48.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Text("هنوز دستگاهی اضافه نشده", style = MaterialTheme.typography.titleLarge)
-    }
-}
-
-@Composable
-private fun ErrorContent(
-    message: String,
-    onRetry: () -> Unit,
+private fun DevicePowerButton(
+    deviceName: String,
+    isOn: Boolean?,
+    isEnabled: Boolean,
+    isUpdating: Boolean,
+    onClick: () -> Unit,
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 32.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
+    val isAvailable = isEnabled && isOn != null && !isUpdating
+    val containerColor = when {
+        !isAvailable -> MaterialTheme.colorScheme.surfaceVariant
+        isOn -> MaterialTheme.colorScheme.primaryContainer
+        else -> MaterialTheme.colorScheme.surfaceVariant
+    }
+    val contentColor = when {
+        !isAvailable -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f)
+        isOn -> MaterialTheme.colorScheme.onPrimaryContainer
+        else -> MaterialTheme.colorScheme.onSurfaceVariant
+    }
+    val description = when {
+        isUpdating -> "در حال تغییر وضعیت برق $deviceName"
+        !isEnabled || isOn == null -> "وضعیت برق $deviceName در دسترس نیست"
+        isOn -> "خاموش کردن $deviceName"
+        else -> "روشن کردن $deviceName"
+    }
+
+    IconButton(
+        onClick = onClick,
+        enabled = isAvailable,
+        modifier = Modifier.semantics { contentDescription = description },
     ) {
-        Text(message, color = MaterialTheme.colorScheme.error)
-        Spacer(Modifier.height(12.dp))
-        Button(onClick = onRetry) {
-            Text("تلاش دوباره")
+        Surface(
+            modifier = Modifier.size(38.dp),
+            shape = CircleShape,
+            color = containerColor,
+            contentColor = contentColor,
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                if (isUpdating) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(18.dp),
+                        strokeWidth = 2.dp,
+                    )
+                } else {
+                    Text("⏻", fontSize = 23.sp)
+                }
+            }
         }
     }
 }
 
 @Composable
-private fun DeviceCard(
-    device: WordClockDevice,
-    onClick: () -> Unit,
-) {
-    Card(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
-        Column(Modifier.padding(20.dp)) {
-            Text(device.name, style = MaterialTheme.typography.titleMedium)
-            Spacer(Modifier.height(4.dp))
+private fun DeviceStatusBadge(status: DeviceConnectionStatus) {
+    val (label, color) = when (status) {
+        DeviceConnectionStatus.CHECKING -> "در حال بررسی" to MaterialTheme.colorScheme.tertiary
+        DeviceConnectionStatus.ONLINE -> "آنلاین" to MaterialTheme.colorScheme.primary
+        DeviceConnectionStatus.OFFLINE -> "آفلاین" to MaterialTheme.colorScheme.error
+    }
+    Surface(
+        shape = CircleShape,
+        color = color.copy(alpha = 0.12f),
+        contentColor = color,
+    ) {
+        Text(
+            text = label,
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+            style = MaterialTheme.typography.labelMedium,
+        )
+    }
+}
+
+@Composable
+private fun LoadingDevices() {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 28.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        CircularProgressIndicator()
+        Text("در حال خواندن فهرست دستگاه‌ها…")
+    }
+}
+
+@Composable
+private fun EmptyDevicesCard() {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(22.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+        ),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp, vertical = 32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Text("هنوز دستگاهی اضافه نشده", style = MaterialTheme.typography.titleMedium)
             Text(
-                text = device.address.host,
+                "IP ساعت را در فرم بالا وارد کن تا به فهرستت اضافه شود.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
             )
         }
     }
+}
+
+@Composable
+private fun ListErrorCard(
+    message: String,
+    onRetry: () -> Unit,
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(22.dp),
+    ) {
+        Column(
+            modifier = Modifier.padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            ErrorNotice(message)
+            TextButton(onClick = onRetry, modifier = Modifier.align(Alignment.End)) {
+                Text("تلاش دوباره")
+            }
+        }
+    }
+}
+
+@Composable
+private fun ErrorNotice(message: String) {
+    Text(
+        text = message,
+        color = MaterialTheme.colorScheme.error,
+        style = MaterialTheme.typography.bodyMedium,
+    )
+}
+
+@Composable
+private fun SuccessNotice(message: String) {
+    Text(
+        text = message,
+        color = MaterialTheme.colorScheme.primary,
+        style = MaterialTheme.typography.bodyMedium,
+    )
+}
+
+@Composable
+private fun RenameDeviceDialog(
+    name: String,
+    errorMessage: String?,
+    isSaving: Boolean,
+    onNameChanged: (String) -> Unit,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("تغییر نام دستگاه") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = onNameChanged,
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text("نام دستگاه") },
+                    singleLine = true,
+                    shape = RoundedCornerShape(16.dp),
+                )
+                errorMessage?.let { ErrorNotice(it) }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onConfirm, enabled = !isSaving) {
+                Text(if (isSaving) "در حال ذخیره…" else "ذخیره")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss, enabled = !isSaving) {
+                Text("انصراف")
+            }
+        },
+    )
+}
+
+@Composable
+private fun RemoveDeviceDialog(
+    deviceName: String,
+    isRemoving: Boolean,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("حذف دستگاه؟") },
+        text = { Text("«$deviceName» از فهرست این برنامه حذف می‌شود.") },
+        confirmButton = {
+            TextButton(onClick = onConfirm, enabled = !isRemoving) {
+                Text(if (isRemoving) "در حال حذف…" else "حذف")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss, enabled = !isRemoving) {
+                Text("انصراف")
+            }
+        },
+    )
 }
