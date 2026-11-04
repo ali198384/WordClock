@@ -8,6 +8,7 @@ kotlin {
         namespace = "com.ghazarian.wordclock.core.data"
         compileSdk = 37
         minSdk = 26
+        withHostTest {}
         compilerOptions {
             jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
         }
@@ -23,6 +24,13 @@ kotlin {
         }
         androidMain.dependencies {
             implementation(libs.ktor.client.android)
+        }
+        getByName("androidHostTest") {
+            dependencies {
+                implementation(kotlin("test"))
+                implementation(libs.kotlinx.coroutines.test)
+                implementation(libs.mockk)
+            }
         }
     }
 }

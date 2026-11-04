@@ -27,6 +27,7 @@ include(
     ":core:common",
     ":core:model",
     ":core:domain",
+    ":core:testing",
     ":core:network",
     ":core:storage",
     ":core:data",
