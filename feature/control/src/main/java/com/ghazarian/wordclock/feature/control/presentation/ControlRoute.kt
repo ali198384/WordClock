@@ -284,7 +284,7 @@ private fun ControlDetails(
     when {
         state.isLoading && state.deviceState == null -> LoadingPanel(modifier)
         state.deviceState == null && state.errorMessage != null -> ErrorPanel(
-            message = state.errorMessage?.asString().orEmpty(),
+            message = state.errorMessage.asString(),
             onRetry = onRetry,
             modifier = modifier,
         )

@@ -192,7 +192,7 @@ private fun DevicesScreen(
                     }
                     if (state.successMessage != null) {
                         item(span = { GridItemSpan(maxLineSpan) }) {
-                            SuccessNotice(state.successMessage?.asString().orEmpty())
+                            SuccessNotice(state.successMessage.asString())
                         }
                     }
                     if (state.isLoading && state.devices.isEmpty()) {
@@ -202,7 +202,7 @@ private fun DevicesScreen(
                     } else if (state.listErrorMessage != null && state.devices.isEmpty()) {
                         item(span = { GridItemSpan(maxLineSpan) }) {
                             ListErrorCard(
-                                message = state.listErrorMessage?.asString().orEmpty(),
+                                message = state.listErrorMessage.asString(),
                                 onRetry = onRefresh,
                             )
                         }
@@ -769,9 +769,7 @@ private fun DevicePowerButton(
                         painter = painterResource(DesignSystemR.drawable.power_settings_new_24),
                         contentDescription = null,
                         tint = when {
-                            !isEnabled || isUpdating -> MaterialTheme.colorScheme.onSurfaceVariant.copy(
-                                alpha = 0.45f
-                            )
+                            !isEnabled -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.45f)
 
                             isOn == true -> PowerOnGreen
                             isOn == false -> PowerOffRed
