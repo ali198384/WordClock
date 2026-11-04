@@ -1,5 +1,6 @@
 package com.ghazarian.wordclock.feature.control.presentation
 
+import com.ghazarian.wordclock.core.designsystem.text.UiText
 import com.ghazarian.wordclock.core.model.LedColor
 import com.ghazarian.wordclock.core.model.WordClockDevice
 import com.ghazarian.wordclock.core.model.WordClockState
@@ -16,7 +17,7 @@ data class ControlUiState(
     val updatingDeviceIds: Set<String> = emptySet(),
     val brightnessDraft: Int? = null,
     val colorDraft: LedColor? = null,
-    val devicesErrorMessage: String? = null,
-    val errorMessage: String? = null,
-    val actionErrorMessage: String? = null,
+    val devicesErrorMessage: UiText? = null,
+    val errorMessage: UiText? = null,
+    val actionErrorMessage: UiText? = null,
 )

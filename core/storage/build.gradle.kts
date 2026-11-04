@@ -16,6 +16,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             api(projects.core.model)
+            api(libs.kotlinx.coroutines.core)
             implementation(libs.androidx.datastore.core)
             implementation(libs.androidx.datastore.preferences.core)
             implementation(libs.kotlinx.serialization.json)

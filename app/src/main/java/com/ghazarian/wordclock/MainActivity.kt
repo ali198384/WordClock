@@ -4,8 +4,12 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.runtime.getValue
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.ghazarian.wordclock.appearance.AppearanceViewModel
+import com.ghazarian.wordclock.core.designsystem.theme.WordClockTheme
 import com.ghazarian.wordclock.navigation.AppNavHost
-import com.ghazarian.wordclock.ui.theme.WordClockTheme
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -14,8 +18,13 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            WordClockTheme {
-                AppNavHost()
+            val appearanceViewModel: AppearanceViewModel = hiltViewModel()
+            val themeMode by appearanceViewModel.themeMode.collectAsStateWithLifecycle()
+            WordClockTheme(themeMode = themeMode) {
+                AppNavHost(
+                    themeMode = themeMode,
+                    onThemeModeChanged = appearanceViewModel::setThemeMode
+                )
             }
         }
     }

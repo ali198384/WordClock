@@ -27,12 +27,14 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
@@ -43,7 +45,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -56,6 +57,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -65,32 +68,37 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.ghazarian.wordclock.core.designsystem.text.asString
+import com.ghazarian.wordclock.core.designsystem.theme.PowerOffRed
+import com.ghazarian.wordclock.core.designsystem.theme.PowerOnGreen
 import com.ghazarian.wordclock.core.model.LedColor
 import com.ghazarian.wordclock.core.model.WordClockDevice
 import com.ghazarian.wordclock.core.model.WordClockState
+import com.ghazarian.wordclock.feature.control.R
 import kotlin.math.roundToInt
+import com.ghazarian.wordclock.core.designsystem.R as DesignSystemR
 
 private val QuickColors = listOf(
-    QuickColor("قرمز", LedColor(255, 45, 55)),
-    QuickColor("نارنجی", LedColor(255, 135, 25)),
-    QuickColor("زرد", LedColor(255, 220, 35)),
-    QuickColor("سبز", LedColor(50, 210, 95)),
-    QuickColor("فیروزه‌ای", LedColor(20, 210, 205)),
-    QuickColor("آبی", LedColor(50, 105, 255)),
-    QuickColor("بنفش", LedColor(185, 65, 235)),
-    QuickColor("سفید", LedColor(255, 255, 255)),
+    QuickColor(R.string.color_red, LedColor(255, 45, 55)),
+    QuickColor(R.string.color_orange, LedColor(255, 135, 25)),
+    QuickColor(R.string.color_yellow, LedColor(255, 220, 35)),
+    QuickColor(R.string.color_green, LedColor(50, 210, 95)),
+    QuickColor(R.string.color_cyan, LedColor(20, 210, 205)),
+    QuickColor(R.string.color_blue, LedColor(50, 105, 255)),
+    QuickColor(R.string.color_purple, LedColor(185, 65, 235)),
+    QuickColor(R.string.color_white, LedColor(255, 255, 255)),
 )
 
 private val WhiteColors = listOf(
-    QuickColor("سفید گرم", LedColor(255, 180, 105)),
-    QuickColor("سفید طبیعی", LedColor(255, 232, 205)),
-    QuickColor("سفید سرد", LedColor(220, 238, 255)),
-    QuickColor("سفید", LedColor(255, 255, 255)),
+    QuickColor(R.string.color_warm_white, LedColor(255, 180, 105)),
+    QuickColor(R.string.color_natural_white, LedColor(255, 232, 205)),
+    QuickColor(R.string.color_cool_white, LedColor(220, 238, 255)),
+    QuickColor(R.string.color_white, LedColor(255, 255, 255)),
 )
 
 private val BrightnessPresets = listOf(25, 50, 75, 100)
 
-private data class QuickColor(val name: String, val color: LedColor)
+private data class QuickColor(val nameResource: Int, val color: LedColor)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -102,18 +110,19 @@ fun ControlRoute(
     var isColorPickerOpen by rememberSaveable { mutableStateOf(false) }
     val selectedDevice = state.devices.firstOrNull { it.id == state.selectedDeviceId }
 
-    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
-        Scaffold(
-            containerColor = MaterialTheme.colorScheme.background,
-            topBar = {
-                TopAppBar(
+    Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
+        topBar = {
+            CenterAlignedTopAppBar(
                     title = {
-                        Column {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(
-                                text = selectedDevice?.name ?: "کنترل Word Clock",
+                                text = selectedDevice?.name
+                                    ?: stringResource(R.string.control_title),
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis,
                                 style = MaterialTheme.typography.titleLarge,
+                                textAlign = TextAlign.Center,
                             )
                             selectedDevice?.let {
                                 CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
@@ -121,33 +130,67 @@ fun ControlRoute(
                                         text = it.address.host,
                                         style = MaterialTheme.typography.labelMedium,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        textAlign = TextAlign.Center,
                                     )
                                 }
                             }
                         }
                     },
                     navigationIcon = {
-                        TextButton(onClick = onBack) { Text("بازگشت") }
+                        val backDescription = stringResource(R.string.back_to_devices_description)
+                        IconButton(
+                            onClick = onBack,
+                            modifier = Modifier.semantics {
+                                contentDescription = backDescription
+                            },
+                        ) {
+                            Icon(
+                                painter = painterResource(DesignSystemR.drawable.arrow_back_24),
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurface,
+                            )
+                        }
                     },
                     actions = {
-                        TextButton(
+                        val refreshDescription = stringResource(
+                            if (state.isRefreshing || state.isDevicesLoading) {
+                                R.string.refreshing
+                            } else {
+                                R.string.refresh_clock_description
+                            },
+                        )
+                        IconButton(
                             onClick = {
                                 viewModel.refreshDevices()
                                 viewModel.refresh()
                             },
                             enabled = !state.isRefreshing && !state.isDevicesLoading,
+                            modifier = Modifier.semantics {
+                                contentDescription = refreshDescription
+                            },
                         ) {
-                            Text(if (state.isRefreshing) "در حال بررسی" else "تازه‌سازی")
+                            if (state.isRefreshing || state.isDevicesLoading) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(20.dp),
+                                    strokeWidth = 2.dp
+                                )
+                            } else {
+                                Icon(
+                                    painter = painterResource(DesignSystemR.drawable.refresh_24),
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                )
+                            }
                         }
                     },
-                )
-            },
-        ) { contentPadding ->
-            BoxWithConstraints(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(contentPadding),
-            ) {
+            )
+        },
+    ) { contentPadding ->
+        BoxWithConstraints(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(contentPadding),
+        ) {
                 val availableWidth = maxWidth
                 val isExpanded = availableWidth >= 840.dp
                 if (isExpanded) {
@@ -156,7 +199,7 @@ fun ControlRoute(
                             devices = state.devices,
                             selectedDeviceId = state.selectedDeviceId,
                             isLoading = state.isDevicesLoading,
-                            errorMessage = state.devicesErrorMessage,
+                            errorMessage = state.devicesErrorMessage?.asString(),
                             onSelectDevice = viewModel::selectDevice,
                             onRefresh = viewModel::refreshDevices,
                             modifier = Modifier
@@ -198,10 +241,10 @@ fun ControlRoute(
                         modifier = Modifier.fillMaxSize(),
                     )
                 }
-            }
         }
+    }
 
-        if (isColorPickerOpen) {
+    if (isColorPickerOpen) {
             val deviceState = state.deviceState
             if (deviceState != null) {
                 ModalBottomSheet(
@@ -221,7 +264,6 @@ fun ControlRoute(
                     )
                 }
             }
-        }
     }
 }
 
@@ -242,7 +284,7 @@ private fun ControlDetails(
     when {
         state.isLoading && state.deviceState == null -> LoadingPanel(modifier)
         state.deviceState == null && state.errorMessage != null -> ErrorPanel(
-            message = state.errorMessage,
+            message = state.errorMessage?.asString().orEmpty(),
             onRetry = onRetry,
             modifier = modifier,
         )
@@ -261,8 +303,8 @@ private fun ControlDetails(
                     .padding(horizontal = 20.dp, vertical = 18.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
-                state.errorMessage?.let { InlineError(it) }
-                state.actionErrorMessage?.let { InlineError(it) }
+                state.errorMessage?.let { InlineError(it.asString()) }
+                state.actionErrorMessage?.let { InlineError(it.asString()) }
                 DeviceStatusCard(
                     device = selectedDevice,
                     state = deviceState,
@@ -329,6 +371,9 @@ private fun DeviceStatusCard(
     isRefreshing: Boolean,
     onPowerToggle: () -> Unit,
 ) {
+    val powerDescription = stringResource(
+        if (state.isOn) R.string.power_turn_off else R.string.power_turn_on,
+    )
     Card(
         shape = RoundedCornerShape(28.dp),
         colors = CardDefaults.cardColors(
@@ -350,12 +395,18 @@ private fun DeviceStatusCard(
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 Surface(
-                    modifier = Modifier.size(62.dp),
+                    modifier = Modifier
+                        .size(62.dp)
+                        .clip(CircleShape)
+                        .clickable(
+                            enabled = canControl,
+                            role = Role.Button,
+                            onClick = onPowerToggle,
+                        )
+                        .semantics { contentDescription = powerDescription },
                     shape = CircleShape,
-                    color = if (state.isOn) MaterialTheme.colorScheme.primary
-                    else MaterialTheme.colorScheme.surface,
-                    contentColor = if (state.isOn) MaterialTheme.colorScheme.onPrimary
-                    else MaterialTheme.colorScheme.onSurface,
+                    color = if (state.isOn) MaterialTheme.colorScheme.primaryContainer
+                    else MaterialTheme.colorScheme.errorContainer,
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         if (isUpdating) {
@@ -364,40 +415,43 @@ private fun DeviceStatusCard(
                                 strokeWidth = 2.dp,
                             )
                         } else {
-                            Text("⏻", style = MaterialTheme.typography.headlineMedium)
+                            Icon(
+                                painter = painterResource(DesignSystemR.drawable.power_settings_new_24),
+                                contentDescription = null,
+                                tint = when {
+                                    !canControl -> MaterialTheme.colorScheme.onSurfaceVariant.copy(
+                                        alpha = 0.45f
+                                    )
+
+                                    state.isOn -> PowerOnGreen
+                                    else -> PowerOffRed
+                                },
+                                modifier = Modifier.size(32.dp),
+                            )
                         }
                     }
                 }
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = device?.name ?: "Word Clock",
+                        text = device?.name ?: stringResource(R.string.control_title),
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.SemiBold,
                     )
                     Text(
                         text = when {
-                            !isWifiAvailable -> "اتصال Wi-Fi برقرار نیست"
-                            isRefreshing -> "در حال همگام‌سازی"
-                            !isDeviceOnline -> "دستگاه در دسترس نیست"
-                            state.isOn -> "روشن · روشنایی ${state.brightness.percent()}٪ · RGB"
-                            else -> "خاموش"
+                            !isWifiAvailable -> stringResource(R.string.wifi_not_connected)
+                            isRefreshing -> stringResource(R.string.syncing)
+                            !isDeviceOnline -> stringResource(R.string.device_unavailable)
+                            state.isOn -> stringResource(
+                                R.string.clock_on_summary,
+                                state.brightness.percent(),
+                            )
+
+                            else -> stringResource(R.string.power_status_off)
                         },
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
-                }
-                Button(
-                    onClick = onPowerToggle,
-                    enabled = canControl,
-                    shape = RoundedCornerShape(16.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (state.isOn) MaterialTheme.colorScheme.errorContainer
-                        else MaterialTheme.colorScheme.primary,
-                        contentColor = if (state.isOn) MaterialTheme.colorScheme.onErrorContainer
-                        else MaterialTheme.colorScheme.onPrimary,
-                    ),
-                ) {
-                    Text(if (state.isOn) "خاموش" else "روشن")
                 }
             }
             Box(
@@ -420,18 +474,34 @@ private fun BrightnessCard(
     onApply: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val sliderDescription = stringResource(R.string.brightness_slider_description)
     ControlCard(modifier = modifier) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text("روشنایی", style = MaterialTheme.typography.titleLarge)
-                Text(
-                    "شدت نور LED",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+            Row(
+                modifier = Modifier.weight(1f),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(9.dp),
+            ) {
+                Icon(
+                    painter = painterResource(DesignSystemR.drawable.sunny_24),
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.tertiary,
+                    modifier = Modifier.size(23.dp),
                 )
+                Column {
+                    Text(
+                        stringResource(R.string.brightness_title),
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                    Text(
+                        stringResource(R.string.brightness_description),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
             Text(
-                text = "${brightness.percent()}٪",
+                text = stringResource(R.string.brightness_percent, brightness.percent()),
                 style = MaterialTheme.typography.headlineSmall,
                 color = MaterialTheme.colorScheme.primary,
                 fontWeight = FontWeight.SemiBold,
@@ -444,7 +514,7 @@ private fun BrightnessCard(
             valueRange = 0f..255f,
             enabled = enabled,
             modifier = Modifier.semantics {
-                contentDescription = "روشنایی از صفر تا ۲۵۵"
+                contentDescription = sliderDescription
             },
         )
         if (isPending) {
@@ -452,7 +522,7 @@ private fun BrightnessCard(
                 onClick = onApply,
                 enabled = enabled,
                 modifier = Modifier.align(Alignment.End),
-            ) { Text("اعمال روشنایی") }
+            ) { Text(stringResource(R.string.apply_brightness)) }
         }
         Row(
             modifier = Modifier.horizontalScroll(rememberScrollState()),
@@ -465,13 +535,13 @@ private fun BrightnessCard(
                         onClick = { onBrightnessChanged(percent.toBrightness()); onApply() },
                         enabled = enabled,
                         contentPadding = PaddingValues(horizontal = 15.dp, vertical = 8.dp),
-                    ) { Text("${percent}٪") }
+                    ) { Text(stringResource(R.string.brightness_percent, percent)) }
                 } else {
                     OutlinedButton(
                         onClick = { onBrightnessChanged(percent.toBrightness()); onApply() },
                         enabled = enabled,
                         contentPadding = PaddingValues(horizontal = 15.dp, vertical = 8.dp),
-                    ) { Text("${percent}٪") }
+                    ) { Text(stringResource(R.string.brightness_percent, percent)) }
                 }
             }
         }
@@ -490,15 +560,38 @@ private fun ColorControlCard(
 ) {
     ControlCard(modifier = modifier) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text("رنگ LED", style = MaterialTheme.typography.titleLarge)
-                Text(
-                    color.toHex(),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+            Row(
+                modifier = Modifier.weight(1f),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(9.dp),
+            ) {
+                Icon(
+                    painter = painterResource(DesignSystemR.drawable.color_lens_24),
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(23.dp),
                 )
+                Column {
+                    Text(
+                        stringResource(R.string.color_title),
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                    Text(
+                        color.toHex(),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
-            OutlinedButton(onClick = onOpenPicker, enabled = enabled) { Text("انتخاب‌گر رنگ") }
+            OutlinedButton(onClick = onOpenPicker, enabled = enabled) {
+                Icon(
+                    painter = painterResource(DesignSystemR.drawable.colorize_24),
+                    contentDescription = null,
+                    modifier = Modifier.size(19.dp),
+                )
+                Spacer(Modifier.width(7.dp))
+                Text(stringResource(R.string.choose_color))
+            }
         }
         Row(
             modifier = Modifier.horizontalScroll(rememberScrollState()),
@@ -523,7 +616,7 @@ private fun ColorControlCard(
                 enabled = enabled,
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(14.dp),
-            ) { Text("اعمال رنگ") }
+            ) { Text(stringResource(R.string.apply_color)) }
         }
     }
 }
@@ -531,15 +624,24 @@ private fun ColorControlCard(
 @Composable
 private fun DeviceInfoCard(device: WordClockDevice?, state: WordClockState) {
     ControlCard {
-        Text("اطلاعات دستگاه", style = MaterialTheme.typography.titleMedium)
+        Text(
+            stringResource(R.string.device_info_title),
+            style = MaterialTheme.typography.titleMedium
+        )
         Row(
             modifier = Modifier.horizontalScroll(rememberScrollState()),
             horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            device?.physicalLedCount?.let { InfoPill("LED فیزیکی", it.toString()) }
-            state.physicalLedCount?.let { InfoPill("LED در سگمنت فعال", it.toString()) }
-            InfoPill("تعداد سگمنت‌ها", state.segmentCount.toString())
-            device?.firmwareVersion?.let { InfoPill("Firmware", it) }
+            device?.firmwareVersion?.let {
+                InfoPill(stringResource(R.string.firmware), it)
+            }
+            device?.physicalLedCount?.let {
+                InfoPill(stringResource(R.string.physical_led_count), it.toString())
+            }
+            state.physicalLedCount?.let {
+                InfoPill(stringResource(R.string.active_segment_led_count), it.toString())
+            }
+            InfoPill(stringResource(R.string.segment_count), state.segmentCount.toString())
         }
     }
 }
@@ -562,11 +664,30 @@ private fun DeviceSidebar(
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
-                "دستگاه‌ها",
+                stringResource(R.string.devices_title),
                 style = MaterialTheme.typography.titleLarge,
                 modifier = Modifier.weight(1f)
             )
-            TextButton(onClick = onRefresh, enabled = !isLoading) { Text("تازه‌سازی") }
+            val refreshDescription = stringResource(
+                if (isLoading) R.string.refreshing else R.string.refresh_devices_description,
+            )
+            IconButton(
+                onClick = onRefresh,
+                enabled = !isLoading,
+                modifier = Modifier.semantics {
+                    contentDescription = refreshDescription
+                },
+            ) {
+                if (isLoading) {
+                    CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                } else {
+                    Icon(
+                        painter = painterResource(DesignSystemR.drawable.refresh_24),
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                }
+            }
         }
         LazyColumn(
             modifier = Modifier.weight(1f),
@@ -577,7 +698,7 @@ private fun DeviceSidebar(
                 item(key = "device-list-error") {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(errorMessage, color = MaterialTheme.colorScheme.error)
-                        TextButton(onClick = onRefresh) { Text("تلاش دوباره") }
+                        TextButton(onClick = onRefresh) { Text(stringResource(R.string.retry)) }
                     }
                 }
             }
@@ -595,7 +716,7 @@ private fun DeviceSidebar(
             } else if (devices.isEmpty()) {
                 item(key = "device-list-empty") {
                     Text(
-                        "هنوز دستگاهی اضافه نشده است.",
+                        stringResource(R.string.no_devices),
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -649,7 +770,7 @@ private fun DeviceListItem(
             }
             device.firmwareVersion?.let {
                 Text(
-                    "Firmware $it",
+                    stringResource(R.string.device_firmware, it),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -678,21 +799,21 @@ private fun ColorPickerContent(
             Surface(modifier = Modifier.size(14.dp), shape = CircleShape, color = colorOf(color)) {}
             Spacer(Modifier.width(9.dp))
             Text(
-                "رنگ انتخاب‌شده · ${color.toHex()}",
+                stringResource(R.string.selected_color, color.toHex()),
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.weight(1f)
             )
-            TextButton(onClick = onDone, enabled = enabled) { Text("اعمال") }
+            TextButton(onClick = onDone, enabled = enabled) { Text(stringResource(R.string.apply)) }
         }
         SecondaryTabRow(selectedTabIndex = selectedTab) {
             Tab(
                 selected = selectedTab == 0,
                 onClick = { selectedTab = 0 },
-                text = { Text("رنگ‌ها") })
+                text = { Text(stringResource(R.string.colors_tab)) })
             Tab(
                 selected = selectedTab == 1,
                 onClick = { selectedTab = 1 },
-                text = { Text("سفیدها") })
+                text = { Text(stringResource(R.string.whites_tab)) })
         }
         if (selectedTab == 0) {
             BoxWithConstraints(Modifier.fillMaxWidth()) {
@@ -706,7 +827,7 @@ private fun ColorPickerContent(
                 )
             }
             Text(
-                text = "برای انتخاب رنگ، روی چرخ بکشید.",
+                text = stringResource(R.string.color_wheel_description),
                 modifier = Modifier.fillMaxWidth(),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -728,7 +849,7 @@ private fun ColorPickerContent(
                 }
             }
             Text(
-                text = "تنظیم سفیدها با ترکیب RGB انجام می‌شود.",
+                text = stringResource(R.string.white_mix_description),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -744,34 +865,57 @@ private fun ColorSwatch(
     onClick: () -> Unit,
     showLabel: Boolean = false,
 ) {
+    val itemName = stringResource(item.nameResource)
+    val swatchSize = if (showLabel) 48.dp else 42.dp
+    val outerSize = if (selected) swatchSize + 8.dp else swatchSize
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(5.dp)
     ) {
-        Surface(
+        Box(
             modifier = Modifier
-                .size(if (showLabel) 48.dp else 42.dp)
-                .clip(CircleShape)
+                .size(outerSize)
                 .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
-                .semantics { contentDescription = item.name },
-            shape = CircleShape,
-            color = colorOf(item.color),
-            border = if (selected) BorderStroke(3.dp, MaterialTheme.colorScheme.primary)
-            else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                .semantics { contentDescription = itemName },
         ) {
             if (selected) {
-                Box(contentAlignment = Alignment.Center) {
-                    Text(
-                        "✓",
-                        color = if (item.color.red + item.color.green + item.color.blue > 420) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.surface,
-                        fontWeight = FontWeight.Bold
-                    )
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.surface,
+                    border = BorderStroke(2.dp, MaterialTheme.colorScheme.onSurface),
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Surface(
+                            modifier = Modifier.size(swatchSize - 2.dp),
+                            shape = CircleShape,
+                            color = colorOf(item.color),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Text(
+                                    stringResource(R.string.selected_color_checkmark),
+                                    color = if (item.color.red + item.color.green + item.color.blue > 420) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.surface,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+                    }
                 }
+            } else {
+                Surface(
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .size(swatchSize),
+                    shape = CircleShape,
+                    color = colorOf(item.color),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                ) {}
             }
         }
         if (showLabel) {
             Text(
-                item.name,
+                itemName,
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -827,7 +971,7 @@ private fun LoadingPanel(modifier: Modifier = Modifier) {
         ) {
             CircularProgressIndicator()
             Text(
-                "در حال دریافت وضعیت Word Clock…",
+                stringResource(R.string.loading_device_state),
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
@@ -842,12 +986,15 @@ private fun ErrorPanel(message: String, onRetry: () -> Unit, modifier: Modifier 
             .padding(24.dp), contentAlignment = Alignment.Center
     ) {
         ControlCard {
-            Text("اتصال برقرار نشد", style = MaterialTheme.typography.titleLarge)
+            Text(
+                stringResource(R.string.connection_failed),
+                style = MaterialTheme.typography.titleLarge
+            )
             Text(message, color = MaterialTheme.colorScheme.error)
             TextButton(
                 onClick = onRetry,
                 modifier = Modifier.align(Alignment.End)
-            ) { Text("تلاش دوباره") }
+            ) { Text(stringResource(R.string.retry)) }
         }
     }
 }
@@ -856,7 +1003,7 @@ private fun ErrorPanel(message: String, onRetry: () -> Unit, modifier: Modifier 
 private fun EmptyControlPanel(modifier: Modifier = Modifier) {
     Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Text(
-            "دستگاهی برای کنترل انتخاب نشده است.",
+            stringResource(R.string.no_device_selected),
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }

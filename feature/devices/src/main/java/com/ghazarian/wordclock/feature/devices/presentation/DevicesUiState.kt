@@ -1,5 +1,6 @@
 package com.ghazarian.wordclock.feature.devices.presentation
 
+import com.ghazarian.wordclock.core.designsystem.text.UiText
 import com.ghazarian.wordclock.core.model.WordClockDevice
 
 enum class DeviceConnectionStatus {
@@ -15,13 +16,13 @@ data class DevicesUiState(
     val powerUpdatingDeviceIds: Set<String> = emptySet(),
     val isLoading: Boolean = false,
     val isRefreshing: Boolean = false,
-    val listErrorMessage: String? = null,
+    val listErrorMessage: UiText? = null,
     val ipAddress: String = "",
     val deviceName: String = "",
     val isAdding: Boolean = false,
-    val formErrorMessage: String? = null,
-    val successMessage: String? = null,
-    val actionErrorMessage: String? = null,
+    val formErrorMessage: UiText? = null,
+    val successMessage: UiText? = null,
+    val actionErrorMessage: UiText? = null,
     val editingDeviceId: String? = null,
     val editingName: String = "",
     val isRenaming: Boolean = false,

@@ -8,7 +8,7 @@ import com.ghazarian.wordclock.core.model.WordClockDevice
 import kotlinx.coroutines.flow.first
 import kotlinx.serialization.json.Json
 
-internal const val DEVICE_STORAGE_DATASTORE_NAME = "word_clock_devices"
+internal const val WORD_CLOCK_DATASTORE_NAME = "word_clock_devices"
 internal const val DEVICE_LIST_PREFERENCE_KEY = "devices"
 
 class DataStoreDeviceStorage internal constructor(

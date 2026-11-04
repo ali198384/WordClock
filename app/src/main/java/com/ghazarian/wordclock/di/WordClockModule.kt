@@ -13,6 +13,8 @@ import com.ghazarian.wordclock.core.domain.usecase.RenameWordClockDevice
 import com.ghazarian.wordclock.core.domain.usecase.SetWordClockBrightness
 import com.ghazarian.wordclock.core.domain.usecase.SetWordClockColor
 import com.ghazarian.wordclock.core.domain.usecase.SetWordClockPower
+import com.ghazarian.wordclock.core.storage.ThemeModeStorage
+import com.ghazarian.wordclock.core.storage.createAndroidThemeModeStorage
 import com.ghazarian.wordclock.network.AndroidWifiAvailabilityMonitor
 import dagger.Module
 import dagger.Provides
@@ -30,6 +32,12 @@ object WordClockModule {
     fun provideWordClockRepository(
         @ApplicationContext context: Context,
     ): WordClockRepository = createAndroidWordClockRepository(context)
+
+    @Provides
+    @Singleton
+    fun provideThemeModeStorage(
+        @ApplicationContext context: Context,
+    ): ThemeModeStorage = createAndroidThemeModeStorage(context)
 
     @Provides
     @Singleton

@@ -13,11 +13,13 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.ghazarian.wordclock.core.model.LedColor
+import com.ghazarian.wordclock.feature.control.R
 import kotlin.math.PI
 import kotlin.math.atan2
 import kotlin.math.cos
@@ -45,10 +47,11 @@ internal fun ColorWheel(
     onColorSelected: (LedColor) -> Unit,
 ) {
     val latestOnColorSelected by rememberUpdatedState(onColorSelected)
+    val wheelDescription = stringResource(R.string.color_wheel_content_description)
     Canvas(
         modifier = modifier
             .aspectRatio(1f)
-            .semantics { contentDescription = "چرخ انتخاب رنگ RGB" }
+            .semantics { contentDescription = wheelDescription }
             .pointerInput(enabled) {
                 if (enabled) {
                     detectTapGestures { offset ->

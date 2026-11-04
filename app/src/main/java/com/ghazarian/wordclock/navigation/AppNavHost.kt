@@ -20,13 +20,19 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.ghazarian.wordclock.R
+import com.ghazarian.wordclock.core.designsystem.text.UiText
+import com.ghazarian.wordclock.core.designsystem.theme.ThemeMode
 import com.ghazarian.wordclock.feature.control.presentation.ControlRoute
 import com.ghazarian.wordclock.feature.control.presentation.ControlViewModel
 import com.ghazarian.wordclock.feature.devices.presentation.DevicesRoute
 import com.ghazarian.wordclock.feature.devices.presentation.DevicesViewModel
 
 @Composable
-fun AppNavHost() {
+fun AppNavHost(
+    themeMode: ThemeMode,
+    onThemeModeChanged: (ThemeMode) -> Unit,
+) {
     val navController = rememberNavController()
     val context = LocalContext.current
 
@@ -37,7 +43,7 @@ fun AppNavHost() {
     ) {
         composable(AppRoute.DevicesRoute.route) {
             val viewModel: DevicesViewModel = hiltViewModel()
-            var permissionMessage by remember { mutableStateOf<String?>(null) }
+            var permissionMessage by remember { mutableStateOf<UiText?>(null) }
             val localNetworkPermissionLauncher = rememberLauncherForActivityResult(
                 contract = ActivityResultContracts.RequestPermission(),
             ) { isGranted ->
@@ -45,13 +51,14 @@ fun AppNavHost() {
                     permissionMessage = null
                     viewModel.addDevice()
                 } else {
-                    permissionMessage =
-                        "برای اتصال به Word Clock، دسترسی شبکهٔ محلی را فعال کن."
+                    permissionMessage = UiText(R.string.local_network_permission_required)
                 }
             }
             DevicesRoute(
                 viewModel = viewModel,
                 permissionMessage = permissionMessage,
+                themeMode = themeMode,
+                onThemeModeChanged = onThemeModeChanged,
                 onAddDevice = {
                     if (viewModel.validateIpAddress()) {
                         val needsLocalNetworkPermission =

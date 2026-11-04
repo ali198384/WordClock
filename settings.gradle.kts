@@ -32,7 +32,6 @@ include(
     ":core:storage",
     ":core:data",
     ":core:designsystem",
-    ":core:ui",
     ":feature:devices",
     ":feature:control",
 )

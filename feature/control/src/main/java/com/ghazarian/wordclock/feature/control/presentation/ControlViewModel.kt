@@ -3,6 +3,7 @@ package com.ghazarian.wordclock.feature.control.presentation
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ghazarian.wordclock.core.designsystem.text.UiText
 import com.ghazarian.wordclock.core.domain.connectivity.WifiAvailabilityMonitor
 import com.ghazarian.wordclock.core.domain.error.InvalidWordClockDeviceResponseException
 import com.ghazarian.wordclock.core.domain.error.WordClockDeviceConnectionException
@@ -14,6 +15,7 @@ import com.ghazarian.wordclock.core.domain.usecase.SetWordClockColor
 import com.ghazarian.wordclock.core.domain.usecase.SetWordClockPower
 import com.ghazarian.wordclock.core.model.LedColor
 import com.ghazarian.wordclock.core.model.WordClockState
+import com.ghazarian.wordclock.feature.control.R
 import com.ghazarian.wordclock.feature.control.navigation.ControlRouteArguments
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
@@ -60,7 +62,7 @@ class ControlViewModel @Inject constructor(
         }
         refreshDevices()
         if (initialDeviceId == null) {
-            _uiState.update { it.copy(errorMessage = "شناسهٔ دستگاه در دسترس نیست.") }
+            _uiState.update { it.copy(errorMessage = UiText(R.string.device_id_missing)) }
         } else if (_uiState.value.isWifiAvailable) {
             scheduleWifiRecovery(initialDeviceId, initialDelayMillis = 750, attempts = 2)
         } else {
@@ -79,7 +81,7 @@ class ControlViewModel @Inject constructor(
                 throw cancellation
             } catch (_: Exception) {
                 _uiState.update {
-                    it.copy(devicesErrorMessage = "خواندن فهرست دستگاه‌ها ناموفق بود.")
+                    it.copy(devicesErrorMessage = UiText(R.string.devices_load_error))
                 }
             } finally {
                 _uiState.update { it.copy(isDevicesLoading = false) }
@@ -120,7 +122,7 @@ class ControlViewModel @Inject constructor(
                     isLoading = false,
                     isRefreshing = false,
                     isDeviceOnline = false,
-                    errorMessage = "اتصال Wi-Fi در دسترس نیست. پس از اتصال، وضعیت به‌صورت خودکار بررسی می‌شود.",
+                    errorMessage = UiText(R.string.wifi_reconnect_message),
                 )
             }
             return null
@@ -295,7 +297,7 @@ class ControlViewModel @Inject constructor(
                     isDeviceOnline = false,
                     isLoading = false,
                     isRefreshing = false,
-                    errorMessage = "Wi-Fi قطع است؛ کنترل Word Clock تا اتصال دوباره غیرفعال شد.",
+                    errorMessage = UiText(R.string.wifi_lost_message),
                 )
             }
             return
@@ -337,14 +339,14 @@ class ControlViewModel @Inject constructor(
         }
     }
 
-    private fun errorMessage(exception: Exception): String = when (exception) {
+    private fun errorMessage(exception: Exception): UiText = when (exception) {
         is WordClockDeviceConnectionException ->
-            "ارتباط با Word Clock برقرار نشد. اتصال Wi-Fi و IP دستگاه را بررسی کن."
+            UiText(R.string.device_connection_error)
 
         is InvalidWordClockDeviceResponseException ->
-            "پاسخ دستگاه معتبر نبود. دوباره وضعیت را دریافت کن."
+            UiText(R.string.invalid_device_response)
 
-        is WordClockDeviceNotFoundException -> "دستگاه در فهرست پیدا نشد. فهرست را تازه کن."
-        else -> exception.message ?: "عملیات انجام نشد. دوباره تلاش کن."
+        is WordClockDeviceNotFoundException -> UiText(R.string.device_not_found)
+        else -> UiText(R.string.generic_control_error)
     }
 }

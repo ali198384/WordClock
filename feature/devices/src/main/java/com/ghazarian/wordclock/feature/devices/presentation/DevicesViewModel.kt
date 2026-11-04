@@ -2,6 +2,7 @@ package com.ghazarian.wordclock.feature.devices.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ghazarian.wordclock.core.designsystem.text.UiText
 import com.ghazarian.wordclock.core.domain.connectivity.WifiAvailabilityMonitor
 import com.ghazarian.wordclock.core.domain.error.InvalidWordClockDeviceResponseException
 import com.ghazarian.wordclock.core.domain.error.WordClockDeviceAlreadyAddedException
@@ -16,6 +17,7 @@ import com.ghazarian.wordclock.core.domain.usecase.RenameWordClockDevice
 import com.ghazarian.wordclock.core.domain.usecase.SetWordClockPower
 import com.ghazarian.wordclock.core.model.DeviceAddress
 import com.ghazarian.wordclock.core.model.WordClockDevice
+import com.ghazarian.wordclock.feature.devices.R
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
@@ -121,7 +123,7 @@ class DevicesViewModel @Inject constructor(
                                     }),
                             devicePower = state.devicePower +
                                     (device.id to wordClockState.isOn),
-                            successMessage = "${device.name} با موفقیت اضافه شد.",
+                            successMessage = UiText(R.string.device_added, listOf(device.name)),
                         )
                     }
                 } catch (cancellation: CancellationException) {
@@ -135,8 +137,8 @@ class DevicesViewModel @Inject constructor(
                                     } else {
                                         DeviceConnectionStatus.OFFLINE
                                     }),
-                            actionErrorMessage = "دستگاه اضافه شد، اما وضعیت روشن/خاموش خوانده نشد.",
-                            successMessage = "${device.name} با موفقیت اضافه شد.",
+                            actionErrorMessage = UiText(R.string.device_added_state_unavailable),
+                            successMessage = UiText(R.string.device_added, listOf(device.name)),
                         )
                     }
                 }
@@ -186,7 +188,7 @@ class DevicesViewModel @Inject constructor(
                         it.copy(
                             isLoading = false,
                             isRefreshing = false,
-                            listErrorMessage = "خواندن فهرست دستگاه‌ها ناموفق بود.",
+                            listErrorMessage = UiText(R.string.devices_load_error),
                         )
                     }
                     return@launch
@@ -383,7 +385,7 @@ class DevicesViewModel @Inject constructor(
         val deviceId = current.editingDeviceId ?: return
         val name = current.editingName.trim()
         if (name.isEmpty()) {
-            _uiState.update { it.copy(actionErrorMessage = "نام دستگاه را وارد کن.") }
+            _uiState.update { it.copy(actionErrorMessage = UiText(R.string.device_name_required)) }
             return
         }
         if (current.isRenaming) return
@@ -399,7 +401,7 @@ class DevicesViewModel @Inject constructor(
                         },
                         editingDeviceId = null,
                         editingName = "",
-                        successMessage = "نام دستگاه تغییر کرد.",
+                        successMessage = UiText(R.string.device_renamed),
                     )
                 }
             } catch (cancellation: CancellationException) {
@@ -440,7 +442,7 @@ class DevicesViewModel @Inject constructor(
                         devicePower = state.devicePower - deviceId,
                         powerUpdatingDeviceIds = state.powerUpdatingDeviceIds - deviceId,
                         pendingRemovalId = null,
-                        successMessage = "دستگاه از فهرست حذف شد.",
+                        successMessage = UiText(R.string.device_removed),
                     )
                 }
             } catch (cancellation: CancellationException) {
@@ -453,16 +455,16 @@ class DevicesViewModel @Inject constructor(
         }
     }
 
-    private fun errorMessage(exception: Exception): String = when (exception) {
-        is WordClockDeviceAlreadyAddedException -> "این دستگاه قبلاً به فهرست اضافه شده است."
+    private fun errorMessage(exception: Exception): UiText = when (exception) {
+        is WordClockDeviceAlreadyAddedException -> UiText(R.string.device_already_added)
         is InvalidWordClockDeviceResponseException ->
-            "این IP پاسخ معتبر Word Clock را برنگرداند. IP و اتصال دستگاه را بررسی کن."
+            UiText(R.string.invalid_word_clock_response)
 
         is WordClockDeviceConnectionException ->
-            "اتصال برقرار نشد. IP دستگاه و اتصال گوشی به همان Wi-Fi را بررسی کن."
+            UiText(R.string.device_connection_error)
 
-        is WordClockDeviceNotFoundException -> "دستگاه در فهرست پیدا نشد. فهرست را تازه‌سازی کن."
-        else -> "عملیات انجام نشد. اطلاعات دستگاه و اتصال شبکه را بررسی کن."
+        is WordClockDeviceNotFoundException -> UiText(R.string.device_not_found)
+        else -> UiText(R.string.generic_device_error)
     }
 
     private fun createAddressOrShowError(value: String): DeviceAddress? = try {
@@ -470,7 +472,7 @@ class DevicesViewModel @Inject constructor(
     } catch (_: IllegalArgumentException) {
         _uiState.update {
             it.copy(
-                formErrorMessage = "یک IP خصوصی معتبر مثل 192.168.1.100 وارد کن.",
+                formErrorMessage = UiText(R.string.invalid_private_ip),
                 successMessage = null,
             )
         }
