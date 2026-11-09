@@ -1,0 +1,3 @@
+# AGP 9.1+ repackages classes into the unnamed package by default. Preserve
+# package boundaries needed by Kotlin's internal JVM classes and their callers.
+-dontrepackage

@@ -14,6 +14,9 @@ kotlin {
         }
     }
 
+    iosArm64()
+    iosSimulatorArm64()
+
     sourceSets {
         commonMain.dependencies {
             api(projects.core.domain)
@@ -24,6 +27,9 @@ kotlin {
         }
         androidMain.dependencies {
             implementation(libs.ktor.client.android)
+        }
+        iosMain.dependencies {
+            implementation(libs.ktor.client.darwin)
         }
         getByName("androidHostTest") {
             dependencies {

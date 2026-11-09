@@ -4,28 +4,33 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.runtime.getValue
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.ghazarian.wordclock.appearance.AppearanceViewModel
-import com.ghazarian.wordclock.core.designsystem.theme.WordClockTheme
-import com.ghazarian.wordclock.navigation.AppNavHost
+import com.ghazarian.wordclock.core.domain.connectivity.WifiAvailabilityMonitor
+import com.ghazarian.wordclock.core.domain.repository.WordClockRepository
+import com.ghazarian.wordclock.core.storage.ThemeModeStorage
+import com.ghazarian.wordclock.platform.AndroidWordClockApp
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    @Inject
+    lateinit var wordClockRepository: WordClockRepository
+
+    @Inject
+    lateinit var themeModeStorage: ThemeModeStorage
+
+    @Inject
+    lateinit var wifiAvailabilityMonitor: WifiAvailabilityMonitor
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            val appearanceViewModel: AppearanceViewModel = hiltViewModel()
-            val themeMode by appearanceViewModel.themeMode.collectAsStateWithLifecycle()
-            WordClockTheme(themeMode = themeMode) {
-                AppNavHost(
-                    themeMode = themeMode,
-                    onThemeModeChanged = appearanceViewModel::setThemeMode
-                )
-            }
+            AndroidWordClockApp(
+                repository = wordClockRepository,
+                themeModeStorage = themeModeStorage,
+                wifiAvailabilityMonitor = wifiAvailabilityMonitor,
+            )
         }
     }
 }

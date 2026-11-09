@@ -16,6 +16,16 @@ data class DeviceAddress(
 
     val baseUrl: String
         get() = "http://$host:$port"
+
+    companion object {
+        fun normalizeAddressInput(value: String): String = value.map { character ->
+            when (character) {
+                in '\u06F0'..'\u06F9' -> ('0'.code + character.code - '\u06F0'.code).toChar()
+                in '\u0660'..'\u0669' -> ('0'.code + character.code - '\u0660'.code).toChar()
+                else -> character
+            }
+        }.joinToString(separator = "")
+    }
 }
 
 private fun isPrivateIpv4Address(value: String): Boolean {

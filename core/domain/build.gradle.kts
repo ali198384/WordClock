@@ -14,9 +14,11 @@ kotlin {
         }
     }
 
+    iosArm64()
+    iosSimulatorArm64()
+
     sourceSets {
         commonMain.dependencies {
-            api(projects.core.common)
             api(projects.core.model)
             api(libs.kotlinx.coroutines.core)
         }

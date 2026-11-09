@@ -1,39 +1,33 @@
 plugins {
-    alias(libs.plugins.android.library)
+    alias(libs.plugins.kotlin.multiplatform)
+    alias(libs.plugins.android.kotlin.multiplatform.library)
+    alias(libs.plugins.jetbrains.compose)
     alias(libs.plugins.kotlin.compose)
-    alias(libs.plugins.ksp)
-    alias(libs.plugins.hilt)
 }
 
-android {
-    namespace = "com.ghazarian.wordclock.feature.devices"
-    compileSdk = 37
-
-    defaultConfig {
+kotlin {
+    android {
+        namespace = "com.ghazarian.wordclock.feature.devices"
+        compileSdk = 37
         minSdk = 26
+        androidResources.enable = true
+        compilerOptions {
+            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
+        }
     }
 
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
-    }
+    iosArm64()
+    iosSimulatorArm64()
 
-    buildFeatures {
-        compose = true
+    sourceSets {
+        commonMain.dependencies {
+            api(projects.core.model)
+            implementation(projects.core.designsystem)
+            api(libs.compose.runtime)
+            api(libs.compose.ui)
+            implementation(libs.compose.foundation)
+            implementation(libs.compose.material3)
+            implementation(libs.compose.components.resources)
+        }
     }
-}
-
-dependencies {
-    implementation(projects.core.domain)
-    implementation(projects.core.designsystem)
-    implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.androidx.compose.foundation)
-    implementation(libs.androidx.compose.material3)
-    implementation(libs.androidx.compose.ui)
-    implementation(libs.androidx.lifecycle.runtime.compose)
-    implementation(libs.androidx.lifecycle.viewmodel.ktx)
-    implementation(libs.androidx.lifecycle.viewmodel.compose)
-    implementation(libs.kotlinx.coroutines.android)
-    implementation(libs.hilt.android)
-    ksp(libs.hilt.compiler)
 }
