@@ -111,6 +111,7 @@ fun WordClockSharedTheme(
         AppThemeMode.LIGHT -> false
         AppThemeMode.DARK -> true
     }
+
     MaterialTheme(
         colorScheme = if (useDarkTheme) DarkColors else LightColors,
         typography = WordClockTypography,
