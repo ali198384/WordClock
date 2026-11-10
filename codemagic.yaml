@@ -1,4 +1,3 @@
-
 workflows:
   ios-simulator:
     name: WordClock - iOS Simulator
@@ -6,7 +5,7 @@ workflows:
     instance_type: mac_mini_m2
 
     environment:
-      xcode: 26.6
+      xcode: latest
 
     cache:
       cache_paths:
@@ -15,52 +14,82 @@ workflows:
         - $HOME/.konan
 
     scripts:
-      - name: Configure Android SDK for Gradle
+      - name: Configure Gradle and Android SDK
         script: |
           set -e
-          chmod +x "$CM_BUILD_DIR/gradlew"
+
+          cd "$CM_BUILD_DIR"
+          chmod +x ./gradlew
 
           SDK_ROOT="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-/usr/local/share/android-sdk}}"
-          echo "sdk.dir=$SDK_ROOT" > "$CM_BUILD_DIR/local.properties"
 
-          SDKMANAGER="$SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
-
-          if [ ! -x "$SDKMANAGER" ]; then
-            SDKMANAGER="$(command -v sdkmanager || true)"
-          fi
-
-          if [ ! -x "$SDKMANAGER" ]; then
-            echo "ERROR: sdkmanager was not found."
+          if [ ! -d "$SDK_ROOT" ]; then
+            echo "ERROR: Android SDK directory does not exist: $SDK_ROOT"
             exit 1
           fi
 
+          echo "sdk.dir=$SDK_ROOT" > local.properties
+
           if [ ! -d "$SDK_ROOT/platforms/android-37" ]; then
+            SDKMANAGER="$SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
+
+            if [ ! -x "$SDKMANAGER" ]; then
+              SDKMANAGER="$(command -v sdkmanager || true)"
+            fi
+
+            if [ -z "$SDKMANAGER" ] || [ ! -x "$SDKMANAGER" ]; then
+              echo "ERROR: sdkmanager was not found."
+              exit 1
+            fi
+
+            # Avoid a possible SIGPIPE failure from `yes` when sdkmanager exits.
             yes | "$SDKMANAGER" --sdk_root="$SDK_ROOT" "platforms;android-37"
           fi
 
       - name: Print build tool versions
         script: |
+          set -e
+          cd "$CM_BUILD_DIR"
+
           xcodebuild -version
           java -version
+          ./gradlew --version
 
       - name: Build WordClock for iOS Simulator
         script: |
+          set -e
           set -o pipefail
+
           mkdir -p "$CM_BUILD_DIR/build"
 
           xcodebuild build \
             -project "$CM_BUILD_DIR/iosApp/WordClock.xcodeproj" \
             -scheme WordClock \
             -sdk iphonesimulator \
-            -destination 'generic/platform=iOS Simulator' \
+            -destination "generic/platform=iOS Simulator" \
             -configuration Debug \
             -derivedDataPath "$CM_BUILD_DIR/build/ios-simulator" \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             2>&1 | tee "$CM_BUILD_DIR/build/ios-simulator-build.log"
 
+      - name: Package simulator app
+        script: |
+          set -e
+
+          APP_PATH="$CM_BUILD_DIR/build/ios-simulator/Build/Products/Debug-iphonesimulator/WordClock.app"
+
+          if [ ! -d "$APP_PATH" ]; then
+            echo "ERROR: Simulator app not found at $APP_PATH"
+            exit 1
+          fi
+
+          ditto -c -k --sequesterRsrc --keepParent \
+            "$APP_PATH" \
+            "$CM_BUILD_DIR/build/WordClock-iOS-Simulator.zip"
+
     artifacts:
-      - build/ios-simulator/Build/Products/Debug-iphonesimulator/WordClock.app
+      - build/WordClock-iOS-Simulator.zip
       - build/ios-simulator-build.log
 
   ios-release:
@@ -72,7 +101,7 @@ workflows:
       app_store_connect: WordClockAppStore
 
     environment:
-      xcode: 26.6
+      xcode: latest
 
       ios_signing:
         distribution_type: app_store
@@ -85,35 +114,57 @@ workflows:
         - $HOME/.konan
 
     scripts:
-      - name: Configure Android SDK for Gradle
+      - name: Configure Gradle and Android SDK
         script: |
           set -e
-          chmod +x "$CM_BUILD_DIR/gradlew"
+
+          cd "$CM_BUILD_DIR"
+          chmod +x ./gradlew
 
           SDK_ROOT="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-/usr/local/share/android-sdk}}"
-          echo "sdk.dir=$SDK_ROOT" > "$CM_BUILD_DIR/local.properties"
 
-          SDKMANAGER="$SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
-
-          if [ ! -x "$SDKMANAGER" ]; then
-            SDKMANAGER="$(command -v sdkmanager || true)"
-          fi
-
-          if [ ! -x "$SDKMANAGER" ]; then
-            echo "ERROR: sdkmanager was not found."
+          if [ ! -d "$SDK_ROOT" ]; then
+            echo "ERROR: Android SDK directory does not exist: $SDK_ROOT"
             exit 1
           fi
 
+          echo "sdk.dir=$SDK_ROOT" > local.properties
+
           if [ ! -d "$SDK_ROOT/platforms/android-37" ]; then
+            SDKMANAGER="$SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
+
+            if [ ! -x "$SDKMANAGER" ]; then
+              SDKMANAGER="$(command -v sdkmanager || true)"
+            fi
+
+            if [ -z "$SDKMANAGER" ] || [ ! -x "$SDKMANAGER" ]; then
+              echo "ERROR: sdkmanager was not found."
+              exit 1
+            fi
+
             yes | "$SDKMANAGER" --sdk_root="$SDK_ROOT" "platforms;android-37"
           fi
 
+      - name: Print build tool versions
+        script: |
+          set -e
+          cd "$CM_BUILD_DIR"
+
+          xcodebuild -version
+          java -version
+          ./gradlew --version
+
       - name: Configure iOS code signing
         script: |
-          xcode-project use-profiles
+          set -e
+
+          xcode-project use-profiles \
+            --project "$CM_BUILD_DIR/iosApp/WordClock.xcodeproj"
 
       - name: Build signed IPA
         script: |
+          set -e
+
           xcode-project build-ipa \
             --project "$CM_BUILD_DIR/iosApp/WordClock.xcodeproj" \
             --scheme WordClock
