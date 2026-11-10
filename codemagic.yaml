@@ -14,10 +14,9 @@ workflows:
         - $HOME/.konan
 
     scripts:
-      - name: Configure Gradle and Android SDK
+      - name: Configure Gradle and Android SDK path
         script: |
           set -e
-
           cd "$CM_BUILD_DIR"
           chmod +x ./gradlew
 
@@ -29,22 +28,7 @@ workflows:
           fi
 
           echo "sdk.dir=$SDK_ROOT" > local.properties
-
-          if [ ! -d "$SDK_ROOT/platforms/android-37" ]; then
-            SDKMANAGER="$SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
-
-            if [ ! -x "$SDKMANAGER" ]; then
-              SDKMANAGER="$(command -v sdkmanager || true)"
-            fi
-
-            if [ -z "$SDKMANAGER" ] || [ ! -x "$SDKMANAGER" ]; then
-              echo "ERROR: sdkmanager was not found."
-              exit 1
-            fi
-
-            # Avoid a possible SIGPIPE failure from `yes` when sdkmanager exits.
-            yes | "$SDKMANAGER" --sdk_root="$SDK_ROOT" "platforms;android-37"
-          fi
+          echo "Android SDK path: $SDK_ROOT"
 
       - name: Print build tool versions
         script: |
@@ -114,10 +98,9 @@ workflows:
         - $HOME/.konan
 
     scripts:
-      - name: Configure Gradle and Android SDK
+      - name: Configure Gradle and Android SDK path
         script: |
           set -e
-
           cd "$CM_BUILD_DIR"
           chmod +x ./gradlew
 
@@ -129,21 +112,7 @@ workflows:
           fi
 
           echo "sdk.dir=$SDK_ROOT" > local.properties
-
-          if [ ! -d "$SDK_ROOT/platforms/android-37" ]; then
-            SDKMANAGER="$SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
-
-            if [ ! -x "$SDKMANAGER" ]; then
-              SDKMANAGER="$(command -v sdkmanager || true)"
-            fi
-
-            if [ -z "$SDKMANAGER" ] || [ ! -x "$SDKMANAGER" ]; then
-              echo "ERROR: sdkmanager was not found."
-              exit 1
-            fi
-
-            yes | "$SDKMANAGER" --sdk_root="$SDK_ROOT" "platforms;android-37"
-          fi
+          echo "Android SDK path: $SDK_ROOT"
 
       - name: Print build tool versions
         script: |
