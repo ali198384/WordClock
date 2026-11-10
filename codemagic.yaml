@@ -1,79 +1,123 @@
+
 workflows:
   ios-simulator:
-    name: iOS Simulator - Build and Launch
+    name: WordClock - iOS Simulator
     max_build_duration: 120
     instance_type: mac_mini_m2
-    environment:
-      xcode: "26.4"
-      java: "17"
-      vars:
-        XCODE_PROJECT: iosApp/WordClock.xcodeproj
-        XCODE_SCHEME: WordClock
-        IOS_BUNDLE_ID: com.ghazarian.wordclock.ios
-        SIMULATOR_NAME: iPhone 17 Pro
-        SIMULATOR_RUNTIME: iOS-26-4
-    scripts:
-      - name: Build unsigned iOS Simulator app
-        script: |
-          xcodebuild build \
-            -project "$CM_BUILD_DIR/$XCODE_PROJECT" \
-            -scheme "$XCODE_SCHEME" \
-            -configuration Debug \
-            -sdk iphonesimulator \
-            -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=26.4' \
-            -derivedDataPath "$CM_BUILD_DIR/build/ios-simulator" \
-            CODE_SIGN_IDENTITY="" \
-            CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO
-      - name: Install and launch on iOS Simulator
-        script: |
-          APP_PATH="$CM_BUILD_DIR/build/ios-simulator/Build/Products/Debug-iphonesimulator/WordClock.app"
-          test -d "$APP_PATH"
 
-          SIMULATOR_UDID=$(xcrun simctl list devices available --json | python3 -c '
-          import json, sys
-          data = json.load(sys.stdin)
-          runtime_suffix, device_name = sys.argv[1:]
-          devices = [device for runtime, items in data["devices"].items()
-                     if runtime.endswith(runtime_suffix)
-                     for device in items if device["name"] == device_name]
-          print(devices[0]["udid"] if devices else "")
-          ' "$SIMULATOR_RUNTIME" "$SIMULATOR_NAME")
-          if [ -z "$SIMULATOR_UDID" ]; then
-            echo "Could not find $SIMULATOR_NAME on runtime $SIMULATOR_RUNTIME"
+    environment:
+      xcode: 26.6
+
+    cache:
+      cache_paths:
+        - $HOME/.gradle/caches
+        - $HOME/.gradle/wrapper
+        - $HOME/.konan
+
+    scripts:
+      - name: Configure Android SDK for Gradle
+        script: |
+          set -e
+          chmod +x "$CM_BUILD_DIR/gradlew"
+
+          SDK_ROOT="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-/usr/local/share/android-sdk}}"
+          echo "sdk.dir=$SDK_ROOT" > "$CM_BUILD_DIR/local.properties"
+
+          SDKMANAGER="$SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
+
+          if [ ! -x "$SDKMANAGER" ]; then
+            SDKMANAGER="$(command -v sdkmanager || true)"
+          fi
+
+          if [ ! -x "$SDKMANAGER" ]; then
+            echo "ERROR: sdkmanager was not found."
             exit 1
           fi
 
-          xcrun simctl boot "$SIMULATOR_UDID" 2>/dev/null || true
-          xcrun simctl bootstatus "$SIMULATOR_UDID" -b
-          xcrun simctl install "$SIMULATOR_UDID" "$APP_PATH"
-          xcrun simctl launch "$SIMULATOR_UDID" "$IOS_BUNDLE_ID"
+          if [ ! -d "$SDK_ROOT/platforms/android-37" ]; then
+            yes | "$SDKMANAGER" --sdk_root="$SDK_ROOT" "platforms;android-37"
+          fi
+
+      - name: Print build tool versions
+        script: |
+          xcodebuild -version
+          java -version
+
+      - name: Build WordClock for iOS Simulator
+        script: |
+          set -o pipefail
+          mkdir -p "$CM_BUILD_DIR/build"
+
+          xcodebuild build \
+            -project "$CM_BUILD_DIR/iosApp/WordClock.xcodeproj" \
+            -scheme WordClock \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            -configuration Debug \
+            -derivedDataPath "$CM_BUILD_DIR/build/ios-simulator" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            2>&1 | tee "$CM_BUILD_DIR/build/ios-simulator-build.log"
+
     artifacts:
       - build/ios-simulator/Build/Products/Debug-iphonesimulator/WordClock.app
-      - build/ios-simulator/Build/Products/Debug-iphonesimulator/*.dSYM
-      - /tmp/xcodebuild_logs/*.log
+      - build/ios-simulator-build.log
 
-  ios-ipa:
-    name: iOS IPA - App Store Signing
+  ios-release:
+    name: WordClock - iOS IPA (App Store)
     max_build_duration: 120
     instance_type: mac_mini_m2
+
+    integrations:
+      app_store_connect: WordClockAppStore
+
     environment:
-      xcode: "26.4"
-      java: "17"
+      xcode: 26.6
+
       ios_signing:
         distribution_type: app_store
         bundle_identifier: com.ghazarian.wordclock.ios
-      vars:
-        XCODE_PROJECT: iosApp/WordClock.xcodeproj
-        XCODE_SCHEME: WordClock
+
+    cache:
+      cache_paths:
+        - $HOME/.gradle/caches
+        - $HOME/.gradle/wrapper
+        - $HOME/.konan
+
     scripts:
-      - name: Apply provisioning profiles
-        script: xcode-project use-profiles
+      - name: Configure Android SDK for Gradle
+        script: |
+          set -e
+          chmod +x "$CM_BUILD_DIR/gradlew"
+
+          SDK_ROOT="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-/usr/local/share/android-sdk}}"
+          echo "sdk.dir=$SDK_ROOT" > "$CM_BUILD_DIR/local.properties"
+
+          SDKMANAGER="$SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
+
+          if [ ! -x "$SDKMANAGER" ]; then
+            SDKMANAGER="$(command -v sdkmanager || true)"
+          fi
+
+          if [ ! -x "$SDKMANAGER" ]; then
+            echo "ERROR: sdkmanager was not found."
+            exit 1
+          fi
+
+          if [ ! -d "$SDK_ROOT/platforms/android-37" ]; then
+            yes | "$SDKMANAGER" --sdk_root="$SDK_ROOT" "platforms;android-37"
+          fi
+
+      - name: Configure iOS code signing
+        script: |
+          xcode-project use-profiles
+
       - name: Build signed IPA
         script: |
           xcode-project build-ipa \
-            --project "$CM_BUILD_DIR/$XCODE_PROJECT" \
-            --scheme "$XCODE_SCHEME"
+            --project "$CM_BUILD_DIR/iosApp/WordClock.xcodeproj" \
+            --scheme WordClock
+
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
