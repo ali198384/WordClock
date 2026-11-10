@@ -70,8 +70,10 @@ workflows:
             "$CM_BUILD_DIR/build/WordClock-iOS-Simulator.zip"
 
     artifacts:
+      - build/ios-simulator/Build/Products/Debug-iphonesimulator/WordClock.app
       - build/WordClock-iOS-Simulator.zip
       - build/ios-simulator-build.log
+
 
   ios-release:
     name: WordClock - iOS IPA (App Store)
