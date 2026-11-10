@@ -21,6 +21,7 @@ workflows:
           chmod +x ./gradlew
 
           SDK_ROOT="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-/usr/local/share/android-sdk}}"
+
           if [ ! -d "$SDK_ROOT" ]; then
             echo "ERROR: Android SDK directory does not exist: $SDK_ROOT"
             exit 1
@@ -33,6 +34,7 @@ workflows:
         script: |
           set -e
           cd "$CM_BUILD_DIR"
+
           xcodebuild -version
           java -version
           ./gradlew --version
@@ -41,6 +43,7 @@ workflows:
         script: |
           set -e
           set -o pipefail
+
           mkdir -p "$CM_BUILD_DIR/build"
 
           xcodebuild build \
@@ -58,6 +61,7 @@ workflows:
       - name: Package simulator app
         script: |
           set -e
+
           APP_PATH="$CM_BUILD_DIR/build/ios-simulator/Build/Products/Debug-iphonesimulator/WordClock.app"
 
           if [ ! -d "$APP_PATH" ]; then
@@ -69,11 +73,103 @@ workflows:
             "$APP_PATH" \
             "$CM_BUILD_DIR/build/WordClock-iOS-Simulator.zip"
 
+      - name: Run simulator and collect startup logs
+        script: |
+          set -e
+          cd "$CM_BUILD_DIR"
+
+          LOG_DIR="$CM_BUILD_DIR/build/simulator-diagnostics"
+          APP_PATH="$CM_BUILD_DIR/build/ios-simulator/Build/Products/Debug-iphonesimulator/WordClock.app"
+
+          mkdir -p "$LOG_DIR"
+
+          if [ ! -d "$APP_PATH" ]; then
+            echo "ERROR: App not found at $APP_PATH"
+            exit 1
+          fi
+
+          # Save the list of available simulators.
+          xcrun simctl list devices available \
+            > "$LOG_DIR/available-simulators.txt"
+
+          # Select the first available iPhone simulator.
+          DEVICE_ID="$(xcrun simctl list devices available -j | python3 -c 'import json,sys; d=json.load(sys.stdin); print(next((x["udid"] for v in d["devices"].values() for x in v if x.get("isAvailable") and x.get("name", "").startswith("iPhone")), ""))')"
+
+          if [ -z "$DEVICE_ID" ]; then
+            echo "ERROR: No available iPhone simulator found"
+            exit 1
+          fi
+
+          echo "Selected simulator: $DEVICE_ID"
+          echo "$DEVICE_ID" > "$LOG_DIR/simulator-id.txt"
+
+          # Boot the simulator and wait until it is ready.
+          xcrun simctl boot "$DEVICE_ID" 2>/dev/null || true
+          xcrun simctl bootstatus "$DEVICE_ID" -b
+
+          # Read the bundle identifier from the built application.
+          BUNDLE_ID="$(/usr/libexec/PlistBuddy -c 'Print CFBundleIdentifier' "$APP_PATH/Info.plist")"
+
+          echo "Bundle identifier: $BUNDLE_ID"
+          echo "$BUNDLE_ID" > "$LOG_DIR/bundle-id.txt"
+
+          # Install the app.
+          xcrun simctl install "$DEVICE_ID" "$APP_PATH" \
+            > "$LOG_DIR/install.log" 2>&1
+
+          # Capture simulator system logs.
+          xcrun simctl spawn "$DEVICE_ID" log stream \
+            --style compact \
+            --level debug \
+            > "$LOG_DIR/simulator-system.log" 2>&1 &
+
+          LOG_PID=$!
+
+          # Launch the app and capture its console output.
+          xcrun simctl launch \
+            --console \
+            --terminate-running-process \
+            "$DEVICE_ID" \
+            "$BUNDLE_ID" \
+            > "$LOG_DIR/app-console.log" 2>&1 &
+
+          APP_PID=$!
+
+          echo "Waiting 30 seconds for startup and crash logs..."
+          sleep 30
+
+          if kill -0 "$APP_PID" 2>/dev/null; then
+            echo "simctl launch was still running after 30 seconds." \
+              > "$LOG_DIR/launch-status.txt"
+          else
+            echo "simctl launch exited during the first 30 seconds." \
+              > "$LOG_DIR/launch-status.txt"
+          fi
+
+          # Stop the background commands.
+          kill "$APP_PID" 2>/dev/null || true
+          kill "$LOG_PID" 2>/dev/null || true
+
+          wait "$APP_PID" 2>/dev/null || true
+          wait "$LOG_PID" 2>/dev/null || true
+
+          # Collect matching crash reports, if available.
+          mkdir -p "$LOG_DIR/crash-reports"
+
+          if [ -d "$HOME/Library/Logs/DiagnosticReports" ]; then
+            find "$HOME/Library/Logs/DiagnosticReports" \
+              -type f \
+              -iname '*WordClock*' \
+              -exec cp {} "$LOG_DIR/crash-reports/" \;
+          fi
+
+          echo "Diagnostics collected in $LOG_DIR"
+
     artifacts:
       - build/ios-simulator/Build/Products/Debug-iphonesimulator/WordClock.app
+      - build/simulator-diagnostics/**
       - build/WordClock-iOS-Simulator.zip
       - build/ios-simulator-build.log
-
 
   ios-release:
     name: WordClock - iOS IPA (App Store)
@@ -85,6 +181,7 @@ workflows:
 
     environment:
       xcode: latest
+
       ios_signing:
         distribution_type: app_store
         bundle_identifier: com.ghazarian.wordclock.ios
@@ -103,6 +200,7 @@ workflows:
           chmod +x ./gradlew
 
           SDK_ROOT="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-/usr/local/share/android-sdk}}"
+
           if [ ! -d "$SDK_ROOT" ]; then
             echo "ERROR: Android SDK directory does not exist: $SDK_ROOT"
             exit 1
@@ -115,6 +213,7 @@ workflows:
         script: |
           set -e
           cd "$CM_BUILD_DIR"
+
           xcodebuild -version
           java -version
           ./gradlew --version
@@ -122,12 +221,14 @@ workflows:
       - name: Configure iOS code signing
         script: |
           set -e
+
           xcode-project use-profiles \
             --project "$CM_BUILD_DIR/iosApp/WordClock.xcodeproj"
 
       - name: Build signed IPA
         script: |
           set -e
+
           xcode-project build-ipa \
             --project "$CM_BUILD_DIR/iosApp/WordClock.xcodeproj" \
             --scheme WordClock
