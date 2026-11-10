@@ -1,0 +1,79 @@
+workflows:
+  ios-simulator:
+    name: iOS Simulator - Build and Launch
+    max_build_duration: 120
+    instance_type: mac_mini_m2
+    environment:
+      xcode: "26.4"
+      java: "17"
+      vars:
+        XCODE_PROJECT: iosApp/WordClock.xcodeproj
+        XCODE_SCHEME: WordClock
+        IOS_BUNDLE_ID: com.ghazarian.wordclock.ios
+        SIMULATOR_NAME: iPhone 17 Pro
+        SIMULATOR_RUNTIME: iOS-26-4
+    scripts:
+      - name: Build unsigned iOS Simulator app
+        script: |
+          xcodebuild build \
+            -project "$CM_BUILD_DIR/$XCODE_PROJECT" \
+            -scheme "$XCODE_SCHEME" \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=26.4' \
+            -derivedDataPath "$CM_BUILD_DIR/build/ios-simulator" \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO
+      - name: Install and launch on iOS Simulator
+        script: |
+          APP_PATH="$CM_BUILD_DIR/build/ios-simulator/Build/Products/Debug-iphonesimulator/WordClock.app"
+          test -d "$APP_PATH"
+
+          SIMULATOR_UDID=$(xcrun simctl list devices available --json | python3 -c '
+          import json, sys
+          data = json.load(sys.stdin)
+          runtime_suffix, device_name = sys.argv[1:]
+          devices = [device for runtime, items in data["devices"].items()
+                     if runtime.endswith(runtime_suffix)
+                     for device in items if device["name"] == device_name]
+          print(devices[0]["udid"] if devices else "")
+          ' "$SIMULATOR_RUNTIME" "$SIMULATOR_NAME")
+          if [ -z "$SIMULATOR_UDID" ]; then
+            echo "Could not find $SIMULATOR_NAME on runtime $SIMULATOR_RUNTIME"
+            exit 1
+          fi
+
+          xcrun simctl boot "$SIMULATOR_UDID" 2>/dev/null || true
+          xcrun simctl bootstatus "$SIMULATOR_UDID" -b
+          xcrun simctl install "$SIMULATOR_UDID" "$APP_PATH"
+          xcrun simctl launch "$SIMULATOR_UDID" "$IOS_BUNDLE_ID"
+    artifacts:
+      - build/ios-simulator/Build/Products/Debug-iphonesimulator/WordClock.app
+      - build/ios-simulator/Build/Products/Debug-iphonesimulator/*.dSYM
+      - /tmp/xcodebuild_logs/*.log
+
+  ios-ipa:
+    name: iOS IPA - App Store Signing
+    max_build_duration: 120
+    instance_type: mac_mini_m2
+    environment:
+      xcode: "26.4"
+      java: "17"
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.ghazarian.wordclock.ios
+      vars:
+        XCODE_PROJECT: iosApp/WordClock.xcodeproj
+        XCODE_SCHEME: WordClock
+    scripts:
+      - name: Apply provisioning profiles
+        script: xcode-project use-profiles
+      - name: Build signed IPA
+        script: |
+          xcode-project build-ipa \
+            --project "$CM_BUILD_DIR/$XCODE_PROJECT" \
+            --scheme "$XCODE_SCHEME"
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
