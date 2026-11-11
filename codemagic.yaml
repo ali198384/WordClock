@@ -171,6 +171,71 @@ workflows:
       - build/WordClock-iOS-Simulator.zip
       - build/ios-simulator-build.log
 
+  ios-unsigned-ipa:
+    name: WordClock - iPhone unsigned IPA (AltStore)
+    max_build_duration: 120
+    instance_type: mac_mini_m2
+
+    environment:
+      xcode: latest
+
+    cache:
+      cache_paths:
+        - $HOME/.gradle/caches
+        - $HOME/.gradle/wrapper
+        - $HOME/.konan
+
+    scripts:
+      - name: Configure Gradle and Android SDK path
+        script: |
+          set -e
+          cd "$CM_BUILD_DIR"
+          chmod +x ./gradlew
+          SDK_ROOT="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-/usr/local/share/android-sdk}}"
+          if [ ! -d "$SDK_ROOT" ]; then
+            echo "ERROR: Android SDK directory does not exist: $SDK_ROOT"
+            exit 1
+          fi
+          echo "sdk.dir=$SDK_ROOT" > local.properties
+
+      - name: Build unsigned app for physical iPhone
+        script: |
+          set -e
+          set -o pipefail
+          cd "$CM_BUILD_DIR"
+          mkdir -p build
+          xcodebuild build \
+            -project "$CM_BUILD_DIR/iosApp/WordClock.xcodeproj" \
+            -scheme WordClock \
+            -sdk iphoneos \
+            -destination "generic/platform=iOS" \
+            -configuration Debug \
+            -derivedDataPath "$CM_BUILD_DIR/build/ios-device" \
+            ARCHS=arm64 \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            2>&1 | tee "$CM_BUILD_DIR/build/ios-device-build.log"
+
+      - name: Package unsigned IPA for sideloading
+        script: |
+          set -e
+          APP_PATH="$CM_BUILD_DIR/build/ios-device/Build/Products/Debug-iphoneos/WordClock.app"
+          PACKAGE_DIR="$CM_BUILD_DIR/build/unsigned-ipa"
+          if [ ! -d "$APP_PATH" ]; then
+            echo "ERROR: iPhone app not found at $APP_PATH"
+            exit 1
+          fi
+          rm -rf "$PACKAGE_DIR"
+          mkdir -p "$PACKAGE_DIR/Payload"
+          ditto "$APP_PATH" "$PACKAGE_DIR/Payload/WordClock.app"
+          cd "$PACKAGE_DIR"
+          /usr/bin/zip -qry "$CM_BUILD_DIR/build/WordClock-unsigned.ipa" Payload
+          echo "Unsigned IPA created; it must be signed before installation."
+
+    artifacts:
+      - build/WordClock-unsigned.ipa
+      - build/ios-device-build.log
+
   ios-release:
     name: WordClock - iOS IPA (App Store)
     max_build_duration: 120
