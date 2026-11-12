@@ -1,0 +1,192 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		A10000000000000000000001 /* WordClockIOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000001 /* WordClockIOSApp.swift */; };
+		A10000000000000000000002 /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000002 /* AppModel.swift */; };
+		A10000000000000000000003 /* WifiMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000003 /* WifiMonitor.swift */; };
+		A10000000000000000000004 /* ClockTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000004 /* ClockTheme.swift */; };
+		A10000000000000000000005 /* DevicesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000005 /* DevicesView.swift */; };
+		A10000000000000000000006 /* ControlView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000006 /* ControlView.swift */; };
+		A10000000000000000000007 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000007 /* Assets.xcassets */; };
+		A10000000000000000000008 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000010 /* Localizable.strings */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		A20000000000000000000001 /* WordClockIOSApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WordClockIOSApp.swift; sourceTree = "<group>"; };
+		A20000000000000000000002 /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
+		A20000000000000000000003 /* WifiMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WifiMonitor.swift; sourceTree = "<group>"; };
+		A20000000000000000000004 /* ClockTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClockTheme.swift; sourceTree = "<group>"; };
+		A20000000000000000000005 /* DevicesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DevicesView.swift; sourceTree = "<group>"; };
+		A20000000000000000000006 /* ControlView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ControlView.swift; sourceTree = "<group>"; };
+		A20000000000000000000007 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		A20000000000000000000008 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A20000000000000000000009 /* WordClockIOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WordClockIOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A20000000000000000000010 /* Localizable.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = Localizable.strings; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		A30000000000000000000001 /* Frameworks */ = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		A40000000000000000000001 = {
+			isa = PBXGroup;
+			children = (
+				A40000000000000000000002 /* WordClockIOS */,
+				A40000000000000000000003 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		A40000000000000000000002 /* WordClockIOS */ = {
+			isa = PBXGroup;
+			path = WordClockIOS;
+			sourceTree = "<group>";
+			children = (
+				A20000000000000000000001 /* WordClockIOSApp.swift */,
+				A20000000000000000000002 /* AppModel.swift */,
+				A20000000000000000000003 /* WifiMonitor.swift */,
+				A20000000000000000000004 /* ClockTheme.swift */,
+				A20000000000000000000005 /* DevicesView.swift */,
+				A20000000000000000000006 /* ControlView.swift */,
+				A20000000000000000000007 /* Assets.xcassets */,
+				A20000000000000000000008 /* Info.plist */,
+				A20000000000000000000010 /* Localizable.strings */,
+			);
+		};
+		A40000000000000000000003 /* Products */ = {
+			isa = PBXGroup;
+			name = Products;
+			sourceTree = "<group>";
+			children = (A20000000000000000000009 /* WordClockIOS.app */,);
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		A50000000000000000000001 /* WordClockIOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A60000000000000000000001 /* Build configuration list for PBXNativeTarget "WordClockIOS" */;
+			buildPhases = (
+				A70000000000000000000001 /* Build Kotlin/Native framework */,
+				A70000000000000000000002 /* Sources */,
+				A30000000000000000000001 /* Frameworks */,
+				A70000000000000000000003 /* Resources */,
+			);
+			buildRules = ();
+			dependencies = ();
+			name = WordClockIOS;
+			productName = WordClockIOS;
+			productReference = A20000000000000000000009 /* WordClockIOS.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXSourcesBuildPhase section */
+		A70000000000000000000002 /* Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (
+			A10000000000000000000001 /* WordClockIOSApp.swift in Sources */,
+			A10000000000000000000002 /* AppModel.swift in Sources */,
+			A10000000000000000000003 /* WifiMonitor.swift in Sources */,
+			A10000000000000000000004 /* ClockTheme.swift in Sources */,
+			A10000000000000000000005 /* DevicesView.swift in Sources */,
+			A10000000000000000000006 /* ControlView.swift in Sources */,
+		); runOnlyForDeploymentPostprocessing = 0; };
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXResourcesBuildPhase section */
+		A70000000000000000000003 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (A10000000000000000000007 /* Assets.xcassets in Resources */, A10000000000000000000008 /* Localizable.strings in Resources */,); runOnlyForDeploymentPostprocessing = 0; };
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		A70000000000000000000001 /* Build Kotlin/Native framework */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = ();
+			name = "Build Kotlin/Native framework";
+			outputPaths = ();
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "set -e\ncd \"$SRCROOT/..\"\nif [ \"$PLATFORM_NAME\" = \"iphonesimulator\" ]; then\n  ./gradlew :shared:link${CONFIGURATION}FrameworkIosSimulatorArm64\nelse\n  ./gradlew :shared:link${CONFIGURATION}FrameworkIosArm64\nfi\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXProject section */
+		A80000000000000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {BuildIndependentTargetsInParallel = 1; LastUpgradeCheck = 1600; TargetAttributes = {A50000000000000000000001 = {CreatedOnToolsVersion = 16.0; }; }; };
+			buildConfigurationList = A60000000000000000000002 /* Build configuration list for PBXProject "WordClockIOS" */;
+			compatibilityVersion = "Xcode 15.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (en, Base,);
+			mainGroup = A40000000000000000000001;
+			productRefGroup = A40000000000000000000003 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (A50000000000000000000001 /* WordClockIOS */,);
+		};
+/* End PBXProject section */
+
+/* Begin XCBuildConfiguration section */
+		A90000000000000000000001 /* Debug Project */ = {isa = XCBuildConfiguration; buildSettings = {SDKROOT = iphoneos; }; name = Debug; };
+		A90000000000000000000002 /* Release Project */ = {isa = XCBuildConfiguration; buildSettings = {SDKROOT = iphoneos; }; name = Release; };
+		A90000000000000000000003 /* Debug Target */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				"FRAMEWORK_SEARCH_PATHS[sdk=iphonesimulator*][config=Debug]" = "$(inherited) $(SRCROOT)/../shared/build/bin/iosSimulatorArm64/debugFramework";
+				"FRAMEWORK_SEARCH_PATHS[sdk=iphonesimulator*][config=Release]" = "$(inherited) $(SRCROOT)/../shared/build/bin/iosSimulatorArm64/releaseFramework";
+				"FRAMEWORK_SEARCH_PATHS[sdk=iphoneos*][config=Debug]" = "$(inherited) $(SRCROOT)/../shared/build/bin/iosArm64/debugFramework";
+				"FRAMEWORK_SEARCH_PATHS[sdk=iphoneos*][config=Release]" = "$(inherited) $(SRCROOT)/../shared/build/bin/iosArm64/releaseFramework";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = WordClockIOS/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = ("$(inherited)", "@executable_path/Frameworks",);
+				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = ("$(inherited)", "-framework", WordClockShared,);
+				PRODUCT_BUNDLE_IDENTIFIER = com.ghazarian.wordclock.ios;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		A90000000000000000000004 /* Release Target */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				"FRAMEWORK_SEARCH_PATHS[sdk=iphonesimulator*][config=Debug]" = "$(inherited) $(SRCROOT)/../shared/build/bin/iosSimulatorArm64/debugFramework";
+				"FRAMEWORK_SEARCH_PATHS[sdk=iphonesimulator*][config=Release]" = "$(inherited) $(SRCROOT)/../shared/build/bin/iosSimulatorArm64/releaseFramework";
+				"FRAMEWORK_SEARCH_PATHS[sdk=iphoneos*][config=Debug]" = "$(inherited) $(SRCROOT)/../shared/build/bin/iosArm64/debugFramework";
+				"FRAMEWORK_SEARCH_PATHS[sdk=iphoneos*][config=Release]" = "$(inherited) $(SRCROOT)/../shared/build/bin/iosArm64/releaseFramework";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = WordClockIOS/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = ("$(inherited)", "@executable_path/Frameworks",);
+				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = ("$(inherited)", "-framework", WordClockShared,);
+				PRODUCT_BUNDLE_IDENTIFIER = com.ghazarian.wordclock.ios;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		A60000000000000000000001 /* Build configuration list for PBXNativeTarget "WordClockIOS" */ = {isa = XCConfigurationList; buildConfigurations = (A90000000000000000000003 /* Debug Target */, A90000000000000000000004 /* Release Target */,); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		A60000000000000000000002 /* Build configuration list for PBXProject "WordClockIOS" */ = {isa = XCConfigurationList; buildConfigurations = (A90000000000000000000001 /* Debug Project */, A90000000000000000000002 /* Release Project */,); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+/* End XCConfigurationList section */
+	};
+	rootObject = A80000000000000000000001 /* Project object */;
+}

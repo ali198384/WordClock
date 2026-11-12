@@ -1,0 +1,137 @@
+workflows:
+  ios-simulator:
+    name: WordClock - iOS Simulator
+    max_build_duration: 120
+    instance_type: mac_mini_m2
+
+    environment:
+      xcode: latest
+
+    cache:
+      cache_paths:
+        - $HOME/.gradle/caches
+        - $HOME/.gradle/wrapper
+        - $HOME/.konan
+
+    scripts:
+      - name: Configure Gradle and Android SDK path
+        script: |
+          set -e
+          cd "$CM_BUILD_DIR"
+          chmod +x ./gradlew
+          SDK_ROOT="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-/usr/local/share/android-sdk}}"
+          if [ ! -d "$SDK_ROOT" ]; then
+            echo "ERROR: Android SDK directory does not exist: $SDK_ROOT"
+            exit 1
+          fi
+          echo "sdk.dir=$SDK_ROOT" > local.properties
+
+      - name: Build iOS Simulator app
+        script: |
+          set -e
+          set -o pipefail
+          mkdir -p "$CM_BUILD_DIR/build"
+          xcodebuild build \
+            -project "$CM_BUILD_DIR/iosApp/WordClock.xcodeproj" \
+            -scheme WordClockIOS \
+            -sdk iphonesimulator \
+            -destination "generic/platform=iOS Simulator" \
+            -configuration Debug \
+            -derivedDataPath "$CM_BUILD_DIR/build/ios-simulator" \
+            ARCHS=arm64 \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            2>&1 | tee "$CM_BUILD_DIR/build/ios-simulator-build.log"
+
+      - name: Install and launch on an iPhone Simulator
+        script: |
+          set -e
+          APP_PATH="$CM_BUILD_DIR/build/ios-simulator/Build/Products/Debug-iphonesimulator/WordClockIOS.app"
+          LOG_DIR="$CM_BUILD_DIR/build/simulator-diagnostics"
+          mkdir -p "$LOG_DIR"
+          if [ ! -d "$APP_PATH" ]; then
+            echo "ERROR: Simulator app not found at $APP_PATH"
+            exit 1
+          fi
+          DEVICE_ID="$(xcrun simctl list devices available -j | python3 -c 'import json,sys; d=json.load(sys.stdin); print(next((x["udid"] for v in d["devices"].values() for x in v if x.get("isAvailable") and x.get("name", "").startswith("iPhone")), ""))')"
+          if [ -z "$DEVICE_ID" ]; then
+            echo "ERROR: No available iPhone Simulator found"
+            exit 1
+          fi
+          xcrun simctl boot "$DEVICE_ID" 2>/dev/null || true
+          xcrun simctl bootstatus "$DEVICE_ID" -b
+          xcrun simctl install "$DEVICE_ID" "$APP_PATH"
+          BUNDLE_ID="$(/usr/libexec/PlistBuddy -c 'Print CFBundleIdentifier' "$APP_PATH/Info.plist")"
+          xcrun simctl launch --terminate-running-process "$DEVICE_ID" "$BUNDLE_ID" \
+            | tee "$LOG_DIR/launch.log"
+          xcrun simctl list devices available > "$LOG_DIR/available-simulators.txt"
+          ditto -c -k --sequesterRsrc --keepParent \
+            "$APP_PATH" "$CM_BUILD_DIR/build/WordClock-iOS-Simulator.zip"
+
+    artifacts:
+      - build/ios-simulator/Build/Products/Debug-iphonesimulator/WordClockIOS.app
+      - build/simulator-diagnostics/**
+      - build/WordClock-iOS-Simulator.zip
+      - build/ios-simulator-build.log
+
+  ios-unsigned-ipa:
+    name: WordClock - Unsigned iOS IPA
+    max_build_duration: 120
+    instance_type: mac_mini_m2
+
+    environment:
+      xcode: latest
+
+    cache:
+      cache_paths:
+        - $HOME/.gradle/caches
+        - $HOME/.gradle/wrapper
+        - $HOME/.konan
+
+    scripts:
+      - name: Configure Gradle and Android SDK path
+        script: |
+          set -e
+          cd "$CM_BUILD_DIR"
+          chmod +x ./gradlew
+          SDK_ROOT="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-/usr/local/share/android-sdk}}"
+          if [ ! -d "$SDK_ROOT" ]; then
+            echo "ERROR: Android SDK directory does not exist: $SDK_ROOT"
+            exit 1
+          fi
+          echo "sdk.dir=$SDK_ROOT" > local.properties
+
+      - name: Build unsigned iPhone app
+        script: |
+          set -e
+          set -o pipefail
+          mkdir -p "$CM_BUILD_DIR/build"
+          xcodebuild build \
+            -project "$CM_BUILD_DIR/iosApp/WordClock.xcodeproj" \
+            -scheme WordClockIOS \
+            -sdk iphoneos \
+            -destination "generic/platform=iOS" \
+            -configuration Debug \
+            -derivedDataPath "$CM_BUILD_DIR/build/ios-device" \
+            ARCHS=arm64 \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            2>&1 | tee "$CM_BUILD_DIR/build/ios-device-build.log"
+
+      - name: Package unsigned IPA
+        script: |
+          set -e
+          APP_PATH="$CM_BUILD_DIR/build/ios-device/Build/Products/Debug-iphoneos/WordClockIOS.app"
+          PACKAGE_DIR="$CM_BUILD_DIR/build/unsigned-ipa"
+          if [ ! -d "$APP_PATH" ]; then
+            echo "ERROR: iPhone app not found at $APP_PATH"
+            exit 1
+          fi
+          mkdir -p "$PACKAGE_DIR/Payload"
+          ditto "$APP_PATH" "$PACKAGE_DIR/Payload/WordClockIOS.app"
+          cd "$PACKAGE_DIR"
+          /usr/bin/zip -qry "$CM_BUILD_DIR/build/WordClock-unsigned.ipa" Payload
+
+    artifacts:
+      - build/WordClock-unsigned.ipa
+      - build/ios-device-build.log

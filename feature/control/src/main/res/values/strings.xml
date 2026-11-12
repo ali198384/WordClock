@@ -42,9 +42,12 @@
     <string name="color_blue">Blue</string>
     <string name="color_purple">Purple</string>
     <string name="color_white">White</string>
-    <string name="color_warm_white">Warm white</string>
-    <string name="color_natural_white">Natural white</string>
-    <string name="color_cool_white">Cool white</string>
+    <string name="color_warm_white">Warm</string>
+    <string name="color_soft_white">Soft</string>
+    <string name="color_natural_white">Natural</string>
+    <string name="color_day_light">Daylight</string>
+    <string name="color_cool_white">Cool</string>
+    <string name="color_blue_sky">Blue Sky</string>
     <string name="selected_color_checkmark">✓</string>
     <string name="loading_device_state">Getting your clock’s status…</string>
     <string name="connection_failed">Connection failed</string>

@@ -4,6 +4,9 @@ plugins {
 }
 
 kotlin {
+    iosArm64()
+    iosSimulatorArm64()
+
     android {
         namespace = "com.ghazarian.wordclock.core.data"
         compileSdk = 37
@@ -24,6 +27,9 @@ kotlin {
         }
         androidMain.dependencies {
             implementation(libs.ktor.client.android)
+        }
+        iosMain.dependencies {
+            implementation(libs.ktor.client.darwin)
         }
         getByName("androidHostTest") {
             dependencies {

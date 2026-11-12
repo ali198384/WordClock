@@ -23,6 +23,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -51,6 +52,7 @@ class ControlViewModel @Inject constructor(
     private var stateLoadJob: Job? = null
     private var stateLoadGeneration = 0L
     private var wifiRecoveryJob: Job? = null
+    private var liveControlApplyJob: Job? = null
 
     init {
         viewModelScope.launch {
@@ -92,6 +94,7 @@ class ControlViewModel @Inject constructor(
     fun selectDevice(deviceId: String) {
         if (_uiState.value.selectedDeviceId == deviceId) return
         wifiRecoveryJob?.cancel()
+        liveControlApplyJob?.cancel()
         _uiState.update {
             it.copy(
                 selectedDeviceId = deviceId,
@@ -192,9 +195,10 @@ class ControlViewModel @Inject constructor(
 
     fun onBrightnessChanged(value: Int) {
         _uiState.update { it.copy(brightnessDraft = value.coerceIn(0, 255)) }
+        scheduleLiveControlApply()
     }
 
-    fun applyBrightness() {
+    private fun applyBrightness() {
         val current = _uiState.value
         if (!current.isWifiAvailable || !current.isDeviceOnline) return
         val deviceId = current.selectedDeviceId ?: return
@@ -211,9 +215,10 @@ class ControlViewModel @Inject constructor(
 
     fun selectColor(color: LedColor) {
         _uiState.update { it.copy(colorDraft = color, actionErrorMessage = null) }
+        scheduleLiveControlApply()
     }
 
-    fun applyColor() {
+    private fun applyColor() {
         val current = _uiState.value
         if (!current.isWifiAvailable || !current.isDeviceOnline) return
         val deviceId = current.selectedDeviceId ?: return
@@ -225,6 +230,36 @@ class ControlViewModel @Inject constructor(
         }
         performAction(deviceId, clearColorDraft = true) {
             setWordClockColor(deviceId, color)
+        }
+    }
+
+    private fun scheduleLiveControlApply() {
+        liveControlApplyJob?.cancel()
+        val deviceId = _uiState.value.selectedDeviceId ?: return
+        liveControlApplyJob = viewModelScope.launch {
+            _uiState.first { state ->
+                state.selectedDeviceId != deviceId || deviceId !in state.updatingDeviceIds
+            }
+            val current = _uiState.value
+            if (current.selectedDeviceId != deviceId ||
+                !current.isWifiAvailable || !current.isDeviceOnline
+            ) return@launch
+            val deviceState = current.deviceState ?: return@launch
+            val brightness = current.brightnessDraft
+            if (brightness != null) {
+                if (brightness != deviceState.brightness) {
+                    applyBrightness()
+                    return@launch
+                }
+                _uiState.update { it.copy(brightnessDraft = null) }
+            }
+            val latest = _uiState.value
+            val latestDeviceState = latest.deviceState ?: return@launch
+            val color = latest.colorDraft
+            if (color != null) {
+                if (color != latestDeviceState.color) applyColor()
+                else _uiState.update { it.copy(colorDraft = null) }
+            }
         }
     }
 
@@ -251,12 +286,16 @@ class ControlViewModel @Inject constructor(
                         state.copy(
                             deviceState = updatedState,
                             isDeviceOnline = true,
-                            brightnessDraft = if (clearBrightnessDraft) {
+                            brightnessDraft = if (
+                                clearBrightnessDraft && state.brightnessDraft == updatedState.brightness
+                            ) {
                                 null
                             } else {
                                 state.brightnessDraft
                             },
-                            colorDraft = if (clearColorDraft) null else state.colorDraft,
+                            colorDraft = if (
+                                clearColorDraft && state.colorDraft == updatedState.color
+                            ) null else state.colorDraft,
                         )
                     }
                 }
@@ -282,6 +321,9 @@ class ControlViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(updatingDeviceIds = it.updatingDeviceIds - deviceId)
                 }
+                if (_uiState.value.selectedDeviceId == deviceId) {
+                    scheduleLiveControlApply()
+                }
             }
         }
     }
@@ -289,6 +331,7 @@ class ControlViewModel @Inject constructor(
     private fun onWifiAvailabilityChanged(isAvailable: Boolean) {
         if (!isAvailable) {
             wifiRecoveryJob?.cancel()
+            liveControlApplyJob?.cancel()
             stateLoadGeneration += 1
             stateLoadJob?.cancel()
             _uiState.update {

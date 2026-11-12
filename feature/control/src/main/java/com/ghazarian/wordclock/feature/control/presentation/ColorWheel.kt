@@ -19,15 +19,11 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.ghazarian.wordclock.core.model.LedColor
+import com.ghazarian.wordclock.core.model.LedColorMath
 import com.ghazarian.wordclock.feature.control.R
 import kotlin.math.PI
-import kotlin.math.atan2
 import kotlin.math.cos
-import kotlin.math.max
-import kotlin.math.min
-import kotlin.math.roundToInt
 import kotlin.math.sin
-import kotlin.math.sqrt
 
 private val ColorWheelHues = listOf(
     Color.Red,
@@ -97,11 +93,11 @@ internal fun ColorWheel(
             style = Stroke(width = 1.dp.toPx()),
         )
 
-        val (hue, saturation) = hueAndSaturation(selectedColor)
-        val angle = hue * (PI.toFloat() / 180f)
+        val position = LedColorMath.hueAndSaturation(selectedColor)
+        val angle = position.hueDegrees.toFloat() * (PI.toFloat() / 180f)
         val markerCenter = center + Offset(
-            x = cos(angle) * wheelRadius * saturation,
-            y = sin(angle) * wheelRadius * saturation,
+            x = cos(angle) * wheelRadius * position.saturation.toFloat(),
+            y = sin(angle) * wheelRadius * position.saturation.toFloat(),
         )
         drawCircle(
             color = Color.White,
@@ -120,49 +116,13 @@ internal fun ColorWheel(
 private fun colorAt(offset: Offset, size: IntSize): LedColor {
     val centerX = size.width / 2f
     val centerY = size.height / 2f
-    val deltaX = offset.x - centerX
-    val deltaY = offset.y - centerY
-    val distance = sqrt(deltaX * deltaX + deltaY * deltaY)
-    val radius = min(size.width, size.height) / 2f
-    val hue = (atan2(deltaY, deltaX) * (180f / PI.toFloat()) + 360f) % 360f
-    val saturation = if (radius == 0f) 0f else (distance / radius).coerceIn(0f, 1f)
-    return hsvToColor(hue, saturation)
-}
-
-private fun hsvToColor(hue: Float, saturation: Float): LedColor {
-    val huePart = hue / 60f
-    val secondary = saturation * (1f - kotlin.math.abs(huePart % 2f - 1f))
-    val (red, green, blue) = when (huePart.toInt()) {
-        0 -> Triple(saturation, secondary, 0f)
-        1 -> Triple(secondary, saturation, 0f)
-        2 -> Triple(0f, saturation, secondary)
-        3 -> Triple(0f, secondary, saturation)
-        4 -> Triple(secondary, 0f, saturation)
-        else -> Triple(saturation, 0f, secondary)
-    }
-    val white = 1f - saturation
-    return LedColor(
-        red = ((red + white) * 255f).roundToInt().coerceIn(0, 255),
-        green = ((green + white) * 255f).roundToInt().coerceIn(0, 255),
-        blue = ((blue + white) * 255f).roundToInt().coerceIn(0, 255),
+    return LedColorMath.colorAt(
+        x = offset.x.toDouble(),
+        y = offset.y.toDouble(),
+        centerX = centerX.toDouble(),
+        centerY = centerY.toDouble(),
+        radius = minOf(size.width, size.height).toDouble() / 2.0,
     )
-}
-
-private fun hueAndSaturation(color: LedColor): Pair<Float, Float> {
-    val red = color.red / 255f
-    val green = color.green / 255f
-    val blue = color.blue / 255f
-    val maximum = max(red, max(green, blue))
-    val minimum = min(red, min(green, blue))
-    val delta = maximum - minimum
-    val hue = when {
-        delta == 0f -> 0f
-        maximum == red -> 60f * (((green - blue) / delta) % 6f)
-        maximum == green -> 60f * (((blue - red) / delta) + 2f)
-        else -> 60f * (((red - green) / delta) + 4f)
-    }.let { if (it < 0f) it + 360f else it }
-    val saturation = if (maximum == 0f) 0f else delta / maximum
-    return hue to saturation
 }
 
 internal fun colorOf(color: LedColor): Color = Color(

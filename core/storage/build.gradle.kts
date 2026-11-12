@@ -4,6 +4,9 @@ plugins {
 }
 
 kotlin {
+    iosArm64()
+    iosSimulatorArm64()
+
     android {
         namespace = "com.ghazarian.wordclock.core.storage"
         compileSdk = 37
@@ -24,6 +27,10 @@ kotlin {
 
         androidMain.dependencies {
             implementation(libs.androidx.datastore.preferences)
+        }
+
+        iosMain.dependencies {
+            implementation(libs.androidx.datastore.core.okio)
         }
     }
 }

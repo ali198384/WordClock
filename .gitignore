@@ -55,6 +55,8 @@ local.properties
 # =========================
 .DS_Store
 Thumbs.db
+**/xcuserdata/
+**/*.xcuserstate
 
 # =========================
 # Misc

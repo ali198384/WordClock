@@ -26,7 +26,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -72,33 +71,39 @@ import com.ghazarian.wordclock.core.designsystem.text.asString
 import com.ghazarian.wordclock.core.designsystem.theme.PowerOffRed
 import com.ghazarian.wordclock.core.designsystem.theme.PowerOnGreen
 import com.ghazarian.wordclock.core.model.LedColor
+import com.ghazarian.wordclock.core.model.WordClockColorPreset
+import com.ghazarian.wordclock.core.model.WordClockColorPresets
 import com.ghazarian.wordclock.core.model.WordClockDevice
 import com.ghazarian.wordclock.core.model.WordClockState
 import com.ghazarian.wordclock.feature.control.R
 import kotlin.math.roundToInt
 import com.ghazarian.wordclock.core.designsystem.R as DesignSystemR
 
-private val QuickColors = listOf(
-    QuickColor(R.string.color_red, LedColor(255, 45, 55)),
-    QuickColor(R.string.color_orange, LedColor(255, 135, 25)),
-    QuickColor(R.string.color_yellow, LedColor(255, 220, 35)),
-    QuickColor(R.string.color_green, LedColor(50, 210, 95)),
-    QuickColor(R.string.color_cyan, LedColor(20, 210, 205)),
-    QuickColor(R.string.color_blue, LedColor(50, 105, 255)),
-    QuickColor(R.string.color_purple, LedColor(185, 65, 235)),
-    QuickColor(R.string.color_white, LedColor(255, 255, 255)),
-)
-
-private val WhiteColors = listOf(
-    QuickColor(R.string.color_warm_white, LedColor(255, 180, 105)),
-    QuickColor(R.string.color_natural_white, LedColor(255, 232, 205)),
-    QuickColor(R.string.color_cool_white, LedColor(220, 238, 255)),
-    QuickColor(R.string.color_white, LedColor(255, 255, 255)),
-)
+private val QuickColors = WordClockColorPresets.quickColors.map { it.toQuickColor() }
+private val WhiteColors = WordClockColorPresets.whiteColors.map { it.toQuickColor() }
 
 private val BrightnessPresets = listOf(25, 50, 75, 100)
 
 private data class QuickColor(val nameResource: Int, val color: LedColor)
+
+private fun WordClockColorPreset.toQuickColor() = QuickColor(
+    nameResource = when (id) {
+        "red" -> R.string.color_red
+        "orange" -> R.string.color_orange
+        "yellow" -> R.string.color_yellow
+        "green" -> R.string.color_green
+        "cyan" -> R.string.color_cyan
+        "blue" -> R.string.color_blue
+        "purple" -> R.string.color_purple
+        "warm_white" -> R.string.color_warm_white
+        "soft_white" -> R.string.color_soft_white
+        "natural_white" -> R.string.color_natural_white
+        "day_light" -> R.string.color_day_light
+        "cool_white" -> R.string.color_cool_white
+        else -> R.string.color_blue_sky
+    },
+    color = color
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -219,9 +224,7 @@ fun ControlRoute(
                             onRetry = viewModel::refresh,
                             onPowerToggle = viewModel::togglePower,
                             onBrightnessChanged = viewModel::onBrightnessChanged,
-                            onBrightnessApply = viewModel::applyBrightness,
                             onColorSelected = viewModel::selectColor,
-                            onColorApply = viewModel::applyColor,
                             onOpenColorPicker = { isColorPickerOpen = true },
                             modifier = Modifier.weight(1f),
                         )
@@ -234,9 +237,7 @@ fun ControlRoute(
                         onRetry = viewModel::refresh,
                         onPowerToggle = viewModel::togglePower,
                         onBrightnessChanged = viewModel::onBrightnessChanged,
-                        onBrightnessApply = viewModel::applyBrightness,
                         onColorSelected = viewModel::selectColor,
-                        onColorApply = viewModel::applyColor,
                         onOpenColorPicker = { isColorPickerOpen = true },
                         modifier = Modifier.fillMaxSize(),
                     )
@@ -254,13 +255,8 @@ fun ControlRoute(
                 ) {
                     ColorPickerContent(
                         color = state.colorDraft ?: deviceState.color,
-                        enabled = state.isWifiAvailable && state.isDeviceOnline &&
-                                state.selectedDeviceId?.let { it !in state.updatingDeviceIds } == true,
+                        enabled = state.isWifiAvailable && state.isDeviceOnline,
                         onColorSelected = viewModel::selectColor,
-                        onDone = {
-                            viewModel.applyColor()
-                            isColorPickerOpen = false
-                        },
                     )
                 }
             }
@@ -275,9 +271,7 @@ private fun ControlDetails(
     onRetry: () -> Unit,
     onPowerToggle: () -> Unit,
     onBrightnessChanged: (Int) -> Unit,
-    onBrightnessApply: () -> Unit,
     onColorSelected: (LedColor) -> Unit,
-    onColorApply: () -> Unit,
     onOpenColorPicker: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -296,6 +290,7 @@ private fun ControlDetails(
             val color = state.colorDraft ?: deviceState.color
             val isUpdating = state.selectedDeviceId?.let { it in state.updatingDeviceIds } == true
             val canControl = state.isWifiAvailable && state.isDeviceOnline && !isUpdating
+            val canAdjustSettings = state.isWifiAvailable && state.isDeviceOnline
             Column(
                 modifier = modifier
                     .fillMaxSize()
@@ -320,18 +315,14 @@ private fun ControlDetails(
                     Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                         BrightnessCard(
                             brightness = brightness,
-                            isPending = state.brightnessDraft != null,
-                            enabled = canControl,
+                            enabled = canAdjustSettings,
                             onBrightnessChanged = onBrightnessChanged,
-                            onApply = onBrightnessApply,
                             modifier = Modifier.weight(1f),
                         )
                         ColorControlCard(
                             color = color,
-                            isPending = state.colorDraft != null,
-                            enabled = canControl,
+                            enabled = canAdjustSettings,
                             onColorSelected = onColorSelected,
-                            onApply = onColorApply,
                             onOpenPicker = onOpenColorPicker,
                             modifier = Modifier.weight(1f),
                         )
@@ -339,17 +330,13 @@ private fun ControlDetails(
                 } else {
                     BrightnessCard(
                         brightness = brightness,
-                        isPending = state.brightnessDraft != null,
-                        enabled = canControl,
+                        enabled = canAdjustSettings,
                         onBrightnessChanged = onBrightnessChanged,
-                        onApply = onBrightnessApply,
                     )
                     ColorControlCard(
                         color = color,
-                        isPending = state.colorDraft != null,
-                        enabled = canControl,
+                        enabled = canAdjustSettings,
                         onColorSelected = onColorSelected,
-                        onApply = onColorApply,
                         onOpenPicker = onOpenColorPicker,
                     )
                 }
@@ -468,10 +455,8 @@ private fun DeviceStatusCard(
 @Composable
 private fun BrightnessCard(
     brightness: Int,
-    isPending: Boolean,
     enabled: Boolean,
     onBrightnessChanged: (Int) -> Unit,
-    onApply: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val sliderDescription = stringResource(R.string.brightness_slider_description)
@@ -510,20 +495,12 @@ private fun BrightnessCard(
         Slider(
             value = brightness.toFloat(),
             onValueChange = { onBrightnessChanged(it.toInt().coerceIn(0, 255)) },
-            onValueChangeFinished = onApply,
             valueRange = 0f..255f,
             enabled = enabled,
             modifier = Modifier.semantics {
                 contentDescription = sliderDescription
             },
         )
-        if (isPending) {
-            TextButton(
-                onClick = onApply,
-                enabled = enabled,
-                modifier = Modifier.align(Alignment.End),
-            ) { Text(stringResource(R.string.apply_brightness)) }
-        }
         Row(
             modifier = Modifier.horizontalScroll(rememberScrollState()),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -532,13 +509,13 @@ private fun BrightnessCard(
                 val selected = kotlin.math.abs(brightness - percent.toBrightness()) <= 1
                 if (selected) {
                     FilledTonalButton(
-                        onClick = { onBrightnessChanged(percent.toBrightness()); onApply() },
+                        onClick = { onBrightnessChanged(percent.toBrightness()) },
                         enabled = enabled,
                         contentPadding = PaddingValues(horizontal = 15.dp, vertical = 8.dp),
                     ) { Text(stringResource(R.string.brightness_percent, percent)) }
                 } else {
                     OutlinedButton(
-                        onClick = { onBrightnessChanged(percent.toBrightness()); onApply() },
+                        onClick = { onBrightnessChanged(percent.toBrightness()) },
                         enabled = enabled,
                         contentPadding = PaddingValues(horizontal = 15.dp, vertical = 8.dp),
                     ) { Text(stringResource(R.string.brightness_percent, percent)) }
@@ -551,10 +528,8 @@ private fun BrightnessCard(
 @Composable
 private fun ColorControlCard(
     color: LedColor,
-    isPending: Boolean,
     enabled: Boolean,
     onColorSelected: (LedColor) -> Unit,
-    onApply: () -> Unit,
     onOpenPicker: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -603,20 +578,9 @@ private fun ColorControlCard(
                     item = item,
                     selected = item.color == color,
                     enabled = enabled,
-                    onClick = {
-                        onColorSelected(item.color)
-                        onApply()
-                    },
+                    onClick = { onColorSelected(item.color) },
                 )
             }
-        }
-        if (isPending) {
-            Button(
-                onClick = onApply,
-                enabled = enabled,
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(14.dp),
-            ) { Text(stringResource(R.string.apply_color)) }
         }
     }
 }
@@ -784,7 +748,6 @@ private fun ColorPickerContent(
     color: LedColor,
     enabled: Boolean,
     onColorSelected: (LedColor) -> Unit,
-    onDone: () -> Unit,
 ) {
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
     Column(
@@ -803,7 +766,6 @@ private fun ColorPickerContent(
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.weight(1f)
             )
-            TextButton(onClick = onDone, enabled = enabled) { Text(stringResource(R.string.apply)) }
         }
         SecondaryTabRow(selectedTabIndex = selectedTab) {
             Tab(

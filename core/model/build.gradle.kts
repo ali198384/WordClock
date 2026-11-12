@@ -5,6 +5,9 @@ plugins {
 }
 
 kotlin {
+    iosArm64()
+    iosSimulatorArm64()
+
     android {
         namespace = "com.ghazarian.wordclock.core.model"
         compileSdk = 37
