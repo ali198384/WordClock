@@ -20,7 +20,8 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.ghazarian.wordclock.core.model.LedColor
 import com.ghazarian.wordclock.core.model.LedColorMath
-import com.ghazarian.wordclock.feature.control.R
+import com.ghazarian.wordclock.resources.MR
+import com.ghazarian.wordclock.resources.color_wheel_content_description
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
@@ -43,7 +44,7 @@ internal fun ColorWheel(
     onColorSelected: (LedColor) -> Unit,
 ) {
     val latestOnColorSelected by rememberUpdatedState(onColorSelected)
-    val wheelDescription = stringResource(R.string.color_wheel_content_description)
+    val wheelDescription = stringResource(MR.strings.color_wheel_content_description.resourceId)
     Canvas(
         modifier = modifier
             .aspectRatio(1f)

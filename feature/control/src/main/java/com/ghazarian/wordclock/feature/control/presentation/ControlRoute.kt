@@ -75,7 +75,56 @@ import com.ghazarian.wordclock.core.model.WordClockColorPreset
 import com.ghazarian.wordclock.core.model.WordClockColorPresets
 import com.ghazarian.wordclock.core.model.WordClockDevice
 import com.ghazarian.wordclock.core.model.WordClockState
-import com.ghazarian.wordclock.feature.control.R
+import com.ghazarian.wordclock.resources.MR
+import com.ghazarian.wordclock.resources.active_segment_led_count
+import com.ghazarian.wordclock.resources.back_to_devices_description
+import com.ghazarian.wordclock.resources.brightness_description
+import com.ghazarian.wordclock.resources.brightness_percent
+import com.ghazarian.wordclock.resources.brightness_slider_description
+import com.ghazarian.wordclock.resources.brightness_title
+import com.ghazarian.wordclock.resources.choose_color
+import com.ghazarian.wordclock.resources.clock_on_summary
+import com.ghazarian.wordclock.resources.color_blue
+import com.ghazarian.wordclock.resources.color_blue_sky
+import com.ghazarian.wordclock.resources.color_cool_white
+import com.ghazarian.wordclock.resources.color_cyan
+import com.ghazarian.wordclock.resources.color_day_light
+import com.ghazarian.wordclock.resources.color_green
+import com.ghazarian.wordclock.resources.color_natural_white
+import com.ghazarian.wordclock.resources.color_orange
+import com.ghazarian.wordclock.resources.color_purple
+import com.ghazarian.wordclock.resources.color_red
+import com.ghazarian.wordclock.resources.color_soft_white
+import com.ghazarian.wordclock.resources.color_title
+import com.ghazarian.wordclock.resources.color_warm_white
+import com.ghazarian.wordclock.resources.color_wheel_description
+import com.ghazarian.wordclock.resources.color_yellow
+import com.ghazarian.wordclock.resources.colors_tab
+import com.ghazarian.wordclock.resources.connection_failed
+import com.ghazarian.wordclock.resources.control_power_turn_off
+import com.ghazarian.wordclock.resources.control_power_turn_on
+import com.ghazarian.wordclock.resources.control_title
+import com.ghazarian.wordclock.resources.device_firmware
+import com.ghazarian.wordclock.resources.device_info_title
+import com.ghazarian.wordclock.resources.device_unavailable
+import com.ghazarian.wordclock.resources.devices_title
+import com.ghazarian.wordclock.resources.firmware
+import com.ghazarian.wordclock.resources.loading_device_state
+import com.ghazarian.wordclock.resources.no_device_selected
+import com.ghazarian.wordclock.resources.no_devices
+import com.ghazarian.wordclock.resources.physical_led_count
+import com.ghazarian.wordclock.resources.power_status_off
+import com.ghazarian.wordclock.resources.refresh_clock_description
+import com.ghazarian.wordclock.resources.refresh_devices_description
+import com.ghazarian.wordclock.resources.refreshing
+import com.ghazarian.wordclock.resources.retry
+import com.ghazarian.wordclock.resources.segment_count
+import com.ghazarian.wordclock.resources.selected_color
+import com.ghazarian.wordclock.resources.selected_color_checkmark
+import com.ghazarian.wordclock.resources.syncing
+import com.ghazarian.wordclock.resources.white_mix_description
+import com.ghazarian.wordclock.resources.whites_tab
+import com.ghazarian.wordclock.resources.wifi_not_connected
 import kotlin.math.roundToInt
 import com.ghazarian.wordclock.core.designsystem.R as DesignSystemR
 
@@ -88,19 +137,19 @@ private data class QuickColor(val nameResource: Int, val color: LedColor)
 
 private fun WordClockColorPreset.toQuickColor() = QuickColor(
     nameResource = when (id) {
-        "red" -> R.string.color_red
-        "orange" -> R.string.color_orange
-        "yellow" -> R.string.color_yellow
-        "green" -> R.string.color_green
-        "cyan" -> R.string.color_cyan
-        "blue" -> R.string.color_blue
-        "purple" -> R.string.color_purple
-        "warm_white" -> R.string.color_warm_white
-        "soft_white" -> R.string.color_soft_white
-        "natural_white" -> R.string.color_natural_white
-        "day_light" -> R.string.color_day_light
-        "cool_white" -> R.string.color_cool_white
-        else -> R.string.color_blue_sky
+        "red" -> MR.strings.color_red.resourceId
+        "orange" -> MR.strings.color_orange.resourceId
+        "yellow" -> MR.strings.color_yellow.resourceId
+        "green" -> MR.strings.color_green.resourceId
+        "cyan" -> MR.strings.color_cyan.resourceId
+        "blue" -> MR.strings.color_blue.resourceId
+        "purple" -> MR.strings.color_purple.resourceId
+        "warm_white" -> MR.strings.color_warm_white.resourceId
+        "soft_white" -> MR.strings.color_soft_white.resourceId
+        "natural_white" -> MR.strings.color_natural_white.resourceId
+        "day_light" -> MR.strings.color_day_light.resourceId
+        "cool_white" -> MR.strings.color_cool_white.resourceId
+        else -> MR.strings.color_blue_sky.resourceId
     },
     color = color
 )
@@ -123,7 +172,7 @@ fun ControlRoute(
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(
                                 text = selectedDevice?.name
-                                    ?: stringResource(R.string.control_title),
+                                    ?: stringResource(MR.strings.control_title.resourceId),
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis,
                                 style = MaterialTheme.typography.titleLarge,
@@ -142,7 +191,8 @@ fun ControlRoute(
                         }
                     },
                     navigationIcon = {
-                        val backDescription = stringResource(R.string.back_to_devices_description)
+                        val backDescription =
+                            stringResource(MR.strings.back_to_devices_description.resourceId)
                         IconButton(
                             onClick = onBack,
                             modifier = Modifier.semantics {
@@ -159,9 +209,9 @@ fun ControlRoute(
                     actions = {
                         val refreshDescription = stringResource(
                             if (state.isRefreshing || state.isDevicesLoading) {
-                                R.string.refreshing
+                                MR.strings.refreshing.resourceId
                             } else {
-                                R.string.refresh_clock_description
+                                MR.strings.refresh_clock_description.resourceId
                             },
                         )
                         IconButton(
@@ -359,7 +409,7 @@ private fun DeviceStatusCard(
     onPowerToggle: () -> Unit,
 ) {
     val powerDescription = stringResource(
-        if (state.isOn) R.string.power_turn_off else R.string.power_turn_on,
+        if (state.isOn) MR.strings.control_power_turn_off.resourceId else MR.strings.control_power_turn_on.resourceId,
     )
     Card(
         shape = RoundedCornerShape(28.dp),
@@ -420,21 +470,21 @@ private fun DeviceStatusCard(
                 }
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = device?.name ?: stringResource(R.string.control_title),
+                        text = device?.name ?: stringResource(MR.strings.control_title.resourceId),
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.SemiBold,
                     )
                     Text(
                         text = when {
-                            !isWifiAvailable -> stringResource(R.string.wifi_not_connected)
-                            isRefreshing -> stringResource(R.string.syncing)
-                            !isDeviceOnline -> stringResource(R.string.device_unavailable)
+                            !isWifiAvailable -> stringResource(MR.strings.wifi_not_connected.resourceId)
+                            isRefreshing -> stringResource(MR.strings.syncing.resourceId)
+                            !isDeviceOnline -> stringResource(MR.strings.device_unavailable.resourceId)
                             state.isOn -> stringResource(
-                                R.string.clock_on_summary,
+                                MR.strings.clock_on_summary.resourceId,
                                 state.brightness.percent(),
                             )
 
-                            else -> stringResource(R.string.power_status_off)
+                            else -> stringResource(MR.strings.power_status_off.resourceId)
                         },
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -459,7 +509,7 @@ private fun BrightnessCard(
     onBrightnessChanged: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val sliderDescription = stringResource(R.string.brightness_slider_description)
+    val sliderDescription = stringResource(MR.strings.brightness_slider_description.resourceId)
     ControlCard(modifier = modifier) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Row(
@@ -475,18 +525,21 @@ private fun BrightnessCard(
                 )
                 Column {
                     Text(
-                        stringResource(R.string.brightness_title),
+                        stringResource(MR.strings.brightness_title.resourceId),
                         style = MaterialTheme.typography.titleLarge
                     )
                     Text(
-                        stringResource(R.string.brightness_description),
+                        stringResource(MR.strings.brightness_description.resourceId),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
             Text(
-                text = stringResource(R.string.brightness_percent, brightness.percent()),
+                text = stringResource(
+                    MR.strings.brightness_percent.resourceId,
+                    brightness.percent()
+                ),
                 style = MaterialTheme.typography.headlineSmall,
                 color = MaterialTheme.colorScheme.primary,
                 fontWeight = FontWeight.SemiBold,
@@ -512,13 +565,13 @@ private fun BrightnessCard(
                         onClick = { onBrightnessChanged(percent.toBrightness()) },
                         enabled = enabled,
                         contentPadding = PaddingValues(horizontal = 15.dp, vertical = 8.dp),
-                    ) { Text(stringResource(R.string.brightness_percent, percent)) }
+                    ) { Text(stringResource(MR.strings.brightness_percent.resourceId, percent)) }
                 } else {
                     OutlinedButton(
                         onClick = { onBrightnessChanged(percent.toBrightness()) },
                         enabled = enabled,
                         contentPadding = PaddingValues(horizontal = 15.dp, vertical = 8.dp),
-                    ) { Text(stringResource(R.string.brightness_percent, percent)) }
+                    ) { Text(stringResource(MR.strings.brightness_percent.resourceId, percent)) }
                 }
             }
         }
@@ -548,7 +601,7 @@ private fun ColorControlCard(
                 )
                 Column {
                     Text(
-                        stringResource(R.string.color_title),
+                        stringResource(MR.strings.color_title.resourceId),
                         style = MaterialTheme.typography.titleLarge
                     )
                     Text(
@@ -565,7 +618,7 @@ private fun ColorControlCard(
                     modifier = Modifier.size(19.dp),
                 )
                 Spacer(Modifier.width(7.dp))
-                Text(stringResource(R.string.choose_color))
+                Text(stringResource(MR.strings.choose_color.resourceId))
             }
         }
         Row(
@@ -589,7 +642,7 @@ private fun ColorControlCard(
 private fun DeviceInfoCard(device: WordClockDevice?, state: WordClockState) {
     ControlCard {
         Text(
-            stringResource(R.string.device_info_title),
+            stringResource(MR.strings.device_info_title.resourceId),
             style = MaterialTheme.typography.titleMedium
         )
         Row(
@@ -597,15 +650,21 @@ private fun DeviceInfoCard(device: WordClockDevice?, state: WordClockState) {
             horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             device?.firmwareVersion?.let {
-                InfoPill(stringResource(R.string.firmware), it)
+                InfoPill(stringResource(MR.strings.firmware.resourceId), it)
             }
             device?.physicalLedCount?.let {
-                InfoPill(stringResource(R.string.physical_led_count), it.toString())
+                InfoPill(stringResource(MR.strings.physical_led_count.resourceId), it.toString())
             }
             state.physicalLedCount?.let {
-                InfoPill(stringResource(R.string.active_segment_led_count), it.toString())
+                InfoPill(
+                    stringResource(MR.strings.active_segment_led_count.resourceId),
+                    it.toString()
+                )
             }
-            InfoPill(stringResource(R.string.segment_count), state.segmentCount.toString())
+            InfoPill(
+                stringResource(MR.strings.segment_count.resourceId),
+                state.segmentCount.toString()
+            )
         }
     }
 }
@@ -628,12 +687,12 @@ private fun DeviceSidebar(
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
-                stringResource(R.string.devices_title),
+                stringResource(MR.strings.devices_title.resourceId),
                 style = MaterialTheme.typography.titleLarge,
                 modifier = Modifier.weight(1f)
             )
             val refreshDescription = stringResource(
-                if (isLoading) R.string.refreshing else R.string.refresh_devices_description,
+                if (isLoading) MR.strings.refreshing.resourceId else MR.strings.refresh_devices_description.resourceId,
             )
             IconButton(
                 onClick = onRefresh,
@@ -662,7 +721,7 @@ private fun DeviceSidebar(
                 item(key = "device-list-error") {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(errorMessage, color = MaterialTheme.colorScheme.error)
-                        TextButton(onClick = onRefresh) { Text(stringResource(R.string.retry)) }
+                        TextButton(onClick = onRefresh) { Text(stringResource(MR.strings.retry.resourceId)) }
                     }
                 }
             }
@@ -680,7 +739,7 @@ private fun DeviceSidebar(
             } else if (devices.isEmpty()) {
                 item(key = "device-list-empty") {
                     Text(
-                        stringResource(R.string.no_devices),
+                        stringResource(MR.strings.no_devices.resourceId),
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -734,7 +793,7 @@ private fun DeviceListItem(
             }
             device.firmwareVersion?.let {
                 Text(
-                    stringResource(R.string.device_firmware, it),
+                    stringResource(MR.strings.device_firmware.resourceId, it),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -762,7 +821,7 @@ private fun ColorPickerContent(
             Surface(modifier = Modifier.size(14.dp), shape = CircleShape, color = colorOf(color)) {}
             Spacer(Modifier.width(9.dp))
             Text(
-                stringResource(R.string.selected_color, color.toHex()),
+                stringResource(MR.strings.selected_color.resourceId, color.toHex()),
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.weight(1f)
             )
@@ -771,11 +830,11 @@ private fun ColorPickerContent(
             Tab(
                 selected = selectedTab == 0,
                 onClick = { selectedTab = 0 },
-                text = { Text(stringResource(R.string.colors_tab)) })
+                text = { Text(stringResource(MR.strings.colors_tab.resourceId)) })
             Tab(
                 selected = selectedTab == 1,
                 onClick = { selectedTab = 1 },
-                text = { Text(stringResource(R.string.whites_tab)) })
+                text = { Text(stringResource(MR.strings.whites_tab.resourceId)) })
         }
         if (selectedTab == 0) {
             BoxWithConstraints(Modifier.fillMaxWidth()) {
@@ -789,7 +848,7 @@ private fun ColorPickerContent(
                 )
             }
             Text(
-                text = stringResource(R.string.color_wheel_description),
+                text = stringResource(MR.strings.color_wheel_description.resourceId),
                 modifier = Modifier.fillMaxWidth(),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -811,7 +870,7 @@ private fun ColorPickerContent(
                 }
             }
             Text(
-                text = stringResource(R.string.white_mix_description),
+                text = stringResource(MR.strings.white_mix_description.resourceId),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -856,7 +915,7 @@ private fun ColorSwatch(
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 Text(
-                                    stringResource(R.string.selected_color_checkmark),
+                                    stringResource(MR.strings.selected_color_checkmark.resourceId),
                                     color = if (item.color.red + item.color.green + item.color.blue > 420) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.surface,
                                     fontWeight = FontWeight.Bold
                                 )
@@ -933,7 +992,7 @@ private fun LoadingPanel(modifier: Modifier = Modifier) {
         ) {
             CircularProgressIndicator()
             Text(
-                stringResource(R.string.loading_device_state),
+                stringResource(MR.strings.loading_device_state.resourceId),
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
@@ -949,14 +1008,14 @@ private fun ErrorPanel(message: String, onRetry: () -> Unit, modifier: Modifier 
     ) {
         ControlCard {
             Text(
-                stringResource(R.string.connection_failed),
+                stringResource(MR.strings.connection_failed.resourceId),
                 style = MaterialTheme.typography.titleLarge
             )
             Text(message, color = MaterialTheme.colorScheme.error)
             TextButton(
                 onClick = onRetry,
                 modifier = Modifier.align(Alignment.End)
-            ) { Text(stringResource(R.string.retry)) }
+            ) { Text(stringResource(MR.strings.retry.resourceId)) }
         }
     }
 }
@@ -965,7 +1024,7 @@ private fun ErrorPanel(message: String, onRetry: () -> Unit, modifier: Modifier 
 private fun EmptyControlPanel(modifier: Modifier = Modifier) {
     Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Text(
-            stringResource(R.string.no_device_selected),
+            stringResource(MR.strings.no_device_selected.resourceId),
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }

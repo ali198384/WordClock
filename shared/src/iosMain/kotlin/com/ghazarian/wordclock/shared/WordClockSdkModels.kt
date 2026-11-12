@@ -39,5 +39,5 @@ class WordClockSdkResult internal constructor(
     val control: WordClockControlSnapshot? = null,
     val themeMode: String? = null,
     val removedDeviceId: String? = null,
-    val errorMessage: String? = null,
+    val errorCode: String? = null,
 )

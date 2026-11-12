@@ -1,4 +1,4 @@
-// Top-level build file where you can add configuration options common to all sub-projects/modules.
+// Top-level build file where you can add configuration options common to all subprojects/modules.
 plugins {
     alias(libs.plugins.android.application) apply false
     alias(libs.plugins.android.library) apply false
@@ -9,4 +9,5 @@ plugins {
     alias(libs.plugins.hilt) apply false
     alias(libs.plugins.ksp) apply false
     alias(libs.plugins.android.junit) apply false
+    alias(libs.plugins.moko.resources) apply false
 }

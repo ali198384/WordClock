@@ -24,8 +24,8 @@ rootProject.name = "WordClock"
 include(
     ":app",
     ":shared",
-    ":core:common",
     ":core:model",
+    ":core:resources",
     ":core:domain",
     ":core:testing",
     ":core:network",

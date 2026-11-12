@@ -89,7 +89,56 @@ import com.ghazarian.wordclock.core.designsystem.theme.PowerOffRed
 import com.ghazarian.wordclock.core.designsystem.theme.PowerOnGreen
 import com.ghazarian.wordclock.core.designsystem.theme.ThemeMode
 import com.ghazarian.wordclock.core.model.WordClockDevice
-import com.ghazarian.wordclock.feature.devices.R
+import com.ghazarian.wordclock.resources.MR
+import com.ghazarian.wordclock.resources.add_device
+import com.ghazarian.wordclock.resources.add_device_description
+import com.ghazarian.wordclock.resources.add_device_title
+import com.ghazarian.wordclock.resources.app_logo_description
+import com.ghazarian.wordclock.resources.cancel
+import com.ghazarian.wordclock.resources.connecting_device
+import com.ghazarian.wordclock.resources.delete
+import com.ghazarian.wordclock.resources.device_checking
+import com.ghazarian.wordclock.resources.device_count
+import com.ghazarian.wordclock.resources.device_firmware
+import com.ghazarian.wordclock.resources.device_ip
+import com.ghazarian.wordclock.resources.device_led_count
+import com.ghazarian.wordclock.resources.device_list_title
+import com.ghazarian.wordclock.resources.device_name_label
+import com.ghazarian.wordclock.resources.device_name_optional
+import com.ghazarian.wordclock.resources.device_name_placeholder
+import com.ghazarian.wordclock.resources.device_offline
+import com.ghazarian.wordclock.resources.device_online
+import com.ghazarian.wordclock.resources.device_power_turn_off
+import com.ghazarian.wordclock.resources.device_power_turn_on
+import com.ghazarian.wordclock.resources.empty_devices_description
+import com.ghazarian.wordclock.resources.empty_devices_title
+import com.ghazarian.wordclock.resources.ip_address_label
+import com.ghazarian.wordclock.resources.ip_address_placeholder
+import com.ghazarian.wordclock.resources.loading_devices
+import com.ghazarian.wordclock.resources.manage_device
+import com.ghazarian.wordclock.resources.more_options_glyph
+import com.ghazarian.wordclock.resources.no_devices_count
+import com.ghazarian.wordclock.resources.power_status_off
+import com.ghazarian.wordclock.resources.power_status_on
+import com.ghazarian.wordclock.resources.power_toggle
+import com.ghazarian.wordclock.resources.power_unavailable
+import com.ghazarian.wordclock.resources.power_updating
+import com.ghazarian.wordclock.resources.refresh_devices_description
+import com.ghazarian.wordclock.resources.refreshing
+import com.ghazarian.wordclock.resources.remove_device
+import com.ghazarian.wordclock.resources.remove_dialog_message
+import com.ghazarian.wordclock.resources.remove_dialog_title
+import com.ghazarian.wordclock.resources.removing
+import com.ghazarian.wordclock.resources.rename_device
+import com.ghazarian.wordclock.resources.rename_dialog_title
+import com.ghazarian.wordclock.resources.retry
+import com.ghazarian.wordclock.resources.save
+import com.ghazarian.wordclock.resources.saving
+import com.ghazarian.wordclock.resources.screen_description
+import com.ghazarian.wordclock.resources.screen_tagline
+import com.ghazarian.wordclock.resources.screen_title
+import com.ghazarian.wordclock.resources.theme_switch_to_dark
+import com.ghazarian.wordclock.resources.theme_switch_to_light
 import com.ghazarian.wordclock.core.designsystem.R as DesignSystemR
 
 @Composable
@@ -156,7 +205,7 @@ private fun DevicesScreen(
                     TopAppBar(
                         title = {
                             Text(
-                                text = stringResource(R.string.screen_title),
+                                text = stringResource(MR.strings.screen_title.resourceId),
                                 modifier = Modifier.widthIn(max = titleMaxWidth),
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis,
@@ -172,7 +221,7 @@ private fun DevicesScreen(
                     )
                     Image(
                         painter = painterResource(DesignSystemR.drawable.word_clock_logo),
-                        contentDescription = stringResource(R.string.app_logo_description),
+                        contentDescription = stringResource(MR.strings.app_logo_description.resourceId),
                         modifier = Modifier
                             .align(Alignment.Center)
                             .offset(y = topInset / 2)
@@ -306,7 +355,7 @@ private fun ThemeToggleButton(
         ThemeMode.DARK -> true
     }
     val toggleDescription = stringResource(
-        if (currentlyDark) R.string.theme_switch_to_light else R.string.theme_switch_to_dark,
+        if (currentlyDark) MR.strings.theme_switch_to_light.resourceId else MR.strings.theme_switch_to_dark.resourceId,
     )
     IconButton(
         onClick = {
@@ -339,7 +388,7 @@ private fun ScreenHeading() {
         ),
         label = "tagline-hue",
     )
-    val tagline = stringResource(R.string.screen_tagline)
+    val tagline = stringResource(MR.strings.screen_tagline.resourceId)
     val rainbowTagline = remember(tagline, hue) {
         buildAnnotatedString {
             tagline.forEachIndexed { index, character ->
@@ -363,7 +412,7 @@ private fun ScreenHeading() {
             style = MaterialTheme.typography.headlineMedium,
         )
         Text(
-            text = stringResource(R.string.screen_description),
+            text = stringResource(MR.strings.screen_description.resourceId),
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -410,11 +459,11 @@ private fun AddDeviceCard(
                 }
                 Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
                     Text(
-                        stringResource(R.string.add_device_title),
+                        stringResource(MR.strings.add_device_title.resourceId),
                         style = MaterialTheme.typography.titleLarge
                     )
                     Text(
-                        stringResource(R.string.add_device_description),
+                        stringResource(MR.strings.add_device_description.resourceId),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -461,10 +510,10 @@ private fun AddDeviceCard(
                         strokeWidth = 2.dp,
                     )
                     Spacer(Modifier.size(10.dp))
-                    Text(stringResource(R.string.connecting_device))
+                    Text(stringResource(MR.strings.connecting_device.resourceId))
                 } else {
                     Text(
-                        stringResource(R.string.add_device),
+                        stringResource(MR.strings.add_device.resourceId),
                         style = MaterialTheme.typography.titleMedium
                     )
                 }
@@ -484,8 +533,8 @@ private fun IpAddressField(
             value = value,
             onValueChange = { input -> onValueChange(input.normalizeIpDigits()) },
             modifier = modifier.fillMaxWidth(),
-            label = { Text(stringResource(R.string.ip_address_label)) },
-            placeholder = { Text(stringResource(R.string.ip_address_placeholder)) },
+            label = { Text(stringResource(MR.strings.ip_address_label.resourceId)) },
+            placeholder = { Text(stringResource(MR.strings.ip_address_placeholder.resourceId)) },
             colors = OutlinedTextFieldDefaults.colors(
                 focusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.42f),
                 unfocusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f),
@@ -524,8 +573,8 @@ private fun DeviceNameField(
         value = value,
         onValueChange = onValueChange,
         modifier = modifier.fillMaxWidth(),
-        label = { Text(stringResource(R.string.device_name_optional)) },
-        placeholder = { Text(stringResource(R.string.device_name_placeholder)) },
+        label = { Text(stringResource(MR.strings.device_name_optional.resourceId)) },
+        placeholder = { Text(stringResource(MR.strings.device_name_placeholder.resourceId)) },
         colors = OutlinedTextFieldDefaults.colors(
             focusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.42f),
             unfocusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f),
@@ -553,18 +602,22 @@ private fun DeviceListHeading(
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(
-                stringResource(R.string.device_list_title),
+                stringResource(MR.strings.device_list_title.resourceId),
                 style = MaterialTheme.typography.titleLarge
             )
             Text(
-                text = if (deviceCount == 0) stringResource(R.string.no_devices_count)
-                else pluralStringResource(R.plurals.device_count, deviceCount, deviceCount),
+                text = if (deviceCount == 0) stringResource(MR.strings.no_devices_count.resourceId)
+                else pluralStringResource(
+                    MR.plurals.device_count.resourceId,
+                    deviceCount,
+                    deviceCount
+                ),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
         val refreshDescription = stringResource(
-            if (isRefreshing) R.string.refreshing else R.string.refresh_devices_description,
+            if (isRefreshing) MR.strings.refreshing.resourceId else MR.strings.refresh_devices_description.resourceId,
         )
         IconButton(
             onClick = onRefresh,
@@ -598,7 +651,7 @@ private fun DeviceCard(
     onRemove: () -> Unit,
 ) {
     var menuExpanded by remember(device.id) { mutableStateOf(false) }
-    val manageDescription = stringResource(R.string.manage_device, device.name)
+    val manageDescription = stringResource(MR.strings.manage_device.resourceId, device.name)
     val cardContainerColor = when (connectionStatus) {
         DeviceConnectionStatus.ONLINE -> if (isOn == true) {
             MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.56f)
@@ -668,14 +721,14 @@ private fun DeviceCard(
                 )
                 CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
                     Text(
-                        text = stringResource(R.string.device_ip, device.address.host),
+                        text = stringResource(MR.strings.device_ip.resourceId, device.address.host),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Start,
                     )
                     device.firmwareVersion?.let { version ->
                         Text(
-                            text = stringResource(R.string.device_firmware, version),
+                            text = stringResource(MR.strings.device_firmware.resourceId, version),
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Start,
@@ -689,7 +742,7 @@ private fun DeviceCard(
                     DeviceStatusBadge(connectionStatus)
                     isOn?.let { powerIsOn ->
                         Text(
-                            text = stringResource(if (powerIsOn) R.string.power_status_on else R.string.power_status_off),
+                            text = stringResource(if (powerIsOn) MR.strings.power_status_on.resourceId else MR.strings.power_status_off.resourceId),
                             style = MaterialTheme.typography.labelMedium,
                             color = if (powerIsOn) {
                                 MaterialTheme.colorScheme.primary
@@ -700,7 +753,7 @@ private fun DeviceCard(
                     }
                     device.physicalLedCount?.let { count ->
                         Text(
-                            text = stringResource(R.string.device_led_count, count),
+                            text = stringResource(MR.strings.device_led_count.resourceId, count),
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -725,21 +778,24 @@ private fun DeviceCard(
                             contentDescription = manageDescription
                         },
                     ) {
-                        Text(stringResource(R.string.more_options_glyph), fontSize = 26.sp)
+                        Text(
+                            stringResource(MR.strings.more_options_glyph.resourceId),
+                            fontSize = 26.sp
+                        )
                     }
                     DropdownMenu(
                         expanded = menuExpanded,
                         onDismissRequest = { menuExpanded = false },
                     ) {
                         DropdownMenuItem(
-                            text = { Text(stringResource(R.string.rename_device)) },
+                            text = { Text(stringResource(MR.strings.rename_device.resourceId)) },
                             onClick = {
                                 menuExpanded = false
                                 onRename()
                             },
                         )
                         DropdownMenuItem(
-                            text = { Text(stringResource(R.string.remove_device)) },
+                            text = { Text(stringResource(MR.strings.remove_device.resourceId)) },
                             onClick = {
                                 menuExpanded = false
                                 onRemove()
@@ -772,11 +828,11 @@ private fun DevicePowerButton(
         else -> MaterialTheme.colorScheme.onSurfaceVariant
     }
     val description = when {
-        isUpdating -> stringResource(R.string.power_updating, deviceName)
-        !isEnabled -> stringResource(R.string.power_unavailable, deviceName)
-        isOn == null -> stringResource(R.string.power_toggle, deviceName)
-        isOn == true -> stringResource(R.string.power_turn_off, deviceName)
-        else -> stringResource(R.string.power_turn_on, deviceName)
+        isUpdating -> stringResource(MR.strings.power_updating.resourceId, deviceName)
+        !isEnabled -> stringResource(MR.strings.power_unavailable.resourceId, deviceName)
+        isOn == null -> stringResource(MR.strings.power_toggle.resourceId, deviceName)
+        isOn -> stringResource(MR.strings.device_power_turn_off.resourceId, deviceName)
+        else -> stringResource(MR.strings.device_power_turn_on.resourceId, deviceName)
     }
 
     IconButton(
@@ -818,9 +874,9 @@ private fun DevicePowerButton(
 @Composable
 private fun DeviceStatusBadge(status: DeviceConnectionStatus) {
     val (labelId, color) = when (status) {
-        DeviceConnectionStatus.CHECKING -> R.string.device_checking to MaterialTheme.colorScheme.tertiary
-        DeviceConnectionStatus.ONLINE -> R.string.device_online to MaterialTheme.colorScheme.primary
-        DeviceConnectionStatus.OFFLINE -> R.string.device_offline to MaterialTheme.colorScheme.error
+        DeviceConnectionStatus.CHECKING -> MR.strings.device_checking.resourceId to MaterialTheme.colorScheme.tertiary
+        DeviceConnectionStatus.ONLINE -> MR.strings.device_online.resourceId to MaterialTheme.colorScheme.primary
+        DeviceConnectionStatus.OFFLINE -> MR.strings.device_offline.resourceId to MaterialTheme.colorScheme.error
     }
     Surface(
         shape = CircleShape,
@@ -845,7 +901,7 @@ private fun LoadingDevices() {
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         CircularProgressIndicator()
-        Text(stringResource(R.string.loading_devices))
+        Text(stringResource(MR.strings.loading_devices.resourceId))
     }
 }
 
@@ -866,11 +922,11 @@ private fun EmptyDevicesCard() {
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Text(
-                stringResource(R.string.empty_devices_title),
+                stringResource(MR.strings.empty_devices_title.resourceId),
                 style = MaterialTheme.typography.titleMedium
             )
             Text(
-                stringResource(R.string.empty_devices_description),
+                stringResource(MR.strings.empty_devices_description.resourceId),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
@@ -894,7 +950,7 @@ private fun ListErrorCard(
         ) {
             ErrorNotice(message)
             TextButton(onClick = onRetry, modifier = Modifier.align(Alignment.End)) {
-                Text(stringResource(R.string.retry))
+                Text(stringResource(MR.strings.retry.resourceId))
             }
         }
     }
@@ -929,14 +985,14 @@ private fun RenameDeviceDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.rename_dialog_title)) },
+        title = { Text(stringResource(MR.strings.rename_dialog_title.resourceId)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 OutlinedTextField(
                     value = name,
                     onValueChange = onNameChanged,
                     modifier = Modifier.fillMaxWidth(),
-                    label = { Text(stringResource(R.string.device_name_label)) },
+                    label = { Text(stringResource(MR.strings.device_name_label.resourceId)) },
                     singleLine = true,
                     shape = RoundedCornerShape(16.dp),
                 )
@@ -945,12 +1001,12 @@ private fun RenameDeviceDialog(
         },
         confirmButton = {
             TextButton(onClick = onConfirm, enabled = !isSaving) {
-                Text(stringResource(if (isSaving) R.string.saving else R.string.save))
+                Text(stringResource(if (isSaving) MR.strings.saving.resourceId else MR.strings.save.resourceId))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss, enabled = !isSaving) {
-                Text(stringResource(R.string.cancel))
+                Text(stringResource(MR.strings.cancel.resourceId))
             }
         },
     )
@@ -965,16 +1021,16 @@ private fun RemoveDeviceDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.remove_dialog_title)) },
-        text = { Text(stringResource(R.string.remove_dialog_message, deviceName)) },
+        title = { Text(stringResource(MR.strings.remove_dialog_title.resourceId)) },
+        text = { Text(stringResource(MR.strings.remove_dialog_message.resourceId, deviceName)) },
         confirmButton = {
             TextButton(onClick = onConfirm, enabled = !isRemoving) {
-                Text(stringResource(if (isRemoving) R.string.removing else R.string.delete))
+                Text(stringResource(if (isRemoving) MR.strings.removing.resourceId else MR.strings.delete.resourceId))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss, enabled = !isRemoving) {
-                Text(stringResource(R.string.cancel))
+                Text(stringResource(MR.strings.cancel.resourceId))
             }
         },
     )

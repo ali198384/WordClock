@@ -28,7 +28,7 @@ struct ControlView: View {
             VStack(spacing: 16) {
                 topBar
                 if model.isLoadingControl && snapshot == nil {
-                    ProgressView("Getting your clock’s status…")
+                    ProgressView(L10n.loadingDeviceState)
                         .frame(maxWidth: .infinity, minHeight: 180)
                 } else if let snapshot {
                     connectionBanner
@@ -78,10 +78,10 @@ struct ControlView: View {
         .onChange(of: wifi.isAvailable) { available in
             if available { model.loadControl(for: deviceID) }
         }
-        .alert("Something went wrong", isPresented: errorPresented) {
-            Button("OK", role: .cancel) { model.clearNotices() }
+        .alert(L10n.errorTitle, isPresented: errorPresented) {
+            Button(L10n.ok, role: .cancel) { model.clearNotices() }
         } message: {
-            Text(model.errorMessage ?? "Please try again.")
+            Text(model.errorMessage ?? L10n.errorFallback)
         }
     }
 
@@ -93,9 +93,9 @@ struct ControlView: View {
                     .frame(width: 42, height: 42)
                     .contentShape(Rectangle())
             }
-            .accessibilityLabel("Back to devices")
+            .accessibilityLabel(L10n.backToDevicesDescription)
             VStack(spacing: 2) {
-                Text(snapshot?.device.name ?? "Clock control")
+                Text(snapshot?.device.name ?? L10n.controlTitle)
                     .font(.system(size: 17, weight: .semibold))
                     .lineLimit(1)
                 Text(snapshot?.device.ipAddress ?? "")
@@ -114,7 +114,7 @@ struct ControlView: View {
                 }
             }
             .disabled(model.isLoadingControl || !wifi.isAvailable)
-            .accessibilityLabel("Refresh clock status")
+            .accessibilityLabel(L10n.refreshClockDescription)
         }
         .foregroundStyle(ClockPalette.primary(colorScheme))
         .frame(height: 54)
@@ -124,7 +124,7 @@ struct ControlView: View {
         let online = wifi.isAvailable && snapshot?.device.isOnline == true
         return HStack(spacing: 10) {
             Image(systemName: online ? "wifi" : "wifi.slash")
-            Text(online ? "Connected to your clock" : (wifi.isAvailable ? "Clock is unavailable" : "Wi-Fi is not connected"))
+            Text(online ? L10n.connectedToClock : (wifi.isAvailable ? L10n.deviceUnavailable : L10n.wifiNotConnected))
                 .font(.system(size: 14, weight: .medium))
             Spacer()
             Circle().fill(online ? ClockPalette.powerOn : ClockPalette.error).frame(width: 8, height: 8)
@@ -137,9 +137,9 @@ struct ControlView: View {
     private func powerCard(_ value: ControlSnapshot) -> some View {
         HStack(spacing: 16) {
             VStack(alignment: .leading, spacing: 5) {
-                Text(value.state.isOn ? "Clock is on" : "Clock is off")
+                Text(value.state.isOn ? L10n.clockOn : L10n.clockOff)
                     .font(.system(size: 21, weight: .semibold))
-                Text(value.state.isOn ? "\(Int(value.state.brightness * 100 / 255))% brightness" : "LEDs are currently off")
+                Text(value.state.isOn ? L10n.clockOnSummary(Int(value.state.brightness * 100 / 255)) : L10n.powerOffSummary)
                     .font(.system(size: 14))
                     .foregroundStyle(ClockPalette.secondaryText(colorScheme))
             }
@@ -152,7 +152,7 @@ struct ControlView: View {
                     .background((value.state.isOn ? ClockPalette.powerOn : ClockPalette.powerOff).opacity(0.13), in: Circle())
             }
             .disabled(!canControl || model.workingDeviceIDs.contains(deviceID))
-            .accessibilityLabel(value.state.isOn ? "Turn off" : "Turn on")
+            .accessibilityLabel(value.state.isOn ? L10n.controlPowerTurnOff : L10n.controlPowerTurnOn)
         }
         .padding(20)
         .clockCard(colorScheme, tint: ClockPalette.primary(colorScheme).opacity(colorScheme == .dark ? 0.14 : 0.07))
@@ -161,20 +161,20 @@ struct ControlView: View {
     private func brightnessCard(_ value: ControlSnapshot) -> some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack {
-                Label("Brightness", systemImage: "sun.max.fill")
+                Label(L10n.brightnessTitle, systemImage: "sun.max.fill")
                     .font(.system(size: 18, weight: .semibold))
                     .foregroundStyle(ClockPalette.tertiary(colorScheme))
                 Spacer()
-                Text("\(Int(brightnessDraft.rounded()) * 100 / 255)%")
+                Text(L10n.brightnessPercent(Int(brightnessDraft.rounded()) * 100 / 255))
                     .font(.system(size: 16, weight: .semibold, design: .rounded))
                     .foregroundStyle(ClockPalette.primary(colorScheme))
             }
             Slider(value: $brightnessDraft, in: 0...255, step: 1)
                 .tint(ClockPalette.tertiary(colorScheme))
                 .disabled(!canControl)
-                .accessibilityLabel("Brightness from zero to 255")
+                .accessibilityLabel(L10n.brightnessSliderDescription)
             HStack {
-                Text("LED light intensity")
+                Text(L10n.brightnessDescription)
                     .font(.system(size: 13))
                     .foregroundStyle(ClockPalette.secondaryText(colorScheme))
             }
@@ -188,15 +188,15 @@ struct ControlView: View {
             HStack(spacing: 10) {
                 Image(systemName: "paintpalette.fill")
                     .foregroundStyle(ClockPalette.secondary(colorScheme))
-                Text("LED color").font(.system(size: 18, weight: .semibold))
+                Text(L10n.colorTitle).font(.system(size: 18, weight: .semibold))
                 Spacer()
                 Circle().fill(colorDraft).frame(width: 26, height: 26)
                     .padding(4)
                     .overlay(Circle().stroke(colorDraft, lineWidth: 2))
             }
-            Picker("Color mode", selection: $selectedTab) {
-                Text("Colors").tag(0)
-                Text("Whites").tag(1)
+            Picker(L10n.colorMode, selection: $selectedTab) {
+                Text(L10n.colorsTab).tag(0)
+                Text(L10n.whitesTab).tag(1)
             }
             .pickerStyle(.segmented)
             if selectedTab == 0 {
@@ -205,7 +205,7 @@ struct ControlView: View {
                         .frame(width: 190, height: 190)
                         .disabled(!canControl)
                     VStack(alignment: .leading, spacing: 11) {
-                        Text("Choose color")
+                        Text(L10n.chooseColor)
                             .font(.system(size: 15, weight: .semibold))
                         ForEach(ColorPreset.colors, id: \.name) { preset in
                             Button {
@@ -227,11 +227,11 @@ struct ControlView: View {
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                Text("Drag on the wheel to choose a color.")
+                Text(L10n.colorWheelDescription)
                     .font(.system(size: 13))
                     .foregroundStyle(ClockPalette.secondaryText(colorScheme))
             } else {
-                Text("White tones are adjusted using RGB values.")
+                Text(L10n.whiteMixDescription)
                     .font(.system(size: 13))
                     .foregroundStyle(ClockPalette.secondaryText(colorScheme))
                 HStack(spacing: 10) {
@@ -258,7 +258,7 @@ struct ControlView: View {
                 .padding(.vertical, 6)
             }
             HStack {
-                Text(String(format: "Selected color · #%02X%02X%02X", UIColor(colorDraft).rgbComponents.red, UIColor(colorDraft).rgbComponents.green, UIColor(colorDraft).rgbComponents.blue))
+                Text(selectedColorDescription)
                     .font(.system(size: 13, weight: .medium, design: .monospaced))
                     .foregroundStyle(ClockPalette.secondaryText(colorScheme))
             }
@@ -270,15 +270,21 @@ struct ControlView: View {
         }
     }
 
+    private var selectedColorDescription: String {
+        let components = UIColor(colorDraft).rgbComponents
+        let hex = String(format: "#%02X%02X%02X", components.red, components.green, components.blue)
+        return L10n.selectedColor(hex)
+    }
+
     private func detailsCard(_ value: ControlSnapshot) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            Label("Clock details", systemImage: "info.circle.fill")
+            Label(L10n.deviceInfoTitle, systemImage: "info.circle.fill")
                 .font(.system(size: 18, weight: .semibold))
                 .foregroundStyle(ClockPalette.secondary(colorScheme))
-            detailRow("Firmware", value.device.firmwareVersion ?? "Unknown")
-            detailRow("Physical LEDs", value.device.physicalLedCount ?? "Unknown")
-            detailRow("Active segment LEDs", value.state.physicalLedCount ?? "Unknown")
-            detailRow("Segments", value.state.segmentCount)
+            detailRow(L10n.firmware, value.device.firmwareVersion ?? L10n.unknown)
+            detailRow(L10n.physicalLedCount, value.device.physicalLedCount ?? L10n.unknown)
+            detailRow(L10n.activeSegmentLedCount, value.state.physicalLedCount ?? L10n.unknown)
+            detailRow(L10n.segmentCount, value.state.segmentCount)
         }
         .padding(20)
         .clockCard(colorScheme)
@@ -287,12 +293,12 @@ struct ControlView: View {
     private var unavailableCard: some View {
         VStack(spacing: 12) {
             Image(systemName: "wifi.slash").font(.system(size: 30)).foregroundStyle(ClockPalette.error)
-            Text("Clock is unavailable.").font(.system(size: 18, weight: .semibold))
-            Text(wifi.isAvailable ? "Check the clock’s local IP address and try again." : "Wi-Fi will be checked automatically when it reconnects.")
+            Text(L10n.deviceUnavailable)
+            Text(wifi.isAvailable ? L10n.unavailableCheckIp : L10n.wifiReconnectShort)
                 .font(.system(size: 14))
                 .multilineTextAlignment(.center)
                 .foregroundStyle(ClockPalette.secondaryText(colorScheme))
-            Button("Try again") { model.loadControl(for: deviceID) }
+            Button(L10n.retry) { model.loadControl(for: deviceID) }
                 .font(.system(size: 15, weight: .semibold))
                 .disabled(!wifi.isAvailable)
         }
@@ -362,7 +368,7 @@ private struct LedColorWheel: View {
             })
         }
         .aspectRatio(1, contentMode: .fit)
-        .accessibilityLabel("RGB color wheel")
+        .accessibilityLabel(L10n.colorWheelContentDescription)
     }
 
     private func selectionOffset(in size: CGFloat) -> CGSize {
@@ -393,15 +399,6 @@ private struct ColorPreset {
     }
 
     private static func displayName(for id: String) -> String {
-        switch id {
-        case "warm_white": return "Warm"
-        case "soft_white": return "Soft"
-        case "natural_white": return "Natural"
-        case "day_light": return "Daylight"
-        case "cool_white": return "Cool"
-        case "blue_sky": return "Blue Sky"
-        default: return id.capitalized
-        }
+        L10n.colorPreset(id)
     }
 }
-

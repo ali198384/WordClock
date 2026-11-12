@@ -15,8 +15,16 @@ import com.ghazarian.wordclock.core.domain.usecase.SetWordClockColor
 import com.ghazarian.wordclock.core.domain.usecase.SetWordClockPower
 import com.ghazarian.wordclock.core.model.LedColor
 import com.ghazarian.wordclock.core.model.WordClockState
-import com.ghazarian.wordclock.feature.control.R
 import com.ghazarian.wordclock.feature.control.navigation.ControlRouteArguments
+import com.ghazarian.wordclock.resources.MR
+import com.ghazarian.wordclock.resources.control_device_connection_error
+import com.ghazarian.wordclock.resources.control_device_not_found
+import com.ghazarian.wordclock.resources.device_id_missing
+import com.ghazarian.wordclock.resources.devices_load_error
+import com.ghazarian.wordclock.resources.generic_control_error
+import com.ghazarian.wordclock.resources.invalid_device_response
+import com.ghazarian.wordclock.resources.wifi_lost_message
+import com.ghazarian.wordclock.resources.wifi_reconnect_message
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
@@ -64,7 +72,7 @@ class ControlViewModel @Inject constructor(
         }
         refreshDevices()
         if (initialDeviceId == null) {
-            _uiState.update { it.copy(errorMessage = UiText(R.string.device_id_missing)) }
+            _uiState.update { it.copy(errorMessage = UiText(MR.strings.device_id_missing.resourceId)) }
         } else if (_uiState.value.isWifiAvailable) {
             scheduleWifiRecovery(initialDeviceId, initialDelayMillis = 750, attempts = 2)
         } else {
@@ -83,7 +91,7 @@ class ControlViewModel @Inject constructor(
                 throw cancellation
             } catch (_: Exception) {
                 _uiState.update {
-                    it.copy(devicesErrorMessage = UiText(R.string.devices_load_error))
+                    it.copy(devicesErrorMessage = UiText(MR.strings.devices_load_error.resourceId))
                 }
             } finally {
                 _uiState.update { it.copy(isDevicesLoading = false) }
@@ -125,7 +133,7 @@ class ControlViewModel @Inject constructor(
                     isLoading = false,
                     isRefreshing = false,
                     isDeviceOnline = false,
-                    errorMessage = UiText(R.string.wifi_reconnect_message),
+                    errorMessage = UiText(MR.strings.wifi_reconnect_message.resourceId),
                 )
             }
             return null
@@ -340,7 +348,7 @@ class ControlViewModel @Inject constructor(
                     isDeviceOnline = false,
                     isLoading = false,
                     isRefreshing = false,
-                    errorMessage = UiText(R.string.wifi_lost_message),
+                    errorMessage = UiText(MR.strings.wifi_lost_message.resourceId),
                 )
             }
             return
@@ -384,12 +392,12 @@ class ControlViewModel @Inject constructor(
 
     private fun errorMessage(exception: Exception): UiText = when (exception) {
         is WordClockDeviceConnectionException ->
-            UiText(R.string.device_connection_error)
+            UiText(MR.strings.control_device_connection_error.resourceId)
 
         is InvalidWordClockDeviceResponseException ->
-            UiText(R.string.invalid_device_response)
+            UiText(MR.strings.invalid_device_response.resourceId)
 
-        is WordClockDeviceNotFoundException -> UiText(R.string.device_not_found)
-        else -> UiText(R.string.generic_control_error)
+        is WordClockDeviceNotFoundException -> UiText(MR.strings.control_device_not_found.resourceId)
+        else -> UiText(MR.strings.generic_control_error.resourceId)
     }
 }

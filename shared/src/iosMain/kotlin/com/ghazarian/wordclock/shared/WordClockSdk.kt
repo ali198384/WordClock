@@ -1,5 +1,9 @@
 package com.ghazarian.wordclock.shared
 
+import com.ghazarian.wordclock.core.domain.error.InvalidWordClockDeviceResponseException
+import com.ghazarian.wordclock.core.domain.error.WordClockDeviceAlreadyAddedException
+import com.ghazarian.wordclock.core.domain.error.WordClockDeviceConnectionException
+import com.ghazarian.wordclock.core.domain.error.WordClockDeviceNotFoundException
 import com.ghazarian.wordclock.core.domain.repository.WordClockRepository
 import com.ghazarian.wordclock.core.domain.usecase.AddWordClockDevice
 import com.ghazarian.wordclock.core.domain.usecase.GetDevices
@@ -42,30 +46,31 @@ class WordClockSdk internal constructor(
     private val setWordClockBrightness = SetWordClockBrightness(repository)
     private val setWordClockColor = SetWordClockColor(repository)
 
-    fun loadDevices(onResult: (WordClockSdkResult) -> Unit) = execute(onResult) {
-        val devices = getDevices()
-        val cards = coroutineScope {
-            devices.map { device ->
-                async {
-                    val current = try {
-                        refreshWordClockDevice(device.id)
-                    } catch (cancellation: CancellationException) {
-                        throw cancellation
-                    } catch (_: Exception) {
-                        return@async device.toDeviceSnapshot(state = null)
+    fun loadDevices(onResult: (WordClockSdkResult) -> Unit) =
+        execute(onResult, ErrorContext.DEVICES, "devices_load_error") {
+            val devices = getDevices()
+            val cards = coroutineScope {
+                devices.map { device ->
+                    async {
+                        val current = try {
+                            refreshWordClockDevice(device.id)
+                        } catch (cancellation: CancellationException) {
+                            throw cancellation
+                        } catch (_: Exception) {
+                            return@async device.toDeviceSnapshot(state = null)
+                        }
+                        current.toDeviceSnapshot(readStateOrNull(current.id))
                     }
-                    current.toDeviceSnapshot(readStateOrNull(current.id))
-                }
-            }.awaitAll()
+                }.awaitAll()
+            }
+            WordClockSdkResult(devices = cards)
         }
-        WordClockSdkResult(devices = cards)
-    }
 
     fun addDevice(
         ipAddress: String,
         name: String,
         onResult: (WordClockSdkResult) -> Unit,
-    ) = execute(onResult) {
+    ) = execute(onResult, ErrorContext.DEVICES, "generic_device_error") {
         val device = addWordClockDevice(
             address = DeviceAddress(ipAddress.trim()),
             name = name.trim().ifEmpty { null },
@@ -78,7 +83,7 @@ class WordClockSdk internal constructor(
         deviceId: String,
         name: String,
         onResult: (WordClockSdkResult) -> Unit,
-    ) = execute(onResult) {
+    ) = execute(onResult, ErrorContext.DEVICES, "generic_device_error") {
         val renamed = renameWordClockDevice(deviceId, name)
         val state = readStateOrNull(renamed.id)
         WordClockSdkResult(device = renamed.toDeviceSnapshot(state))
@@ -87,7 +92,7 @@ class WordClockSdk internal constructor(
     fun removeDevice(
         deviceId: String,
         onResult: (WordClockSdkResult) -> Unit,
-    ) = execute(onResult) {
+    ) = execute(onResult, ErrorContext.DEVICES, "generic_device_error") {
         removeWordClockDevice(deviceId)
         WordClockSdkResult(removedDeviceId = deviceId)
     }
@@ -95,7 +100,7 @@ class WordClockSdk internal constructor(
     fun loadControl(
         deviceId: String,
         onResult: (WordClockSdkResult) -> Unit,
-    ) = execute(onResult) {
+    ) = execute(onResult, ErrorContext.CONTROL, "generic_control_error") {
         WordClockSdkResult(control = controlSnapshot(deviceId))
     }
 
@@ -103,7 +108,7 @@ class WordClockSdk internal constructor(
         deviceId: String,
         isOn: Boolean,
         onResult: (WordClockSdkResult) -> Unit,
-    ) = execute(onResult) {
+    ) = execute(onResult, ErrorContext.CONTROL, "generic_control_error") {
         setWordClockPower(deviceId, isOn)
         WordClockSdkResult(control = controlSnapshot(deviceId))
     }
@@ -112,7 +117,7 @@ class WordClockSdk internal constructor(
         deviceId: String,
         brightness: Int,
         onResult: (WordClockSdkResult) -> Unit,
-    ) = execute(onResult) {
+    ) = execute(onResult, ErrorContext.CONTROL, "generic_control_error") {
         setWordClockBrightness(deviceId, brightness.coerceIn(0, 255))
         WordClockSdkResult(control = controlSnapshot(deviceId))
     }
@@ -123,19 +128,20 @@ class WordClockSdk internal constructor(
         green: Int,
         blue: Int,
         onResult: (WordClockSdkResult) -> Unit,
-    ) = execute(onResult) {
+    ) = execute(onResult, ErrorContext.CONTROL, "generic_control_error") {
         setWordClockColor(deviceId, LedColor(red, green, blue))
         WordClockSdkResult(control = controlSnapshot(deviceId))
     }
 
-    fun loadThemeMode(onResult: (WordClockSdkResult) -> Unit) = execute(onResult) {
-        WordClockSdkResult(themeMode = themeModeStorage.themeModeValue.first() ?: "system")
-    }
+    fun loadThemeMode(onResult: (WordClockSdkResult) -> Unit) =
+        execute(onResult, ErrorContext.CONTROL, "generic_control_error") {
+            WordClockSdkResult(themeMode = themeModeStorage.themeModeValue.first() ?: "system")
+        }
 
     fun setThemeMode(
         value: String,
         onResult: (WordClockSdkResult) -> Unit,
-    ) = execute(onResult) {
+    ) = execute(onResult, ErrorContext.CONTROL, "generic_control_error") {
         val mode = value.takeIf { it in setOf("system", "light", "dark") } ?: "system"
         themeModeStorage.setThemeModeValue(mode)
         WordClockSdkResult(themeMode = mode)
@@ -143,7 +149,7 @@ class WordClockSdk internal constructor(
 
     private suspend fun controlSnapshot(deviceId: String): WordClockControlSnapshot {
         val device = getDevices().firstOrNull { it.id == deviceId }
-            ?: error("Clock not found. Refresh the clock list and try again.")
+            ?: throw WordClockDeviceNotFoundException()
         val state = getDeviceState(deviceId)
         return WordClockControlSnapshot(
             device = device.toDeviceSnapshot(state),
@@ -161,6 +167,8 @@ class WordClockSdk internal constructor(
 
     private fun execute(
         onResult: (WordClockSdkResult) -> Unit,
+        errorContext: ErrorContext,
+        fallbackErrorCode: String,
         operation: suspend () -> WordClockSdkResult,
     ) {
         scope.launch {
@@ -170,11 +178,42 @@ class WordClockSdk internal constructor(
                 throw cancellation
             } catch (exception: Exception) {
                 WordClockSdkResult(
-                    errorMessage = exception.message ?: "The action could not be completed.",
+                    errorCode = exception.toErrorCode(
+                        errorContext,
+                        fallbackErrorCode
+                    )
                 )
             }
             onResult(result)
         }
+    }
+
+    private fun Exception.toErrorCode(
+        context: ErrorContext,
+        fallback: String,
+    ): String = when (this) {
+        is WordClockDeviceAlreadyAddedException -> "device_already_added"
+        is InvalidWordClockDeviceResponseException -> when (context) {
+            ErrorContext.DEVICES -> "invalid_word_clock_response"
+            ErrorContext.CONTROL -> "invalid_device_response"
+        }
+
+        is WordClockDeviceConnectionException -> when (context) {
+            ErrorContext.DEVICES -> "device_connection_error"
+            ErrorContext.CONTROL -> "control_device_connection_error"
+        }
+
+        is WordClockDeviceNotFoundException -> when (context) {
+            ErrorContext.DEVICES -> "device_not_found"
+            ErrorContext.CONTROL -> "control_device_not_found"
+        }
+
+        else -> fallback
+    }
+
+    private enum class ErrorContext {
+        DEVICES,
+        CONTROL,
     }
 
     private fun WordClockDevice.toDeviceSnapshot(state: WordClockState?) = WordClockDeviceSnapshot(

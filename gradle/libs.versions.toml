@@ -18,6 +18,7 @@ androidJunit = "2.0.2"
 mockk = "1.14.12"
 turbine = "1.2.1"
 truth = "1.4.5"
+mokoResources = "0.27.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -54,6 +55,7 @@ junit-platform-launcher = { group = "org.junit.platform", name = "junit-platform
 mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
 turbine = { group = "app.cash.turbine", name = "turbine", version.ref = "turbine" }
 truth = { group = "com.google.truth", name = "truth", version.ref = "truth" }
+moko-resources = { group = "dev.icerock.moko", name = "resources", version.ref = "mokoResources" }
 hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "hilt" }
 hilt-compiler = { group = "com.google.dagger", name = "hilt-compiler", version.ref = "hilt" }
 
@@ -67,4 +69,5 @@ android-kotlin-multiplatform-library = { id = "com.android.kotlin.multiplatform.
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 android-junit = { id = "de.mannodermaus.android-junit", version.ref = "androidJunit" }
+moko-resources = { id = "dev.icerock.mobile.multiplatform-resources", version.ref = "mokoResources" }
 

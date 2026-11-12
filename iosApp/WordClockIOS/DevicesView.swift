@@ -20,13 +20,13 @@ struct DevicesView: View {
                     addDeviceCard
                     deviceListHeading
                     if !wifi.isAvailable {
-                        notice("Wi-Fi is unavailable. Device controls are paused.", symbol: "wifi.slash", warning: true)
+                        notice(L10n.devicesWifiUnavailable, symbol: "wifi.slash", warning: true)
                     }
                     if let success = model.successMessage {
                         notice(success, symbol: "checkmark.circle.fill", warning: false)
                     }
                     if model.isLoadingDevices && model.devices.isEmpty {
-                        ProgressView("Loading your clocks…")
+                        ProgressView(L10n.loadingDevices)
                             .frame(maxWidth: .infinity)
                             .padding(28)
                     } else if model.devices.isEmpty {
@@ -65,10 +65,10 @@ struct DevicesView: View {
             .onChange(of: wifi.isAvailable) { available in
                 if available { model.loadDevices() }
             }
-            .alert("Something went wrong", isPresented: errorPresented) {
-                Button("OK", role: .cancel) { model.clearNotices() }
+            .alert(L10n.errorTitle, isPresented: errorPresented) {
+                Button(L10n.ok, role: .cancel) { model.clearNotices() }
             } message: {
-                Text(model.errorMessage ?? "Please try again.")
+                Text(model.errorMessage ?? L10n.errorFallback)
             }
             .sheet(isPresented: renameSheetPresented) {
                 if let device = renameTarget {
@@ -78,15 +78,15 @@ struct DevicesView: View {
                 }
             }
             .confirmationDialog(
-                "Remove this clock?",
+                L10n.removeDialogTitle,
                 isPresented: removePresented,
                 titleVisibility: .visible,
                 presenting: removeTarget
             ) { device in
-                Button("Remove", role: .destructive) { model.removeDevice(device) }
-                Button("Cancel", role: .cancel) {}
+                Button(L10n.remove, role: .destructive) { model.removeDevice(device) }
+                Button(L10n.cancel, role: .cancel) {}
             } message: { device in
-                Text("\(device.name) will be removed from this app.")
+                Text(L10n.removeDialogMessage(device.name))
             }
         }
     }
@@ -94,7 +94,7 @@ struct DevicesView: View {
     private var topBar: some View {
         ZStack {
             HStack(spacing: 8) {
-                Text("Devices")
+                Text(L10n.devicesTitle)
                     .font(.system(size: 20, weight: .semibold))
                     .lineLimit(1)
                 Spacer(minLength: 80)
@@ -107,7 +107,7 @@ struct DevicesView: View {
                         .frame(width: 42, height: 42)
                         .contentShape(Rectangle())
                 }
-                .accessibilityLabel(colorScheme == .dark ? "Switch to light theme" : "Switch to dark theme")
+                .accessibilityLabel(colorScheme == .dark ? L10n.themeSwitchToLight : L10n.themeSwitchToDark)
             }
             Image("word_clock_logo")
                 .resizable()
@@ -120,7 +120,7 @@ struct DevicesView: View {
 
     private var heading: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("Your light, in perfect time.")
+            Text(L10n.screenTagline)
                 .font(.system(size: 28, weight: .bold, design: .rounded))
                 .foregroundStyle(
                     LinearGradient(
@@ -130,7 +130,7 @@ struct DevicesView: View {
                     )
                 )
                 .fixedSize(horizontal: false, vertical: true)
-            Text("Connect your clock and shape every moment.")
+            Text(L10n.screenDescription)
                 .font(.system(size: 16))
                 .foregroundStyle(ClockPalette.secondaryText(colorScheme))
         }
@@ -147,8 +147,8 @@ struct DevicesView: View {
                     .frame(width: 46, height: 46)
                     .background(ClockPalette.tertiary(colorScheme).opacity(0.14), in: Circle())
                 VStack(alignment: .leading, spacing: 3) {
-                    Text("Add a word clock").font(.system(size: 20, weight: .semibold))
-                    Text("Enter the clock’s local IP address.")
+                    Text(L10n.addDeviceTitle).font(.system(size: 20, weight: .semibold))
+                    Text(L10n.addDeviceDescription)
                         .font(.system(size: 14))
                         .foregroundStyle(ClockPalette.secondaryText(colorScheme))
                 }
@@ -163,7 +163,7 @@ struct DevicesView: View {
                 HStack(spacing: 9) {
                     if model.isAddingDevice { ProgressView().tint(.white) }
                     else { Image(systemName: "plus.circle.fill") }
-                    Text(model.isAddingDevice ? "Connecting…" : "Add clock")
+                    Text(model.isAddingDevice ? L10n.connectingDevice : L10n.addDeviceButton)
                 }
                 .font(.system(size: 16, weight: .semibold))
                 .frame(maxWidth: .infinity, minHeight: 52)
@@ -178,7 +178,7 @@ struct DevicesView: View {
     }
 
     private var ipField: some View {
-        TextField("IP address (e.g. 192.168.1.100)", text: $ipAddress)
+        TextField(L10n.ipAddressPlaceholder, text: $ipAddress)
             .keyboardType(.decimalPad)
             .textInputAutocapitalization(.never)
             .autocorrectionDisabled()
@@ -191,7 +191,7 @@ struct DevicesView: View {
     }
 
     private var nameField: some View {
-        TextField("Name (optional)", text: $deviceName)
+        TextField(L10n.nameOptional, text: $deviceName)
             .textInputAutocapitalization(.words)
             .textFieldStyle(.plain)
             .padding(.horizontal, 14)
@@ -203,8 +203,8 @@ struct DevicesView: View {
     private var deviceListHeading: some View {
         HStack {
             VStack(alignment: .leading, spacing: 3) {
-                Text("Your clocks").font(.system(size: 21, weight: .semibold))
-                Text("\(model.devices.count) connected device\(model.devices.count == 1 ? "" : "s")")
+                Text(L10n.deviceListTitle).font(.system(size: 21, weight: .semibold))
+                Text(L10n.connectedDeviceCount(model.devices.count))
                     .font(.system(size: 13))
                     .foregroundStyle(ClockPalette.secondaryText(colorScheme))
             }
@@ -217,7 +217,7 @@ struct DevicesView: View {
                     .background(ClockPalette.surfaceVariant(colorScheme).opacity(0.75), in: Circle())
             }
             .disabled(model.isLoadingDevices)
-            .accessibilityLabel("Refresh devices")
+            .accessibilityLabel(L10n.refreshDevicesDescription)
         }
         .padding(.top, 4)
     }
@@ -229,9 +229,9 @@ struct DevicesView: View {
                 .foregroundStyle(ClockPalette.tertiary(colorScheme))
                 .padding(12)
                 .background(ClockPalette.tertiary(colorScheme).opacity(0.12), in: Circle())
-            Text("Your next favorite light starts here")
+            Text(L10n.emptyDevicesTitle)
                 .font(.system(size: 18, weight: .semibold))
-            Text("Add a clock using its local IP address to begin controlling its LEDs.")
+            Text(L10n.emptyDevicesDescription)
                 .font(.system(size: 14))
                 .multilineTextAlignment(.center)
                 .foregroundStyle(ClockPalette.secondaryText(colorScheme))
@@ -255,14 +255,14 @@ struct DevicesView: View {
     private func renameSheet(for device: ClockDevice) -> some View {
         NavigationStack {
             Form {
-                TextField("Clock name", text: $renameValue)
+                TextField(L10n.deviceNameLabel, text: $renameValue)
             }
-            .navigationTitle("Rename clock")
+            .navigationTitle(L10n.renameDialogTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { renameTarget = nil } }
+                ToolbarItem(placement: .cancellationAction) { Button(L10n.cancel) { renameTarget = nil } }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") {
+                    Button(L10n.save) {
                         model.renameDevice(device, to: renameValue)
                         renameTarget = nil
                     }
@@ -321,11 +321,11 @@ private struct DeviceCardView: View {
                     }
                     HStack(spacing: 6) {
                         Circle().fill(online ? ClockPalette.powerOn : ClockPalette.error).frame(width: 7, height: 7)
-                        Text(online ? "Online" : "Offline")
+                        Text(online ? L10n.deviceOnline : L10n.deviceOffline)
                             .font(.system(size: 12, weight: .semibold))
                             .foregroundStyle(online ? ClockPalette.powerOn : ClockPalette.error)
                         if let firmware = device.firmwareVersion {
-                            Text("· Firmware \(firmware)")
+                            Text(L10n.deviceFirmware(firmware))
                                 .font(.system(size: 12))
                                 .foregroundStyle(ClockPalette.secondaryText(colorScheme))
                                 .lineLimit(1)
@@ -339,9 +339,9 @@ private struct DeviceCardView: View {
 
             VStack(spacing: 10) {
                 Menu {
-                    Button(action: onRename) { Label("Rename", systemImage: "pencil") }
+                    Button(action: onRename) { Label(L10n.renameDevice, systemImage: "pencil") }
                     Button(role: .destructive, action: onRemove) {
-                        Label("Remove device", systemImage: "trash")
+                        Label(L10n.removeDevice, systemImage: "trash")
                     }
                 } label: {
                     Image(systemName: "ellipsis")
@@ -362,7 +362,7 @@ private struct DeviceCardView: View {
                     }
                 }
                 .disabled(!online || isWorking)
-                .accessibilityLabel(device.isOn ? "Turn off \(device.name)" : "Turn on \(device.name)")
+                .accessibilityLabel(L10n.devicePowerLabel(isOn: device.isOn, deviceName: device.name))
             }
         }
         .padding(16)

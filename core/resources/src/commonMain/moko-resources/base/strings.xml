@@ -1,0 +1,170 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="local_network_permission_required">Allow local network access to connect to your
+        Word Clock.
+    </string>
+    <string name="screen_title">WordClock</string>
+    <string name="app_logo_description">WordClock logo</string>
+    <string name="screen_tagline">Ghazarian Luxury Art</string>
+    <string name="screen_description">Connect your clocks over Wi-Fi and control their light from
+        one place.
+    </string>
+    <string name="add_device_title">Add a clock</string>
+    <string name="add_device_description">Enter the local IP address shown in your clock’s
+        settings.
+    </string>
+    <string name="ip_address_label">IP address</string>
+    <string name="ip_address_placeholder">192.168.1.100</string>
+    <string name="device_name_optional">Name (optional)</string>
+    <string name="device_name_placeholder">Living room</string>
+    <string name="add_device">Add device</string>
+    <string name="connecting_device">Connecting…</string>
+    <string name="device_list_title">Your clocks</string>
+    <string name="no_devices_count">No clocks connected yet</string>
+    <string name="refreshing">Refreshing…</string>
+    <string name="refresh_devices_description">Refresh device list</string>
+    <string name="theme_switch_to_dark">Switch to dark theme</string>
+    <string name="theme_switch_to_light">Switch to light theme</string>
+    <string name="more_options_glyph">⋮</string>
+    <string name="device_ip">IP: %1$s</string>
+    <string name="device_firmware">Firmware %1$s</string>
+    <string name="device_led_count">%1$d LEDs</string>
+    <string name="device_online">Online</string>
+    <string name="device_offline">Offline</string>
+    <string name="device_checking">Checking</string>
+    <string name="power_status_on">On</string>
+    <string name="power_status_off">Off</string>
+    <string name="manage_device">Manage %1$s</string>
+    <string name="power_updating">Updating power for %1$s</string>
+    <string name="power_unavailable">Power control for %1$s is unavailable</string>
+    <string name="power_toggle">Toggle power for %1$s</string>
+    <string name="device_power_turn_off">Turn off %1$s</string>
+    <string name="device_power_turn_on">Turn on %1$s</string>
+    <string name="rename_device">Rename</string>
+    <string name="remove_device">Remove device</string>
+    <string name="loading_devices">Loading your clocks…</string>
+    <string name="empty_devices_title">Your next favorite light starts here</string>
+    <string name="empty_devices_description">Add a clock using its local IP address to begin
+        controlling its LEDs.
+    </string>
+    <string name="retry">Try again</string>
+    <string name="rename_dialog_title">Rename clock</string>
+    <string name="device_name_label">Clock name</string>
+    <string name="saving">Saving…</string>
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
+    <string name="remove_dialog_title">Remove this clock?</string>
+    <string name="remove_dialog_message">“%1$s” will be removed from this app.</string>
+    <string name="removing">Removing…</string>
+    <string name="delete">Remove</string>
+    <string name="device_added">%1$s is ready to control.</string>
+    <string name="device_added_state_unavailable">The clock was added, but its power state could not
+        be read.
+    </string>
+    <string name="devices_load_error">Your clock list could not be loaded.</string>
+    <string name="device_name_required">Enter a name for this clock.</string>
+    <string name="device_renamed">Clock name updated.</string>
+    <string name="device_removed">Clock removed from this app.</string>
+    <string name="device_already_added">This clock is already in your list.</string>
+    <string name="invalid_word_clock_response">This IP did not respond as a Word Clock. Check the IP
+        address and device connection.
+    </string>
+    <string name="device_connection_error">Could not connect. Make sure your phone and clock are on
+        the same Wi-Fi network.
+    </string>
+    <string name="device_not_found">Clock not found. Refresh your list and try again.</string>
+    <string name="generic_device_error">The action could not be completed. Check the device details
+        and network connection.
+    </string>
+    <string name="invalid_private_ip">Enter a valid private IP address, such as 192.168.1.100.
+    </string>
+    <string name="control_title">Clock control</string>
+    <string name="back_to_devices_description">Back to devices</string>
+    <string name="refresh_clock_description">Refresh clock status</string>
+    <string name="wifi_not_connected">Wi-Fi is not connected.</string>
+    <string name="syncing">Syncing your clock…</string>
+    <string name="device_unavailable">Clock is unavailable.</string>
+    <string name="clock_on_summary">On · %1$d%% brightness</string>
+    <string name="control_power_turn_off">Turn off</string>
+    <string name="control_power_turn_on">Turn on</string>
+    <string name="brightness_title">Brightness</string>
+    <string name="brightness_description">LED light intensity</string>
+    <string name="brightness_percent">%1$d%%</string>
+    <string name="brightness_slider_description">Brightness from zero to 255</string>
+    <string name="color_title">LED color</string>
+    <string name="choose_color">Choose color</string>
+    <string name="device_info_title">Clock details</string>
+    <string name="physical_led_count">Physical LEDs</string>
+    <string name="active_segment_led_count">Active segment LEDs</string>
+    <string name="segment_count">Segments</string>
+    <string name="firmware">Firmware</string>
+    <string name="devices_title">Your clocks</string>
+    <string name="no_devices">No clocks have been added yet.</string>
+    <string name="selected_color">Selected color · %1$s</string>
+    <string name="colors_tab">Colors</string>
+    <string name="whites_tab">Whites</string>
+    <string name="color_wheel_description">Drag on the wheel to choose a color.</string>
+    <string name="white_mix_description">White tones are adjusted using RGB values.</string>
+    <string name="color_wheel_content_description">RGB color wheel</string>
+    <string name="color_red">Red</string>
+    <string name="color_orange">Orange</string>
+    <string name="color_yellow">Yellow</string>
+    <string name="color_green">Green</string>
+    <string name="color_cyan">Cyan</string>
+    <string name="color_blue">Blue</string>
+    <string name="color_purple">Purple</string>
+    <string name="color_white">White</string>
+    <string name="color_warm_white">Warm</string>
+    <string name="color_soft_white">Soft</string>
+    <string name="color_natural_white">Natural</string>
+    <string name="color_day_light">Daylight</string>
+    <string name="color_cool_white">Cool</string>
+    <string name="color_blue_sky">Blue Sky</string>
+    <string name="selected_color_checkmark">✓</string>
+    <string name="loading_device_state">Getting your clock’s status…</string>
+    <string name="connection_failed">Connection failed</string>
+    <string name="no_device_selected">No clock is selected.</string>
+    <string name="device_id_missing">The clock ID is unavailable.</string>
+    <string name="wifi_reconnect_message">Wi-Fi is unavailable. Your clock will be checked
+        automatically when it reconnects.
+    </string>
+    <string name="wifi_lost_message">Wi-Fi disconnected. Clock controls are paused until it
+        reconnects.
+    </string>
+    <string name="control_device_connection_error">Could not reach the Word Clock. Check Wi-Fi and
+        the clock’s IP address.
+    </string>
+    <string name="invalid_device_response">The clock returned an invalid response. Refresh its
+        status and try again.
+    </string>
+    <string name="control_device_not_found">Clock not found. Refresh the clock list and try again.
+    </string>
+    <string name="generic_control_error">The action could not be completed. Please try again.
+    </string>
+    <string name="ios_devices_title">Devices</string>
+    <string name="ios_wifi_unavailable">Wi-Fi is unavailable. Device controls are paused.</string>
+    <string name="error_title">Something went wrong</string>
+    <string name="ok">OK</string>
+    <string name="error_fallback">Please try again.</string>
+    <string name="ios_add_device_title">Add a word clock</string>
+    <string name="ios_add_device_description">Enter the clock?s local IP address.</string>
+    <string name="ios_ip_address_placeholder">IP address (e.g. 192.168.1.100)</string>
+    <string name="ios_add_device_button">Add clock</string>
+    <string name="ios_empty_devices_title">Your next favorite light starts here</string>
+    <string name="ios_empty_devices_description">Add a clock using its local IP address to begin
+        controlling its LEDs.
+    </string>
+    <string name="ios_connected_to_clock">Connected to your clock</string>
+    <string name="ios_clock_on">Clock is on</string>
+    <string name="ios_clock_off">Clock is off</string>
+    <string name="ios_power_off_summary">LEDs are currently off</string>
+    <string name="ios_color_mode">Color mode</string>
+    <string name="unknown">Unknown</string>
+    <string name="ios_unavailable_check_ip">Check the clock?s local IP address and try again.
+    </string>
+    <string name="ios_wifi_reconnect_short">Wi-Fi will be checked automatically when it
+        reconnects.
+    </string>
+    <string name="empty_response">The clock returned an empty response.</string>
+    <string name="ios_device_firmware">· Firmware %1$s</string>
+</resources>

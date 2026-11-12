@@ -17,7 +17,19 @@ import com.ghazarian.wordclock.core.domain.usecase.RenameWordClockDevice
 import com.ghazarian.wordclock.core.domain.usecase.SetWordClockPower
 import com.ghazarian.wordclock.core.model.DeviceAddress
 import com.ghazarian.wordclock.core.model.WordClockDevice
-import com.ghazarian.wordclock.feature.devices.R
+import com.ghazarian.wordclock.resources.MR
+import com.ghazarian.wordclock.resources.device_added
+import com.ghazarian.wordclock.resources.device_added_state_unavailable
+import com.ghazarian.wordclock.resources.device_already_added
+import com.ghazarian.wordclock.resources.device_connection_error
+import com.ghazarian.wordclock.resources.device_name_required
+import com.ghazarian.wordclock.resources.device_not_found
+import com.ghazarian.wordclock.resources.device_removed
+import com.ghazarian.wordclock.resources.device_renamed
+import com.ghazarian.wordclock.resources.devices_load_error
+import com.ghazarian.wordclock.resources.generic_device_error
+import com.ghazarian.wordclock.resources.invalid_private_ip
+import com.ghazarian.wordclock.resources.invalid_word_clock_response
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
@@ -27,6 +39,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.milliseconds
 
 @HiltViewModel
 class DevicesViewModel @Inject constructor(
@@ -123,7 +136,10 @@ class DevicesViewModel @Inject constructor(
                                     }),
                             devicePower = state.devicePower +
                                     (device.id to wordClockState.isOn),
-                            successMessage = UiText(R.string.device_added, listOf(device.name)),
+                            successMessage = UiText(
+                                MR.strings.device_added.resourceId,
+                                listOf(device.name)
+                            ),
                         )
                     }
                 } catch (cancellation: CancellationException) {
@@ -137,8 +153,11 @@ class DevicesViewModel @Inject constructor(
                                     } else {
                                         DeviceConnectionStatus.OFFLINE
                                     }),
-                            actionErrorMessage = UiText(R.string.device_added_state_unavailable),
-                            successMessage = UiText(R.string.device_added, listOf(device.name)),
+                            actionErrorMessage = UiText(MR.strings.device_added_state_unavailable.resourceId),
+                            successMessage = UiText(
+                                MR.strings.device_added.resourceId,
+                                listOf(device.name)
+                            ),
                         )
                     }
                 }
@@ -188,7 +207,7 @@ class DevicesViewModel @Inject constructor(
                         it.copy(
                             isLoading = false,
                             isRefreshing = false,
-                            listErrorMessage = UiText(R.string.devices_load_error),
+                            listErrorMessage = UiText(MR.strings.devices_load_error.resourceId),
                         )
                     }
                     return@launch
@@ -285,7 +304,7 @@ class DevicesViewModel @Inject constructor(
                     connectionStatus = state.devices.associate {
                         it.id to DeviceConnectionStatus.OFFLINE
                     },
-                    isLoading = if (loadingStoredDevices) state.isLoading else false,
+                    isLoading = loadingStoredDevices && state.isLoading,
                     isRefreshing = false,
                 )
             }
@@ -295,12 +314,12 @@ class DevicesViewModel @Inject constructor(
         wifiReconnectJob?.cancel()
         wifiReconnectJob = viewModelScope.launch {
             // Wait for Android to finish switching routes before probing the devices.
-            delay(750)
+            delay(750.milliseconds)
             if (wifiAvailabilityMonitor.isWifiAvailable.value) refresh()
 
             // A probe started during route handover can fail after it has already
             // completed. Recheck once more if any device is still not confirmed online.
-            delay(1_500)
+            delay(1_500.milliseconds)
             val latest = _uiState.value
             val needsAnotherCheck = latest.isLoading || latest.isRefreshing ||
                     latest.devices.any {
@@ -385,7 +404,7 @@ class DevicesViewModel @Inject constructor(
         val deviceId = current.editingDeviceId ?: return
         val name = current.editingName.trim()
         if (name.isEmpty()) {
-            _uiState.update { it.copy(actionErrorMessage = UiText(R.string.device_name_required)) }
+            _uiState.update { it.copy(actionErrorMessage = UiText(MR.strings.device_name_required.resourceId)) }
             return
         }
         if (current.isRenaming) return
@@ -401,7 +420,7 @@ class DevicesViewModel @Inject constructor(
                         },
                         editingDeviceId = null,
                         editingName = "",
-                        successMessage = UiText(R.string.device_renamed),
+                        successMessage = UiText(MR.strings.device_renamed.resourceId),
                     )
                 }
             } catch (cancellation: CancellationException) {
@@ -442,7 +461,7 @@ class DevicesViewModel @Inject constructor(
                         devicePower = state.devicePower - deviceId,
                         powerUpdatingDeviceIds = state.powerUpdatingDeviceIds - deviceId,
                         pendingRemovalId = null,
-                        successMessage = UiText(R.string.device_removed),
+                        successMessage = UiText(MR.strings.device_removed.resourceId),
                     )
                 }
             } catch (cancellation: CancellationException) {
@@ -456,15 +475,15 @@ class DevicesViewModel @Inject constructor(
     }
 
     private fun errorMessage(exception: Exception): UiText = when (exception) {
-        is WordClockDeviceAlreadyAddedException -> UiText(R.string.device_already_added)
+        is WordClockDeviceAlreadyAddedException -> UiText(MR.strings.device_already_added.resourceId)
         is InvalidWordClockDeviceResponseException ->
-            UiText(R.string.invalid_word_clock_response)
+            UiText(MR.strings.invalid_word_clock_response.resourceId)
 
         is WordClockDeviceConnectionException ->
-            UiText(R.string.device_connection_error)
+            UiText(MR.strings.device_connection_error.resourceId)
 
-        is WordClockDeviceNotFoundException -> UiText(R.string.device_not_found)
-        else -> UiText(R.string.generic_device_error)
+        is WordClockDeviceNotFoundException -> UiText(MR.strings.device_not_found.resourceId)
+        else -> UiText(MR.strings.generic_device_error.resourceId)
     }
 
     private fun createAddressOrShowError(value: String): DeviceAddress? = try {
@@ -472,7 +491,7 @@ class DevicesViewModel @Inject constructor(
     } catch (_: IllegalArgumentException) {
         _uiState.update {
             it.copy(
-                formErrorMessage = UiText(R.string.invalid_private_ip),
+                formErrorMessage = UiText(MR.strings.invalid_private_ip.resourceId),
                 successMessage = null,
             )
         }

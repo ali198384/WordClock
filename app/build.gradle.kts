@@ -41,6 +41,7 @@ android {
 dependencies {
     implementation(projects.core.data)
     implementation(projects.core.domain)
+    implementation(projects.core.resources)
     implementation(projects.core.storage)
     implementation(projects.core.designsystem)
     implementation(projects.feature.devices)

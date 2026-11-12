@@ -64,7 +64,7 @@ final class AppModel: ObservableObject {
                     let device = try self.require(result.device, from: result)
                     self.devices.removeAll { $0.id == device.id }
                     self.devices.insert(device, at: 0)
-                    self.successMessage = "\(device.name) is ready to control."
+                    self.successMessage = L10n.deviceAdded(device.name)
                 } catch {
                     self.errorMessage = error.localizedDescription
                 }
@@ -79,7 +79,7 @@ final class AppModel: ObservableObject {
         }, extract: { try self.require($0.device, from: $0) }, onSuccess: { [weak self] updated in
             guard let self else { return }
             self.replace(updated)
-            self.successMessage = "Clock name updated."
+            self.successMessage = L10n.clockNameUpdated
         })
     }
 
@@ -91,7 +91,7 @@ final class AppModel: ObservableObject {
             guard let self else { return }
             self.devices.removeAll { $0.id == device.id }
             if self.control?.device.id == device.id { self.updateControl(nil) }
-            self.successMessage = "Clock removed from this app."
+            self.successMessage = L10n.clockRemoved
         })
     }
 
@@ -283,9 +283,11 @@ final class AppModel: ObservableObject {
         _ value: Value?,
         from result: WordClockSdkResult
     ) throws -> Value {
-        if let message = result.errorMessage { throw SdkError(message: message) }
+        if let errorCode = result.errorCode {
+            throw SdkError(message: L10n.errorMessage(for: errorCode))
+        }
         guard let value else {
-            throw SdkError(message: "The clock returned an empty response.")
+            throw SdkError(message: L10n.emptyResponse)
         }
         return value
     }

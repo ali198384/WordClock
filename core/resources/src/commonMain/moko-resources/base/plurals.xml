@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <plural name="device_count">
+        <item quantity="one">%1$d clock</item>
+        <item quantity="other">%1$d clocks</item>
+    </plural>
+    <plural name="connected_device_count">
+        <item quantity="one">%1$d connected device</item>
+        <item quantity="other">%1$d connected devices</item>
+    </plural>
+</resources>

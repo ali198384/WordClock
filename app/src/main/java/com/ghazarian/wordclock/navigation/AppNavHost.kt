@@ -20,13 +20,14 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.ghazarian.wordclock.R
 import com.ghazarian.wordclock.core.designsystem.text.UiText
 import com.ghazarian.wordclock.core.designsystem.theme.ThemeMode
 import com.ghazarian.wordclock.feature.control.presentation.ControlRoute
 import com.ghazarian.wordclock.feature.control.presentation.ControlViewModel
 import com.ghazarian.wordclock.feature.devices.presentation.DevicesRoute
 import com.ghazarian.wordclock.feature.devices.presentation.DevicesViewModel
+import com.ghazarian.wordclock.resources.MR
+import com.ghazarian.wordclock.resources.local_network_permission_required
 
 @Composable
 fun AppNavHost(
@@ -51,7 +52,8 @@ fun AppNavHost(
                     permissionMessage = null
                     viewModel.addDevice()
                 } else {
-                    permissionMessage = UiText(R.string.local_network_permission_required)
+                    permissionMessage =
+                        UiText(MR.strings.local_network_permission_required.resourceId)
                 }
             }
             DevicesRoute(
