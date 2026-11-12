@@ -49,6 +49,8 @@ workflows:
             -target WordClockIOS \
             -sdk iphonesimulator \
             -configuration Debug \
+            SYMROOT="$CM_BUILD_DIR/build/ios-simulator/Build/Products" \
+            OBJROOT="$CM_BUILD_DIR/build/ios-simulator/Build/Intermediates.noindex" \
             > "$DIAG_DIR/xcode-build-settings.log" 2>&1
           STATUS=$?
           set -e
@@ -93,7 +95,8 @@ workflows:
               -target WordClockIOS \
               -sdk iphonesimulator \
               -configuration Debug \
-              -derivedDataPath "$CM_BUILD_DIR/build/ios-simulator" \
+              SYMROOT="$CM_BUILD_DIR/build/ios-simulator/Build/Products" \
+              OBJROOT="$CM_BUILD_DIR/build/ios-simulator/Build/Intermediates.noindex" \
               ARCHS=arm64 \
               CODE_SIGNING_ALLOWED=NO \
               CODE_SIGNING_REQUIRED=NO \
@@ -248,7 +251,8 @@ workflows:
             -target WordClockIOS \
             -sdk iphoneos \
             -configuration Debug \
-            -derivedDataPath "$CM_BUILD_DIR/build/ios-device" \
+            SYMROOT="$CM_BUILD_DIR/build/ios-device/Build/Products" \
+            OBJROOT="$CM_BUILD_DIR/build/ios-device/Build/Intermediates.noindex" \
             ARCHS=arm64 \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
