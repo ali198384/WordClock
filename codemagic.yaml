@@ -5,7 +5,7 @@ workflows:
     instance_type: mac_mini_m2
 
     environment:
-      xcode: 26.4
+      xcode: latest
 
     cache:
       cache_paths:
