@@ -46,9 +46,8 @@ workflows:
           set +e
           xcodebuild -showBuildSettings \
             -project "$CM_BUILD_DIR/iosApp/WordClock.xcodeproj" \
-            -scheme WordClockIOS \
+            -target WordClockIOS \
             -sdk iphonesimulator \
-            -destination "generic/platform=iOS Simulator" \
             -configuration Debug \
             > "$DIAG_DIR/xcode-build-settings.log" 2>&1
           STATUS=$?
@@ -56,10 +55,12 @@ workflows:
           echo "xcodebuild -showBuildSettings exit code: $STATUS" \
             | tee "$DIAG_DIR/xcode-build-settings-status.txt"
           if [ "$STATUS" -ne 0 ]; then
-            find "$HOME/Library/Logs/DiagnosticReports" -maxdepth 2 -type f -mmin -60 \
-              \( -iname '*xcodebuild*.ips' -o -iname '*xcodebuild*.crash' -o -iname 'Xcode*.ips' -o -iname 'Xcode*.crash' \) \
+            sleep 10
+            find "$HOME/Library/Logs/DiagnosticReports" -maxdepth 3 -type f -mmin -90 \
+              \( -iname '*xcodebuild*' -o -iname '*xcbuild*' \) \
               -exec cp -p {} "$DIAG_DIR/" \; 2>/dev/null || true
-            exit "$STATUS"
+            find "$HOME/Library/Logs/DiagnosticReports" -maxdepth 3 -type f -mmin -90 -print \
+              > "$DIAG_DIR/recent-diagnostic-reports.txt" 2>&1 || true
           fi
 
           set +e
@@ -103,10 +104,11 @@ workflows:
             STATUS=$?
             echo "xcodebuild exited with status $STATUS" \
               | tee -a "$CM_BUILD_DIR/build/ios-simulator-build.log"
-            find "$HOME/Library/Logs/DiagnosticReports" -maxdepth 2 -type f -mmin -60 \
-              \( -iname '*xcodebuild*.ips' -o -iname '*xcodebuild*.crash' -o -iname 'Xcode*.ips' -o -iname 'Xcode*.crash' \) \
+            sleep 10
+            find "$HOME/Library/Logs/DiagnosticReports" -maxdepth 3 -type f -mmin -90 \
+              \( -iname '*xcodebuild*' -o -iname '*xcbuild*' \) \
               -exec cp -p {} "$CM_BUILD_DIR/build/xcode-diagnostics/" \; 2>/dev/null || true
-            find "$HOME/Library/Logs/DiagnosticReports" -maxdepth 2 -type f -mmin -60 -print \
+            find "$HOME/Library/Logs/DiagnosticReports" -maxdepth 3 -type f -mmin -90 -print \
               > "$CM_BUILD_DIR/build/xcode-diagnostics/recent-diagnostic-reports.txt" 2>&1 || true
           fi
           exit "$STATUS"
