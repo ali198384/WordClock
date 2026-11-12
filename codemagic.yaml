@@ -42,12 +42,33 @@ workflows:
           mkdir -p "$DIAG_DIR"
           xcodebuild -version 2>&1 | tee "$DIAG_DIR/xcode-version.log"
           plutil -lint "$CM_BUILD_DIR/iosApp/WordClock.xcodeproj/project.pbxproj" 2>&1 | tee "$DIAG_DIR/project-lint.log"
+
+          set +e
+          xcodebuild -showBuildSettings \
+            -project "$CM_BUILD_DIR/iosApp/WordClock.xcodeproj" \
+            -scheme WordClockIOS \
+            -sdk iphonesimulator \
+            -configuration Debug \
+            > "$DIAG_DIR/xcode-build-settings.log" 2>&1
+          STATUS=$?
+          set -e
+          echo "xcodebuild -showBuildSettings exit code: $STATUS" \
+            | tee "$DIAG_DIR/xcode-build-settings-status.txt"
+          if [ "$STATUS" -ne 0 ]; then
+            find "$HOME/Library/Logs/DiagnosticReports" -maxdepth 2 -type f -mmin -60 \
+              \( -iname '*xcodebuild*.ips' -o -iname '*xcodebuild*.crash' -o -iname 'Xcode*.ips' -o -iname 'Xcode*.crash' \) \
+              -exec cp -p {} "$DIAG_DIR/" \; 2>/dev/null || true
+            exit "$STATUS"
+          fi
+
           set +e
           xcodebuild -list -project "$CM_BUILD_DIR/iosApp/WordClock.xcodeproj" 2>&1 | tee "$DIAG_DIR/project-list.log"
           STATUS=$?
           set -e
           if [ "$STATUS" -ne 0 ]; then
-            find "$HOME/Library/Logs/DiagnosticReports" -maxdepth 1 -type f -mmin -30 -iname '*xcodebuild*' -exec cp -p {} "$DIAG_DIR/" \; 2>/dev/null || true
+            find "$HOME/Library/Logs/DiagnosticReports" -maxdepth 2 -type f -mmin -60 \
+              \( -iname '*xcodebuild*.ips' -o -iname '*xcodebuild*.crash' -o -iname 'Xcode*.ips' -o -iname 'Xcode*.crash' \) \
+              -exec cp -p {} "$DIAG_DIR/" \; 2>/dev/null || true
           fi
           exit "$STATUS"
 
@@ -79,7 +100,13 @@ workflows:
             STATUS=0
           else
             STATUS=$?
-            find "$HOME/Library/Logs/DiagnosticReports" -maxdepth 1 -type f -mmin -30 -iname '*xcodebuild*' -exec cp -p {} "$CM_BUILD_DIR/build/xcode-diagnostics/" \; 2>/dev/null || true
+            echo "xcodebuild exited with status $STATUS" \
+              | tee -a "$CM_BUILD_DIR/build/ios-simulator-build.log"
+            find "$HOME/Library/Logs/DiagnosticReports" -maxdepth 2 -type f -mmin -60 \
+              \( -iname '*xcodebuild*.ips' -o -iname '*xcodebuild*.crash' -o -iname 'Xcode*.ips' -o -iname 'Xcode*.crash' \) \
+              -exec cp -p {} "$CM_BUILD_DIR/build/xcode-diagnostics/" \; 2>/dev/null || true
+            find "$HOME/Library/Logs/DiagnosticReports" -maxdepth 2 -type f -mmin -60 -print \
+              > "$CM_BUILD_DIR/build/xcode-diagnostics/recent-diagnostic-reports.txt" 2>&1 || true
           fi
           exit "$STATUS"
 
