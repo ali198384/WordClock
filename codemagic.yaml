@@ -5,7 +5,7 @@ workflows:
     instance_type: mac_mini_m2
 
     environment:
-      xcode: 26.4
+      xcode: latest
 
     cache:
       cache_paths:
@@ -26,22 +26,45 @@ workflows:
           fi
           echo "sdk.dir=$SDK_ROOT" > local.properties
 
+      - name: Validate Xcode project and capture diagnostics
+        script: |
+          set -e
+          set -o pipefail
+          DIAG_DIR="$CM_BUILD_DIR/build/xcode-diagnostics"
+          mkdir -p "$DIAG_DIR"
+          xcodebuild -version 2>&1 | tee "$DIAG_DIR/xcode-version.log"
+          plutil -lint "$CM_BUILD_DIR/iosApp/WordClock.xcodeproj/project.pbxproj" 2>&1 | tee "$DIAG_DIR/project-lint.log"
+          set +e
+          xcodebuild -list -project "$CM_BUILD_DIR/iosApp/WordClock.xcodeproj" 2>&1 | tee "$DIAG_DIR/project-list.log"
+          STATUS=$?
+          set -e
+          if [ "$STATUS" -ne 0 ]; then
+            find "$HOME/Library/Logs/DiagnosticReports" -maxdepth 1 -type f -mmin -30 -iname '*xcodebuild*' -exec cp -p {} "$DIAG_DIR/" \; 2>/dev/null || true
+          fi
+          exit "$STATUS"
+
       - name: Build iOS Simulator app
         script: |
           set -e
           set -o pipefail
           mkdir -p "$CM_BUILD_DIR/build"
-          xcodebuild build \
-            -project "$CM_BUILD_DIR/iosApp/WordClock.xcodeproj" \
-            -scheme WordClockIOS \
-            -sdk iphonesimulator \
-            -destination "generic/platform=iOS Simulator" \
-            -configuration Debug \
-            -derivedDataPath "$CM_BUILD_DIR/build/ios-simulator" \
-            ARCHS=arm64 \
-            CODE_SIGNING_ALLOWED=NO \
-            CODE_SIGNING_REQUIRED=NO \
-            2>&1 | tee "$CM_BUILD_DIR/build/ios-simulator-build.log"
+          if xcodebuild build \
+              -project "$CM_BUILD_DIR/iosApp/WordClock.xcodeproj" \
+              -scheme WordClockIOS \
+              -sdk iphonesimulator \
+              -destination "generic/platform=iOS Simulator" \
+              -configuration Debug \
+              -derivedDataPath "$CM_BUILD_DIR/build/ios-simulator" \
+              ARCHS=arm64 \
+              CODE_SIGNING_ALLOWED=NO \
+              CODE_SIGNING_REQUIRED=NO \
+              2>&1 | tee "$CM_BUILD_DIR/build/ios-simulator-build.log"; then
+            STATUS=0
+          else
+            STATUS=$?
+            find "$HOME/Library/Logs/DiagnosticReports" -maxdepth 1 -type f -mmin -30 -iname '*xcodebuild*' -exec cp -p {} "$CM_BUILD_DIR/build/xcode-diagnostics/" \; 2>/dev/null || true
+          fi
+          exit "$STATUS"
 
       - name: Install and launch on an iPhone Simulator
         script: |
@@ -71,6 +94,7 @@ workflows:
     artifacts:
       - build/ios-simulator/Build/Products/Debug-iphonesimulator/WordClockIOS.app
       - build/simulator-diagnostics/**
+      - build/xcode-diagnostics/**
       - build/WordClock-iOS-Simulator.zip
       - build/ios-simulator-build.log
 
