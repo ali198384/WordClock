@@ -109,7 +109,7 @@
 			outputPaths = ();
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "set -e\ncd \"$SRCROOT/..\"\nif [ \"$PLATFORM_NAME\" = \"iphonesimulator\" ]; then\n  ./gradlew :shared:link${CONFIGURATION}FrameworkIosSimulatorArm64\nelse\n  ./gradlew :shared:link${CONFIGURATION}FrameworkIosArm64\nfi\n";
+			shellScript = "set -e\nif [ \"${WORDCLOCK_SKIP_GRADLE_FRAMEWORK_BUILD:-0}\" = \"1\" ]; then\n  echo \"Using the Kotlin framework built by the separate Gradle step.\"\n  exit 0\nfi\ncd \"$SRCROOT/..\"\nif [ \"$PLATFORM_NAME\" = \"iphonesimulator\" ]; then\n  ./gradlew :shared:link${CONFIGURATION}FrameworkIosSimulatorArm64\nelse\n  ./gradlew :shared:link${CONFIGURATION}FrameworkIosArm64\nfi\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 

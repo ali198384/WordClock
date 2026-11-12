@@ -5,7 +5,7 @@ workflows:
     instance_type: mac_mini_m2
 
     environment:
-      xcode: latest
+      xcode: 26.4
 
     cache:
       cache_paths:
@@ -51,12 +51,21 @@ workflows:
           fi
           exit "$STATUS"
 
+      - name: Build Kotlin/Native Simulator framework
+        script: |
+          set -e
+          set -o pipefail
+          cd "$CM_BUILD_DIR"
+          mkdir -p "$CM_BUILD_DIR/build"
+          ./gradlew :shared:linkDebugFrameworkIosSimulatorArm64 --stacktrace --info \
+            2>&1 | tee "$CM_BUILD_DIR/build/kotlin-ios-simulator-framework.log"
+
       - name: Build iOS Simulator app
         script: |
           set -e
           set -o pipefail
           mkdir -p "$CM_BUILD_DIR/build"
-          if xcodebuild build \
+          if WORDCLOCK_SKIP_GRADLE_FRAMEWORK_BUILD=1 xcodebuild build \
               -project "$CM_BUILD_DIR/iosApp/WordClock.xcodeproj" \
               -scheme WordClockIOS \
               -sdk iphonesimulator \
@@ -154,6 +163,7 @@ workflows:
       - build/xcode-diagnostics/**
       - build/WordClock-iOS-Simulator.zip
       - build/ios-simulator-build.log
+      - build/kotlin-ios-simulator-framework.log
 
   ios-unsigned-ipa:
     name: WordClock - Unsigned iOS IPA
@@ -190,12 +200,21 @@ workflows:
           java -version
           ./gradlew --version
 
+      - name: Build Kotlin/Native iPhone framework
+        script: |
+          set -e
+          set -o pipefail
+          cd "$CM_BUILD_DIR"
+          mkdir -p "$CM_BUILD_DIR/build"
+          ./gradlew :shared:linkDebugFrameworkIosArm64 --stacktrace --info \
+            2>&1 | tee "$CM_BUILD_DIR/build/kotlin-ios-device-framework.log"
+
       - name: Build unsigned iPhone app
         script: |
           set -e
           set -o pipefail
           mkdir -p "$CM_BUILD_DIR/build"
-          xcodebuild build \
+          WORDCLOCK_SKIP_GRADLE_FRAMEWORK_BUILD=1 xcodebuild build \
             -project "$CM_BUILD_DIR/iosApp/WordClock.xcodeproj" \
             -scheme WordClockIOS \
             -sdk iphoneos \
@@ -224,3 +243,4 @@ workflows:
     artifacts:
       - build/WordClock-unsigned.ipa
       - build/ios-device-build.log
+      - build/kotlin-ios-device-framework.log
