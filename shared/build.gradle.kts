@@ -30,6 +30,7 @@ kotlin {
             implementation(projects.core.designsystem)
             implementation(projects.feature.devices)
             implementation(projects.feature.control)
+            implementation(libs.androidx.navigation.compose)
             implementation(libs.kotlinx.coroutines.core)
             api(libs.compose.runtime)
             implementation(libs.compose.components.resources)

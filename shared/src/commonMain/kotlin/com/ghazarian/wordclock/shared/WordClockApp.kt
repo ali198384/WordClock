@@ -3,11 +3,15 @@ package com.ghazarian.wordclock.shared
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
+import androidx.savedstate.read
 import com.ghazarian.wordclock.core.designsystem.WordClockSharedTheme
 import com.ghazarian.wordclock.core.designsystem.resources.Res
 import com.ghazarian.wordclock.core.designsystem.resources.device_added
@@ -28,11 +32,11 @@ import com.ghazarian.wordclock.core.designsystem.resources.wifi_not_connected
 import com.ghazarian.wordclock.core.domain.connectivity.WifiAvailabilityMonitor
 import com.ghazarian.wordclock.core.domain.repository.WordClockRepository
 import com.ghazarian.wordclock.core.storage.ThemeModeStorage
-import com.ghazarian.wordclock.feature.control.presentation.ControlScreen
 import com.ghazarian.wordclock.feature.control.presentation.ControlScreenState
 import com.ghazarian.wordclock.feature.devices.presentation.ConnectionStatus
-import com.ghazarian.wordclock.feature.devices.presentation.DevicesScreen
 import com.ghazarian.wordclock.feature.devices.presentation.DevicesScreenState
+import com.ghazarian.wordclock.shared.navigation.AppNavHost
+import com.ghazarian.wordclock.shared.navigation.AppRoute
 import com.ghazarian.wordclock.shared.presentation.AppMessage
 import com.ghazarian.wordclock.shared.presentation.WordClockAppState
 import com.ghazarian.wordclock.shared.presentation.WordClockPresenter
@@ -49,57 +53,55 @@ fun WordClockApp(
         WordClockPresenter(repository, themeModeStorage, wifiAvailabilityMonitor)
     }
     val state by presenter.state.collectAsState()
-    PlatformBackHandler(state.selectedDeviceId != null, presenter::goBackToDevices)
+    val navController = rememberNavController()
+    val backStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = backStackEntry?.destination?.route
+    val routeDeviceId = backStackEntry?.arguments?.read {
+        getStringOrNull(AppRoute.ControlRoute.DEVICE_ID_ARGUMENT)
+    }
+
+    LaunchedEffect(currentRoute, routeDeviceId, routeDeviceId?.let { state.connectionStatus[it] }) {
+        if (routeDeviceId == null) {
+            presenter.goBackToDevices()
+        } else if (
+            state.selectedDeviceId != routeDeviceId &&
+            state.connectionStatus[routeDeviceId] == ConnectionStatus.ONLINE
+        ) {
+            presenter.selectDevice(routeDeviceId)
+        }
+    }
+
     DisposableEffect(presenter) {
         presenter.start()
         onDispose { presenter.close() }
     }
 
+    val openDeviceControl: (String) -> Unit = { deviceId ->
+        if (
+            deviceId != routeDeviceId &&
+            state.wifiAvailable &&
+            state.connectionStatus[deviceId] == ConnectionStatus.ONLINE
+        ) {
+            presenter.selectDevice(deviceId)
+            navController.navigate(AppRoute.ControlRoute.createRoute(deviceId)) {
+                popUpTo(AppRoute.DevicesRoute.route)
+                launchSingleTop = true
+            }
+        }
+    }
+
     WordClockSharedTheme(state.themeMode) {
         CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-            if (state.selectedDeviceId == null) {
-                DevicesScreen(
-                    state = state.toDevicesScreenState(),
-                    themeMode = state.themeMode,
-                    onAppThemeModeChanged = presenter::setThemeMode,
-                    onIpAddressChanged = presenter::onIpAddressChanged,
-                    onDeviceNameChanged = presenter::onDeviceNameChanged,
-                    onAddDevice = {
-                        if (presenter.validateIpAddress()) {
-                            if (state.wifiAvailable) {
-                                requestLocalNetworkAccess(
-                                    presenter::addDevice,
-                                    presenter::onLocalNetworkPermissionDenied,
-                                )
-                            } else {
-                                presenter.addDevice()
-                            }
-                        }
-                    },
-                    onRefresh = presenter::refreshDevices,
-                    onDeviceSelected = presenter::selectDevice,
-                    onPowerToggled = presenter::togglePower,
-                    onRenameRequested = presenter::requestRename,
-                    onRemoveRequested = presenter::requestRemove,
-                    onEditingNameChanged = presenter::onEditingNameChanged,
-                    onRenameConfirmed = presenter::confirmRename,
-                    onRenameDismissed = presenter::dismissRename,
-                    onRemoveConfirmed = presenter::confirmRemove,
-                    onRemoveDismissed = presenter::dismissRemove,
-                )
-            } else {
-                ControlScreen(
-                    state = state.toControlScreenState(),
-                    onBack = presenter::goBackToDevices,
-                    onRefreshDevices = presenter::refreshDevices,
-                    onRefresh = presenter::refreshControl,
-                    onSelectDevice = presenter::selectDevice,
-                    onPowerToggle = presenter::toggleControlPower,
-                    onBrightnessChanged = { presenter.onBrightnessChanged(it.toFloat()) },
-                    onBrightnessApply = presenter::applyBrightness,
-                    onColorSelected = presenter::selectColor,
-                )
-            }
+            AppNavHost(
+                navController = navController,
+                devicesState = state.toDevicesScreenState(),
+                controlState = state.toControlScreenState(),
+                themeMode = state.themeMode,
+                wifiAvailable = state.wifiAvailable,
+                presenter = presenter,
+                requestLocalNetworkAccess = requestLocalNetworkAccess,
+                onDeviceSelected = openDeviceControl,
+            )
         }
     }
 }
