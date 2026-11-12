@@ -90,9 +90,8 @@ workflows:
           mkdir -p "$CM_BUILD_DIR/build"
           if WORDCLOCK_SKIP_GRADLE_FRAMEWORK_BUILD=1 xcodebuild build \
               -project "$CM_BUILD_DIR/iosApp/WordClock.xcodeproj" \
-              -scheme WordClockIOS \
+              -target WordClockIOS \
               -sdk iphonesimulator \
-              -destination "generic/platform=iOS Simulator" \
               -configuration Debug \
               -derivedDataPath "$CM_BUILD_DIR/build/ios-simulator" \
               ARCHS=arm64 \
@@ -246,9 +245,8 @@ workflows:
           mkdir -p "$CM_BUILD_DIR/build"
           WORDCLOCK_SKIP_GRADLE_FRAMEWORK_BUILD=1 xcodebuild build \
             -project "$CM_BUILD_DIR/iosApp/WordClock.xcodeproj" \
-            -scheme WordClockIOS \
+            -target WordClockIOS \
             -sdk iphoneos \
-            -destination "generic/platform=iOS" \
             -configuration Debug \
             -derivedDataPath "$CM_BUILD_DIR/build/ios-device" \
             ARCHS=arm64 \
