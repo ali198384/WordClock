@@ -48,6 +48,7 @@ workflows:
             -project "$CM_BUILD_DIR/iosApp/WordClock.xcodeproj" \
             -scheme WordClockIOS \
             -sdk iphonesimulator \
+            -destination "generic/platform=iOS Simulator" \
             -configuration Debug \
             > "$DIAG_DIR/xcode-build-settings.log" 2>&1
           STATUS=$?
