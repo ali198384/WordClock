@@ -7,7 +7,7 @@ enum L10n {
     static var ok: String { MR.strings().ok.desc().localized() }
     static var errorFallback: String { MR.strings().error_fallback.desc().localized() }
     static var removeDialogTitle: String { MR.strings().remove_dialog_title.desc().localized() }
-    static var remove: String { MR.strings().delete.desc().localized() }
+    static var remove: String { MR.strings().remove_action.desc().localized() }
     static var cancel: String { MR.strings().cancel.desc().localized() }
     static var screenTagline: String { MR.strings().screen_tagline.desc().localized() }
     static var screenDescription: String { MR.strings().screen_description.desc().localized() }

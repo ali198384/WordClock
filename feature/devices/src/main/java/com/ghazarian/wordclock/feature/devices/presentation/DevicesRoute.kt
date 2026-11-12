@@ -96,7 +96,6 @@ import com.ghazarian.wordclock.resources.add_device_title
 import com.ghazarian.wordclock.resources.app_logo_description
 import com.ghazarian.wordclock.resources.cancel
 import com.ghazarian.wordclock.resources.connecting_device
-import com.ghazarian.wordclock.resources.delete
 import com.ghazarian.wordclock.resources.device_checking
 import com.ghazarian.wordclock.resources.device_count
 import com.ghazarian.wordclock.resources.device_firmware
@@ -125,6 +124,7 @@ import com.ghazarian.wordclock.resources.power_unavailable
 import com.ghazarian.wordclock.resources.power_updating
 import com.ghazarian.wordclock.resources.refresh_devices_description
 import com.ghazarian.wordclock.resources.refreshing
+import com.ghazarian.wordclock.resources.remove_action
 import com.ghazarian.wordclock.resources.remove_device
 import com.ghazarian.wordclock.resources.remove_dialog_message
 import com.ghazarian.wordclock.resources.remove_dialog_title
@@ -1025,7 +1025,7 @@ private fun RemoveDeviceDialog(
         text = { Text(stringResource(MR.strings.remove_dialog_message.resourceId, deviceName)) },
         confirmButton = {
             TextButton(onClick = onConfirm, enabled = !isRemoving) {
-                Text(stringResource(if (isRemoving) MR.strings.removing.resourceId else MR.strings.delete.resourceId))
+                Text(stringResource(if (isRemoving) MR.strings.removing.resourceId else MR.strings.remove_action.resourceId))
             }
         },
         dismissButton = {
