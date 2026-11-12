@@ -2,6 +2,7 @@
 # Gradle
 # =========================
 .gradle/
+.kotlin/
 **/build/
 build/
 
@@ -15,6 +16,7 @@ local.properties
 *.ap_
 *.aab
 *.dex
+/app/release/
 
 # =========================
 # Kotlin / Java compiled
@@ -75,5 +77,8 @@ gen/
 /doc/3.jpg
 /doc/4.jpg
 /doc/5.jpg
+/doc/wordClockAppIconSample.png
 /doc/sketch_oct05.ino
 /doc/wordClockRoadmap.docx
+
+/doc/wordClockAppIconPreview.png

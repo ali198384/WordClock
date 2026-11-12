@@ -1,6 +1,7 @@
 <resources>
     <string name="screen_title">WordClock</string>
-    <string name="screen_tagline">Make every moment shine in color.</string>
+    <string name="app_logo_description">WordClock logo</string>
+    <string name="screen_tagline">Ghazarian Luxury Art</string>
     <string name="screen_description">Connect your clocks over Wi-Fi and control their light from one place.</string>
     <string name="add_device_title">Add a clock</string>
     <string name="add_device_description">Enter the local IP address shown in your clock’s settings.</string>

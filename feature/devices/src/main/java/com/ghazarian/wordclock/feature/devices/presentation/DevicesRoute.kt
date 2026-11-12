@@ -7,6 +7,7 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
@@ -16,11 +17,15 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
@@ -57,6 +62,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
@@ -70,8 +76,10 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDirection
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.coerceAtLeast
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -140,15 +148,39 @@ private fun DevicesScreen(
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.screen_title)) },
-                actions = {
-                    ThemeToggleButton(
-                        themeMode = themeMode,
-                        onThemeModeChanged = onThemeModeChanged,
+            BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+                val logoWidth = 78.dp
+                val titleMaxWidth = ((maxWidth - logoWidth - 32.dp) / 2).coerceAtLeast(40.dp)
+                val topInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    TopAppBar(
+                        title = {
+                            Text(
+                                text = stringResource(R.string.screen_title),
+                                modifier = Modifier.widthIn(max = titleMaxWidth),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                style = MaterialTheme.typography.titleLarge,
+                            )
+                        },
+                        actions = {
+                            ThemeToggleButton(
+                                themeMode = themeMode,
+                                onThemeModeChanged = onThemeModeChanged,
+                            )
+                        },
                     )
-                },
-            )
+                    Image(
+                        painter = painterResource(DesignSystemR.drawable.word_clock_logo),
+                        contentDescription = stringResource(R.string.app_logo_description),
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .offset(y = topInset / 2)
+                            .size(width = logoWidth, height = 46.dp),
+                        contentScale = ContentScale.Fit,
+                    )
+                }
+            }
         },
     ) { contentPadding ->
         BoxWithConstraints(
