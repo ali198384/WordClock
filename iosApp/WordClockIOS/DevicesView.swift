@@ -178,54 +178,67 @@ struct DevicesView: View {
                 .fill(ClockPalette.secondaryText(colorScheme).opacity(0.16))
                 .frame(height: 1)
 
-            Button {
-                model.setThemeMode(colorScheme == .dark ? "light" : "dark")
-                closeDrawer()
-            } label: {
-                settingsDrawerRow(
-                    symbol: colorScheme == .dark ? "sun.max.fill" : "moon.fill",
-                    title: L10n.appearance,
-                    detail: colorScheme == .dark ? L10n.darkTheme : L10n.lightTheme,
-                    enabled: true
-                )
-            }
-            .buttonStyle(.plain)
+            VStack(spacing: 10) {
+                settingsDrawerCard {
+                    Button {
+                        model.setThemeMode(colorScheme == .dark ? "light" : "dark")
+                        closeDrawer()
+                    } label: {
+                        settingsDrawerRow(
+                            symbol: colorScheme == .dark ? "sun.max.fill" : "moon.fill",
+                            title: L10n.appearance,
+                            detail: colorScheme == .dark ? L10n.darkTheme : L10n.lightTheme,
+                            accent: ClockPalette.primary(colorScheme)
+                        )
+                    }
+                    .buttonStyle(.plain)
+                }
 
-            Button {
-                withAnimation(.spring(response: 0.3, dampingFraction: 0.86)) {
-                    isLanguageOptionsExpanded.toggle()
+                settingsDrawerCard {
+                    VStack(spacing: 0) {
+                        Button {
+                            withAnimation(.spring(response: 0.3, dampingFraction: 0.86)) {
+                                isLanguageOptionsExpanded.toggle()
+                            }
+                        } label: {
+                            settingsDrawerRow(
+                                symbol: "globe",
+                                title: L10n.language,
+                                detail: model.languageCode == "fa" ? L10n.languagePersian : L10n.languageEnglish,
+                                accent: ClockPalette.secondary(colorScheme),
+                                expanded: isLanguageOptionsExpanded
+                            )
+                        }
+                        .buttonStyle(.plain)
+                        if isLanguageOptionsExpanded {
+                            HStack(spacing: 8) {
+                                languageOption(title: L10n.languageEnglish, code: "en")
+                                languageOption(title: L10n.languagePersian, code: "fa")
+                            }
+                            .padding(.horizontal, 12)
+                            .padding(.bottom, 12)
+                            .transition(.opacity.combined(with: .move(edge: .top)))
+                        }
+                    }
                 }
-            } label: {
-                settingsDrawerRow(
-                    symbol: "globe",
-                    title: L10n.language,
-                    detail: model.languageCode == "fa" ? L10n.languagePersian : L10n.languageEnglish,
-                    enabled: true
-                )
-            }
-            .buttonStyle(.plain)
-            if isLanguageOptionsExpanded {
-                HStack(spacing: 8) {
-                    languageOption(title: L10n.languageEnglish, code: "en")
-                    languageOption(title: L10n.languagePersian, code: "fa")
-                }
-                .padding(.leading, 55)
-                .transition(.opacity.combined(with: .move(edge: .top)))
-            }
 
-            Button {
-                withAnimation(.spring(response: 0.34, dampingFraction: 0.88)) {
-                    isDrawerPresented = false
-                    isContactPresented = true
+                settingsDrawerCard {
+                    Button {
+                        withAnimation(.spring(response: 0.34, dampingFraction: 0.88)) {
+                            isDrawerPresented = false
+                            isContactPresented = true
+                        }
+                    } label: {
+                        settingsDrawerRow(
+                            symbol: "bubble.left.and.bubble.right.fill",
+                            title: L10n.contactUs,
+                            detail: L10n.contactBrand,
+                            accent: ClockPalette.tertiary(colorScheme)
+                        )
+                    }
+                    .buttonStyle(.plain)
                 }
-            } label: {
-                settingsDrawerRow(
-                    symbol: "bubble.left.and.bubble.right.fill",
-                    title: L10n.contactUs,
-                    enabled: true
-                )
             }
-            .buttonStyle(.plain)
 
             Spacer(minLength: 0)
 
@@ -312,7 +325,7 @@ struct DevicesView: View {
             .frame(maxWidth: 560)
             .frame(maxWidth: .infinity)
         }
-        .background(ClockPalette.surface(colorScheme).ignoresSafeArea())
+        .background(ClockPalette.sheetSurface(colorScheme).ignoresSafeArea())
     }
 
     private func contactActionRow(
@@ -367,34 +380,52 @@ struct DevicesView: View {
         symbol: String,
         title: String,
         detail: String? = nil,
-        enabled: Bool
+        accent: Color,
+        expanded: Bool? = nil
     ) -> some View {
         HStack(spacing: 13) {
             Image(systemName: symbol)
                 .font(.system(size: 17, weight: .semibold))
-                .foregroundStyle(ClockPalette.primary(colorScheme))
+                .foregroundStyle(accent)
                 .frame(width: 42, height: 42)
-                .background(ClockPalette.primary(colorScheme).opacity(0.11), in: RoundedRectangle(cornerRadius: 14))
-            Text(title)
-                .wordClockFont(size: 16, weight: .medium)
-                .foregroundStyle(ClockPalette.onSurface(colorScheme))
-                .lineLimit(1)
-            Spacer(minLength: 6)
-            if let detail {
-                Text(detail)
-                    .wordClockFont(size: 11, weight: .medium)
-                    .foregroundStyle(ClockPalette.secondaryText(colorScheme))
+                .background(accent.opacity(0.14), in: RoundedRectangle(cornerRadius: 15, style: .continuous))
+            VStack(alignment: .leading, spacing: 3) {
+                Text(title)
+                    .wordClockFont(size: 15, weight: .semibold)
+                    .foregroundStyle(ClockPalette.onSurface(colorScheme))
                     .lineLimit(1)
-                    .padding(.horizontal, 9)
-                    .padding(.vertical, 6)
-                    .background(ClockPalette.surfaceVariant(colorScheme), in: Capsule())
+                if let detail {
+                    Text(detail)
+                        .wordClockFont(size: 12, weight: .medium)
+                        .foregroundStyle(ClockPalette.secondaryText(colorScheme))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
+                }
             }
+            Spacer(minLength: 6)
+            Image(systemName: expanded == true ? "chevron.down" : "chevron.right")
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(ClockPalette.secondaryText(colorScheme))
+                .frame(width: 30, height: 30)
+                .background(ClockPalette.surface(colorScheme).opacity(0.72), in: Circle())
         }
-        .padding(.horizontal, 12)
+        .padding(.horizontal, 10)
         .padding(.vertical, 9)
-        .background(ClockPalette.surfaceVariant(colorScheme).opacity(enabled ? 0.72 : 0.42), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .opacity(enabled ? 1 : 0.58)
-        .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .frame(maxWidth: .infinity, minHeight: 66, alignment: .leading)
+        .contentShape(Rectangle())
+    }
+
+    private func settingsDrawerCard<Content: View>(@ViewBuilder content: () -> Content) -> some View {
+        content()
+            .padding(8)
+            .background(
+                ClockPalette.surfaceVariant(colorScheme).opacity(colorScheme == .dark ? 0.42 : 0.5),
+                in: RoundedRectangle(cornerRadius: 22, style: .continuous)
+            )
+            .overlay {
+                RoundedRectangle(cornerRadius: 22, style: .continuous)
+                    .strokeBorder(ClockPalette.secondaryText(colorScheme).opacity(0.16), lineWidth: 1)
+            }
     }
 
     private func languageOption(title: String, code: String) -> some View {
@@ -597,6 +628,8 @@ struct DevicesView: View {
             Form {
                 TextField(L10n.deviceNameLabel, text: $renameValue)
             }
+            .scrollContentBackground(.hidden)
+            .background(ClockPalette.sheetSurface(colorScheme).ignoresSafeArea())
             .navigationTitle(L10n.renameDialogTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

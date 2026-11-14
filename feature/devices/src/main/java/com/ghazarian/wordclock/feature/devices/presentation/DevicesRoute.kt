@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -57,8 +58,6 @@ import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.ModalNavigationDrawer
-import androidx.compose.material3.NavigationDrawerItem
-import androidx.compose.material3.NavigationDrawerItemDefaults
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.RadioButton
@@ -91,6 +90,7 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -413,7 +413,7 @@ private fun DevicesScreen(
             onDismissRequest = { isContactSheetVisible = false },
             sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
             shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
-            containerColor = MaterialTheme.colorScheme.surface,
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
         ) {
             ContactUsSheetContent()
         }
@@ -512,92 +512,76 @@ private fun SettingsDrawer(
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                     color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f),
                 )
-                NavigationDrawerItem(
-                    label = { Text(stringResource(MR.strings.appearance.resourceId)) },
-                    selected = false,
-                    onClick = {
-                        onThemeModeChanged(if (currentlyDark) ThemeMode.LIGHT else ThemeMode.DARK)
-                    },
-                    icon = {
-                        Icon(
-                            painter = painterResource(
-                                if (currentlyDark) DesignSystemR.drawable.sunny_24
-                                else DesignSystemR.drawable.dark_mode_24,
-                            ),
-                            contentDescription = null,
+                SettingsActionCard {
+                    SettingsActionRow(
+                        iconResource = if (currentlyDark) {
+                            DesignSystemR.drawable.sunny_24
+                        } else {
+                            DesignSystemR.drawable.dark_mode_24
+                        },
+                        iconContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                        iconTint = MaterialTheme.colorScheme.onPrimaryContainer,
+                        title = stringResource(MR.strings.appearance.resourceId),
+                        detail = currentThemeLabel,
+                        onClick = {
+                            onThemeModeChanged(if (currentlyDark) ThemeMode.LIGHT else ThemeMode.DARK)
+                        },
+                    )
+                }
+                Spacer(modifier = Modifier.height(10.dp))
+                SettingsActionCard {
+                    SettingsActionRow(
+                        iconResource = DesignSystemR.drawable.language_24,
+                        iconContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        iconTint = MaterialTheme.colorScheme.onSecondaryContainer,
+                        title = stringResource(MR.strings.language.resourceId),
+                        detail = stringResource(
+                            if (languageCode == "fa") {
+                                MR.strings.language_persian.resourceId
+                            } else {
+                                MR.strings.language_english.resourceId
+                            },
+                        ),
+                        expanded = languageOptionsExpanded,
+                        onClick = { languageOptionsExpanded = !languageOptionsExpanded },
+                    )
+                    if (languageOptionsExpanded) {
+                        HorizontalDivider(
+                            modifier = Modifier.padding(horizontal = 14.dp),
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f),
                         )
-                    },
-                    badge = {
-                        Text(
-                            text = currentThemeLabel,
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    },
-                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding),
-                    shape = RoundedCornerShape(16.dp),
-                )
-                Spacer(modifier = Modifier.height(12.dp))
-                NavigationDrawerItem(
-                    label = { Text(stringResource(MR.strings.language.resourceId)) },
-                    selected = false,
-                    onClick = { languageOptionsExpanded = !languageOptionsExpanded },
-                    icon = {
-                        Icon(
-                            painter = painterResource(DesignSystemR.drawable.language_24),
-                            contentDescription = null,
-                        )
-                    },
-                    badge = {
-                        Text(
-                            text = stringResource(
-                                if (languageCode == "fa") {
-                                    MR.strings.language_persian.resourceId
-                                } else {
-                                    MR.strings.language_english.resourceId
-                                },
-                            ),
-                            style = MaterialTheme.typography.labelMedium,
-                        )
-                    },
-                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding),
-                    shape = RoundedCornerShape(16.dp),
-                )
-                if (languageOptionsExpanded) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        LanguageOption(
-                            label = stringResource(MR.strings.language_english.resourceId),
-                            selected = languageCode == "en",
-                            onClick = { onLanguageChanged("en") },
-                            modifier = Modifier.weight(1f),
-                        )
-                        LanguageOption(
-                            label = stringResource(MR.strings.language_persian.resourceId),
-                            selected = languageCode == "fa",
-                            onClick = { onLanguageChanged("fa") },
-                            modifier = Modifier.weight(1f),
-                        )
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 12.dp, vertical = 12.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            LanguageOption(
+                                label = stringResource(MR.strings.language_english.resourceId),
+                                selected = languageCode == "en",
+                                onClick = { onLanguageChanged("en") },
+                                modifier = Modifier.weight(1f),
+                            )
+                            LanguageOption(
+                                label = stringResource(MR.strings.language_persian.resourceId),
+                                selected = languageCode == "fa",
+                                onClick = { onLanguageChanged("fa") },
+                                modifier = Modifier.weight(1f),
+                            )
+                        }
                     }
                 }
-                Spacer(modifier = Modifier.height(12.dp))
-                NavigationDrawerItem(
-                    label = { Text(stringResource(MR.strings.contact_us.resourceId)) },
-                    selected = false,
-                    onClick = onContactUs,
-                    icon = {
-                        Icon(
-                            painter = painterResource(DesignSystemR.drawable.call_24),
-                            contentDescription = null,
-                        )
-                    },
-                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding),
-                    shape = RoundedCornerShape(16.dp),
-                )
+                Spacer(modifier = Modifier.height(10.dp))
+                SettingsActionCard {
+                    SettingsActionRow(
+                        iconResource = DesignSystemR.drawable.call_24,
+                        iconContainerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                        iconTint = MaterialTheme.colorScheme.onTertiaryContainer,
+                        title = stringResource(MR.strings.contact_us.resourceId),
+                        detail = stringResource(MR.strings.contact_brand.resourceId),
+                        onClick = onContactUs,
+                    )
+                }
                 Spacer(modifier = Modifier.weight(1f))
                 HorizontalDivider(
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
@@ -659,6 +643,84 @@ private fun LanguageOption(
                 maxLines = 1,
             )
         }
+    }
+}
+
+@Composable
+private fun SettingsActionCard(content: @Composable ColumnScope.() -> Unit) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 14.dp),
+        shape = RoundedCornerShape(22.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.42f),
+        border = BorderStroke(
+            1.dp,
+            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f),
+        ),
+    ) {
+        Column(content = content)
+    }
+}
+
+@Composable
+private fun SettingsActionRow(
+    iconResource: Int,
+    iconContainerColor: Color,
+    iconTint: Color,
+    title: String,
+    detail: String,
+    expanded: Boolean? = null,
+    onClick: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(role = Role.Button, onClick = onClick)
+            .padding(horizontal = 14.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Surface(
+            modifier = Modifier.size(44.dp),
+            shape = RoundedCornerShape(15.dp),
+            color = iconContainerColor,
+        ) {
+            Icon(
+                painter = painterResource(iconResource),
+                contentDescription = null,
+                tint = iconTint,
+                modifier = Modifier.padding(11.dp),
+            )
+        }
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                text = detail,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+        Icon(
+            painter = painterResource(
+                if (expanded == true) DesignSystemR.drawable.expand_more_24
+                else DesignSystemR.drawable.chevron_right_24,
+            ),
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(20.dp),
+        )
     }
 }
 

@@ -130,6 +130,7 @@ import com.ghazarian.wordclock.core.designsystem.R as DesignSystemR
 
 private val QuickColors = WordClockColorPresets.quickColors.map { it.toQuickColor() }
 private val WhiteColors = WordClockColorPresets.whiteColors.map { it.toQuickColor() }
+private val WhiteColorRows = WhiteColors.chunked(3)
 
 private val BrightnessPresets = listOf(25, 50, 75, 100)
 
@@ -301,7 +302,7 @@ fun ControlRoute(
                 ModalBottomSheet(
                     onDismissRequest = { isColorPickerOpen = false },
                     sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-                    containerColor = MaterialTheme.colorScheme.surface,
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                 ) {
                     ColorPickerContent(
                         color = state.colorDraft ?: deviceState.color,
@@ -826,7 +827,11 @@ private fun ColorPickerContent(
                 modifier = Modifier.weight(1f)
             )
         }
-        SecondaryTabRow(selectedTabIndex = selectedTab) {
+        SecondaryTabRow(
+            selectedTabIndex = selectedTab,
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+            contentColor = MaterialTheme.colorScheme.onSurface,
+        ) {
             Tab(
                 selected = selectedTab == 0,
                 onClick = { selectedTab = 0 },
@@ -855,18 +860,30 @@ private fun ColorPickerContent(
                 textAlign = TextAlign.Center,
             )
         } else {
-            Row(
-                modifier = Modifier.horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(14.dp),
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(14.dp),
             ) {
-                WhiteColors.forEach { item ->
-                    ColorSwatch(
-                        item = item,
-                        selected = item.color == color,
-                        enabled = enabled,
-                        onClick = { onColorSelected(item.color) },
-                        showLabel = true,
-                    )
+                WhiteColorRows.forEach { rowColors ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        rowColors.forEach { item ->
+                            Box(
+                                modifier = Modifier.weight(1f),
+                                contentAlignment = Alignment.TopCenter,
+                            ) {
+                                ColorSwatch(
+                                    item = item,
+                                    selected = item.color == color,
+                                    enabled = enabled,
+                                    onClick = { onColorSelected(item.color) },
+                                    showLabel = true,
+                                )
+                            }
+                        }
+                    }
                 }
             }
             Text(

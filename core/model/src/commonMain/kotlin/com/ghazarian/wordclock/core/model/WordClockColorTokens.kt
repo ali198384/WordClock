@@ -7,6 +7,7 @@ object WordClockColorTokens {
     val lightTertiary: Int = 0x9B5F00
     val lightBackground: Int = 0xF5F7F8
     val lightSurface: Int = 0xFFFEFC
+    val lightSheetSurface: Int = 0xFFFEFC
     val lightSurfaceVariant: Int = 0xE7EFED
     val lightOnSurface: Int = 0x17211F
     val lightSecondaryText: Int = 0x465451
@@ -16,6 +17,7 @@ object WordClockColorTokens {
     val darkTertiary: Int = 0xFFB95C
     val darkBackground: Int = 0x0C1514
     val darkSurface: Int = 0x111D1B
+    val darkSheetSurface: Int = 0x20332F
     val darkSurfaceVariant: Int = 0x263633
     val darkOnSurface: Int = 0xE0E9E5
     val darkSecondaryText: Int = 0xB9C9C3

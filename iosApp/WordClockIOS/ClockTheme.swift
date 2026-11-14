@@ -57,6 +57,12 @@ enum ClockPalette {
             : WordClockColorTokens.shared.lightSurface)
     }
 
+    static func sheetSurface(_ scheme: ColorScheme) -> Color {
+        token(scheme == .dark
+            ? WordClockColorTokens.shared.darkSheetSurface
+            : WordClockColorTokens.shared.lightSheetSurface)
+    }
+
     static func surfaceVariant(_ scheme: ColorScheme) -> Color {
         token(scheme == .dark
             ? WordClockColorTokens.shared.darkSurfaceVariant

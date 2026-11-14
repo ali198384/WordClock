@@ -2,6 +2,11 @@ import SwiftUI
 import UIKit
 import WordClockShared
 
+private let whitePresetGridColumns = Array(
+    repeating: GridItem(.flexible(), spacing: 10),
+    count: 3
+)
+
 struct ControlView: View {
     let deviceID: String
     @ObservedObject var model: AppModel
@@ -198,11 +203,7 @@ struct ControlView: View {
                     .padding(4)
                     .overlay(Circle().stroke(colorDraft, lineWidth: 2))
             }
-            Picker(L10n.colorMode, selection: $selectedTab) {
-                Text(L10n.colorsTab).wordClockFont(size: 14, weight: .medium).tag(0)
-                Text(L10n.whitesTab).wordClockFont(size: 14, weight: .medium).tag(1)
-            }
-            .pickerStyle(.segmented)
+            colorModeTabs
             if selectedTab == 0 {
                 HStack(spacing: 18) {
                     LedColorWheel(color: $colorDraft)
@@ -238,7 +239,7 @@ struct ControlView: View {
                 Text(L10n.whiteMixDescription)
                     .wordClockFont(size: 13)
                     .foregroundStyle(ClockPalette.secondaryText(colorScheme))
-                HStack(spacing: 10) {
+                LazyVGrid(columns: whitePresetGridColumns, spacing: 14) {
                     ForEach(ColorPreset.whites, id: \.name) { preset in
                         Button {
                             colorDraft = preset.color
@@ -259,7 +260,6 @@ struct ControlView: View {
                         .disabled(!canControl)
                     }
                 }
-                .padding(.vertical, 6)
             }
             HStack {
                 Text(selectedColorDescription)
@@ -272,6 +272,42 @@ struct ControlView: View {
         .onAppear {
             if !draftsLoaded { colorDraft = value.state.color }
         }
+    }
+
+    private var colorModeTabs: some View {
+        HStack(spacing: 0) {
+            colorModeTab(title: L10n.colorsTab, index: 0)
+            colorModeTab(title: L10n.whitesTab, index: 1)
+        }
+        .padding(.horizontal, 10)
+        .background(
+            ClockPalette.sheetSurface(colorScheme),
+            in: RoundedRectangle(cornerRadius: 14, style: .continuous)
+        )
+    }
+
+    private func colorModeTab(title: String, index: Int) -> some View {
+        Button {
+            withAnimation(.easeInOut(duration: 0.18)) {
+                selectedTab = index
+            }
+        } label: {
+            VStack(spacing: 8) {
+                Text(title)
+                    .wordClockFont(size: 14, weight: .medium)
+                    .frame(maxWidth: .infinity, minHeight: 40)
+                Rectangle()
+                    .fill(selectedTab == index ? ClockPalette.primary(colorScheme) : .clear)
+                    .frame(height: 2)
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .foregroundStyle(
+            selectedTab == index
+                ? ClockPalette.primary(colorScheme)
+                : ClockPalette.onSurface(colorScheme)
+        )
     }
 
     private var selectedColorDescription: String {
