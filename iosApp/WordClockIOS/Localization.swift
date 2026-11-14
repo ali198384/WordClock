@@ -52,6 +52,8 @@ enum L10n {
     static var chooseColor: String { MR.strings().choose_color.desc().localized() }
     static var colorWheelDescription: String { MR.strings().color_wheel_description.desc().localized() }
     static var whiteMixDescription: String { MR.strings().white_mix_description.desc().localized() }
+    static var whiteTemperatureTitle: String { MR.strings().white_temperature_title.desc().localized() }
+    static var whitePresetsTitle: String { MR.strings().white_presets.desc().localized() }
     static var deviceInfoTitle: String { MR.strings().device_info_title.desc().localized() }
     static var firmware: String { MR.strings().firmware.desc().localized() }
     static var unknown: String { MR.strings().unknown.desc().localized() }
@@ -118,6 +120,10 @@ enum L10n {
 
     static func selectedColor(_ hex: String) -> String {
         WordClockStrings.shared.selectedColor(hexColor: hex).localized()
+    }
+
+    static func whiteTemperatureValue(_ kelvin: Int) -> String {
+        WordClockStrings.shared.whiteTemperatureKelvin(kelvin: Int32(kelvin)).localized()
     }
 
     static func deviceAdded(_ deviceName: String) -> String {

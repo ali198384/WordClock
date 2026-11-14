@@ -126,7 +126,10 @@
     <string name="colors_tab">رنگ‌ها</string>
     <string name="whites_tab">سفیدها</string>
     <string name="color_wheel_description">برای انتخاب رنگ، روی چرخه بکشید.</string>
-    <string name="white_mix_description">طیف‌های سفید با مقادیر RGB تنظیم می‌شوند.</string>
+    <string name="white_mix_description">طیف دمای سفید با ترکیب رنگ‌های RGB تنظیم می‌شود.</string>
+    <string name="white_temperature_title">دمای رنگ</string>
+    <string name="white_presets">پیش‌تنظیم‌ها</string>
+    <string name="white_temperature_kelvin">%1$d کلوین</string>
     <string name="color_wheel_content_description">چرخهٔ رنگ RGB</string>
     <string name="color_red">قرمز</string>
     <string name="color_orange">نارنجی</string>

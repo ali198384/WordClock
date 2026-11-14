@@ -4,7 +4,7 @@ import WordClockShared
 
 private let whitePresetGridColumns = Array(
     repeating: GridItem(.flexible(), spacing: 10),
-    count: 3
+    count: 2
 )
 
 struct ControlView: View {
@@ -15,6 +15,7 @@ struct ControlView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var brightnessDraft = 128.0
     @State private var colorDraft = Color.white
+    @State private var whiteTemperatureKelvin = 4500
     @State private var selectedTab = 0
     @State private var draftsLoaded = false
     @State private var confirmedBrightness: Int?
@@ -204,63 +205,79 @@ struct ControlView: View {
                     .overlay(Circle().stroke(colorDraft, lineWidth: 2))
             }
             colorModeTabs
-            if selectedTab == 0 {
-                HStack(spacing: 18) {
-                    LedColorWheel(color: $colorDraft)
-                        .frame(width: 190, height: 190)
-                        .disabled(!canControl)
-                    VStack(alignment: .leading, spacing: 11) {
-                        Text(L10n.chooseColor)
-                            .wordClockFont(size: 15, weight: .semibold)
-                        ForEach(ColorPreset.colors, id: \.name) { preset in
-                            Button {
-                                colorDraft = preset.color
-                            } label: {
-                                HStack(spacing: 8) {
-                                    Circle().fill(preset.color).frame(width: 17, height: 17)
-                                    Text(preset.name).wordClockFont(size: 13)
-                                    Spacer(minLength: 0)
-                                    if UIColor(colorDraft).isApproximatelyEqual(to: UIColor(preset.color)) {
-                                        Image(systemName: "checkmark").font(.system(size: 11, weight: .bold))
+            Group {
+                if selectedTab == 0 {
+                    VStack(spacing: 16) {
+                        HStack(spacing: 18) {
+                            LedColorWheel(color: $colorDraft)
+                                .frame(width: 190, height: 190)
+                                .disabled(!canControl)
+                            VStack(alignment: .leading, spacing: 11) {
+                                Text(L10n.chooseColor)
+                                    .wordClockFont(size: 15, weight: .semibold)
+                                ForEach(ColorPreset.colors, id: \.name) { preset in
+                                    Button {
+                                        colorDraft = preset.color
+                                    } label: {
+                                        HStack(spacing: 8) {
+                                            Circle().fill(preset.color).frame(width: 17, height: 17)
+                                            Text(preset.name).wordClockFont(size: 13)
+                                            Spacer(minLength: 0)
+                                            if UIColor(colorDraft).isApproximatelyEqual(to: UIColor(preset.color)) {
+                                                Image(systemName: "checkmark").font(.system(size: 11, weight: .bold))
+                                            }
+                                        }
+                                        .foregroundStyle(ClockPalette.onSurface(colorScheme))
                                     }
+                                    .buttonStyle(.plain)
+                                    .disabled(!canControl)
                                 }
-                                .foregroundStyle(ClockPalette.onSurface(colorScheme))
                             }
-                            .buttonStyle(.plain)
-                            .disabled(!canControl)
+                            .frame(maxWidth: .infinity, alignment: .leading)
                         }
+                        Text(L10n.colorWheelDescription)
+                            .wordClockFont(size: 13)
+                            .foregroundStyle(ClockPalette.secondaryText(colorScheme))
                     }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                }
-                Text(L10n.colorWheelDescription)
-                    .wordClockFont(size: 13)
-                    .foregroundStyle(ClockPalette.secondaryText(colorScheme))
-            } else {
-                Text(L10n.whiteMixDescription)
-                    .wordClockFont(size: 13)
-                    .foregroundStyle(ClockPalette.secondaryText(colorScheme))
-                LazyVGrid(columns: whitePresetGridColumns, spacing: 14) {
-                    ForEach(ColorPreset.whites, id: \.name) { preset in
-                        Button {
-                            colorDraft = preset.color
-                        } label: {
-                            VStack(spacing: 8) {
-                                Circle().fill(preset.color)
-                                    .frame(width: 43, height: 43)
-                                    .overlay(Circle().stroke(ClockPalette.secondaryText(colorScheme).opacity(0.3), lineWidth: 1))
-                                Text(preset.name)
-                                    .wordClockFont(size: 11, weight: .medium)
-                                    .lineLimit(1)
-                                    .minimumScaleFactor(0.8)
-                            }
-                            .frame(maxWidth: .infinity)
-                            .foregroundStyle(ClockPalette.onSurface(colorScheme))
+                } else {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text(L10n.whiteMixDescription)
+                            .wordClockFont(size: 13)
+                            .foregroundStyle(ClockPalette.secondaryText(colorScheme))
+                        HStack {
+                            Text(L10n.whiteTemperatureTitle)
+                                .wordClockFont(size: 15, weight: .semibold)
+                            Spacer()
+                            Text(L10n.whiteTemperatureValue(whiteTemperatureKelvin))
+                                .wordClockFont(size: 13, weight: .medium, design: .rounded)
+                                .foregroundStyle(ClockPalette.secondaryText(colorScheme))
                         }
-                        .buttonStyle(.plain)
-                        .disabled(!canControl)
+                        Slider(
+                            value: Binding(
+                                get: { Double(whiteTemperatureKelvin) },
+                                set: { value in
+                                    whiteTemperatureKelvin = Int(value.rounded())
+                                    colorDraft = WordClockColorPresets.shared
+                                        .whiteColorAtTemperature(kelvin: Int32(whiteTemperatureKelvin))
+                                        .swiftUIColor
+                                }
+                            ),
+                            in: 2700...8000,
+                            step: 10
+                        )
+                        .tint(ClockPalette.primary(colorScheme))
+                        Text(L10n.whitePresetsTitle)
+                            .wordClockFont(size: 15, weight: .semibold)
+                        LazyVGrid(columns: whitePresetGridColumns, spacing: 10) {
+                            ForEach(ColorPreset.whites, id: \.name) { preset in
+                                whitePresetButton(preset)
+                            }
+                        }
                     }
                 }
             }
+            .frame(maxWidth: .infinity, alignment: .topLeading)
+            .frame(height: 380, alignment: .center)
             HStack {
                 Text(selectedColorDescription)
                     .wordClockFont(size: 13, weight: .medium)
@@ -272,6 +289,63 @@ struct ControlView: View {
         .onAppear {
             if !draftsLoaded { colorDraft = value.state.color }
         }
+    }
+
+    private func whitePresetButton(_ preset: ColorPreset) -> some View {
+        let isSelected = UIColor(colorDraft).isApproximatelyEqual(to: UIColor(preset.color))
+        let shape = RoundedRectangle(cornerRadius: 16, style: .continuous)
+        return Button {
+            if preset.temperatureKelvin > 0 {
+                whiteTemperatureKelvin = Int(preset.temperatureKelvin)
+            }
+            colorDraft = preset.color
+        } label: {
+            HStack(spacing: 8) {
+                Circle()
+                    .fill(preset.color)
+                    .frame(width: 36, height: 36)
+                    .overlay(Circle().stroke(ClockPalette.secondaryText(colorScheme).opacity(0.3), lineWidth: 1))
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(preset.name)
+                        .wordClockFont(size: 12, weight: .medium)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.78)
+                    if preset.temperatureKelvin > 0 {
+                        Text(L10n.whiteTemperatureValue(Int(preset.temperatureKelvin)))
+                            .wordClockFont(size: 10)
+                            .foregroundStyle(ClockPalette.secondaryText(colorScheme))
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.75)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                if isSelected {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(ClockPalette.primary(colorScheme))
+                }
+            }
+            .padding(.horizontal, 9)
+            .frame(maxWidth: .infinity, minHeight: 72)
+            .foregroundStyle(ClockPalette.onSurface(colorScheme))
+            .background(
+                isSelected
+                    ? ClockPalette.primary(colorScheme).opacity(colorScheme == .dark ? 0.2 : 0.1)
+                    : ClockPalette.surfaceVariant(colorScheme).opacity(0.62),
+                in: shape
+            )
+            .overlay {
+                shape.strokeBorder(
+                    isSelected
+                        ? ClockPalette.primary(colorScheme).opacity(0.8)
+                        : ClockPalette.secondaryText(colorScheme).opacity(0.2),
+                    lineWidth: isSelected ? 1.5 : 1
+                )
+            }
+            .contentShape(shape)
+        }
+        .buttonStyle(.plain)
+        .disabled(!canControl)
     }
 
     private var colorModeTabs: some View {
@@ -289,6 +363,12 @@ struct ControlView: View {
     private func colorModeTab(title: String, index: Int) -> some View {
         Button {
             withAnimation(.easeInOut(duration: 0.18)) {
+                if index == 1,
+                   let preset = ColorPreset.whites.first(where: {
+                       UIColor(colorDraft).isApproximatelyEqual(to: UIColor($0.color))
+                   }) {
+                    whiteTemperatureKelvin = Int(preset.temperatureKelvin)
+                }
                 selectedTab = index
             }
         } label: {
@@ -435,13 +515,14 @@ private struct LedColorWheel: View {
 private struct ColorPreset {
     let name: String
     let color: Color
+    let temperatureKelvin: Int32
 
     static let colors: [ColorPreset] = WordClockColorPresets.shared.quickColors.map {
-        ColorPreset(name: displayName(for: $0.id), color: $0.color.swiftUIColor)
+        ColorPreset(name: displayName(for: $0.id), color: $0.color.swiftUIColor, temperatureKelvin: $0.temperatureKelvin)
     }
 
     static let whites: [ColorPreset] = WordClockColorPresets.shared.whiteColors.map {
-        ColorPreset(name: displayName(for: $0.id), color: $0.color.swiftUIColor)
+        ColorPreset(name: displayName(for: $0.id), color: $0.color.swiftUIColor, temperatureKelvin: $0.temperatureKelvin)
     }
 
     private static func displayName(for id: String) -> String {

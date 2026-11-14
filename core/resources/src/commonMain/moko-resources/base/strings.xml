@@ -126,7 +126,10 @@
     <string name="colors_tab">Colors</string>
     <string name="whites_tab">Whites</string>
     <string name="color_wheel_description">Drag on the wheel to choose a color.</string>
-    <string name="white_mix_description">White tones are adjusted using RGB values.</string>
+    <string name="white_mix_description">Adjust the white tone by blending RGB values.</string>
+    <string name="white_temperature_title">Color temperature</string>
+    <string name="white_presets">Presets</string>
+    <string name="white_temperature_kelvin">%1$d K</string>
     <string name="color_wheel_content_description">RGB color wheel</string>
     <string name="color_red">Red</string>
     <string name="color_orange">Orange</string>

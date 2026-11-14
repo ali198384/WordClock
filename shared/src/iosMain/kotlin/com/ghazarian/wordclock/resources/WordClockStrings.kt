@@ -32,4 +32,7 @@ object WordClockStrings {
 
     fun selectedColor(hexColor: String): StringDesc =
         StringDesc.ResourceFormatted(MR.strings.selected_color, hexColor)
+
+    fun whiteTemperatureKelvin(kelvin: Int): StringDesc =
+        StringDesc.ResourceFormatted(MR.strings.white_temperature_kelvin, kelvin)
 }

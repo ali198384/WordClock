@@ -40,6 +40,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SecondaryTabRow
 import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
@@ -123,6 +124,9 @@ import com.ghazarian.wordclock.resources.selected_color
 import com.ghazarian.wordclock.resources.selected_color_checkmark
 import com.ghazarian.wordclock.resources.syncing
 import com.ghazarian.wordclock.resources.white_mix_description
+import com.ghazarian.wordclock.resources.white_presets
+import com.ghazarian.wordclock.resources.white_temperature_kelvin
+import com.ghazarian.wordclock.resources.white_temperature_title
 import com.ghazarian.wordclock.resources.whites_tab
 import com.ghazarian.wordclock.resources.wifi_not_connected
 import kotlin.math.roundToInt
@@ -130,11 +134,15 @@ import com.ghazarian.wordclock.core.designsystem.R as DesignSystemR
 
 private val QuickColors = WordClockColorPresets.quickColors.map { it.toQuickColor() }
 private val WhiteColors = WordClockColorPresets.whiteColors.map { it.toQuickColor() }
-private val WhiteColorRows = WhiteColors.chunked(3)
+private val WhiteColorRows = WhiteColors.chunked(2)
 
 private val BrightnessPresets = listOf(25, 50, 75, 100)
 
-private data class QuickColor(val nameResource: Int, val color: LedColor)
+private data class QuickColor(
+    val nameResource: Int,
+    val color: LedColor,
+    val temperatureKelvin: Int,
+)
 
 private fun WordClockColorPreset.toQuickColor() = QuickColor(
     nameResource = when (id) {
@@ -152,7 +160,8 @@ private fun WordClockColorPreset.toQuickColor() = QuickColor(
         "cool_white" -> MR.strings.color_cool_white.resourceId
         else -> MR.strings.color_blue_sky.resourceId
     },
-    color = color
+    color = color,
+    temperatureKelvin = temperatureKelvin,
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -810,9 +819,11 @@ private fun ColorPickerContent(
     onColorSelected: (LedColor) -> Unit,
 ) {
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
+    var whiteTemperature by rememberSaveable { mutableIntStateOf(4500) }
     Column(
         modifier = Modifier
             .fillMaxWidth()
+            .height(560.dp)
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 20.dp)
             .padding(bottom = 28.dp),
@@ -838,7 +849,13 @@ private fun ColorPickerContent(
                 text = { Text(stringResource(MR.strings.colors_tab.resourceId)) })
             Tab(
                 selected = selectedTab == 1,
-                onClick = { selectedTab = 1 },
+                onClick = {
+                    selectedTab = 1
+                    WhiteColors.firstOrNull { it.color == color }
+                        ?.temperatureKelvin
+                        ?.takeIf { it > 0 }
+                        ?.let { whiteTemperature = it }
+                },
                 text = { Text(stringResource(MR.strings.whites_tab.resourceId)) })
         }
         if (selectedTab == 0) {
@@ -862,35 +879,145 @@ private fun ColorPickerContent(
         } else {
             Column(
                 modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(14.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
+                Text(
+                    text = stringResource(MR.strings.white_mix_description.resourceId),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = stringResource(MR.strings.white_temperature_title.resourceId),
+                        style = MaterialTheme.typography.titleSmall,
+                        modifier = Modifier.weight(1f),
+                    )
+                    Text(
+                        text = stringResource(
+                            MR.strings.white_temperature_kelvin.resourceId,
+                            whiteTemperature
+                        ),
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                Slider(
+                    value = whiteTemperature.toFloat(),
+                    onValueChange = { value ->
+                        whiteTemperature = value.roundToInt()
+                        onColorSelected(
+                            WordClockColorPresets.whiteColorAtTemperature(
+                                whiteTemperature
+                            )
+                        )
+                    },
+                    valueRange = 2700f..8000f,
+                    enabled = enabled,
+                    colors = SliderDefaults.colors(
+                        thumbColor = MaterialTheme.colorScheme.primary,
+                        activeTrackColor = MaterialTheme.colorScheme.primary,
+                        inactiveTrackColor = MaterialTheme.colorScheme.surfaceVariant,
+                    ),
+                )
+                Text(
+                    text = stringResource(MR.strings.white_presets.resourceId),
+                    style = MaterialTheme.typography.titleSmall,
+                )
                 WhiteColorRows.forEach { rowColors ->
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
                     ) {
                         rowColors.forEach { item ->
-                            Box(
+                            WhiteColorPresetCard(
+                                item = item,
+                                selected = item.color == color,
+                                enabled = enabled,
+                                onClick = {
+                                    item.temperatureKelvin.takeIf { it > 0 }
+                                        ?.let { whiteTemperature = it }
+                                    onColorSelected(item.color)
+                                },
                                 modifier = Modifier.weight(1f),
-                                contentAlignment = Alignment.TopCenter,
-                            ) {
-                                ColorSwatch(
-                                    item = item,
-                                    selected = item.color == color,
-                                    enabled = enabled,
-                                    onClick = { onColorSelected(item.color) },
-                                    showLabel = true,
-                                )
-                            }
+                            )
                         }
                     }
                 }
             }
-            Text(
-                text = stringResource(MR.strings.white_mix_description.resourceId),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+        }
+    }
+}
+
+@Composable
+private fun WhiteColorPresetCard(
+    item: QuickColor,
+    selected: Boolean,
+    enabled: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val itemName = stringResource(item.nameResource)
+    val shape = RoundedCornerShape(18.dp)
+    Surface(
+        modifier = modifier
+            .height(72.dp)
+            .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
+            .semantics { contentDescription = itemName },
+        shape = shape,
+        color = if (selected) {
+            MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.78f)
+        } else {
+            MaterialTheme.colorScheme.surface.copy(alpha = 0.82f)
+        },
+        border = BorderStroke(
+            width = if (selected) 2.dp else 1.dp,
+            color = if (selected) MaterialTheme.colorScheme.primary
+            else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.65f),
+        ),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(9.dp),
+        ) {
+            Surface(
+                modifier = Modifier.size(38.dp),
+                shape = CircleShape,
+                color = colorOf(item.color),
+                border = BorderStroke(
+                    1.dp,
+                    MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f)
+                ),
+            ) {}
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = itemName,
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                if (item.temperatureKelvin > 0) {
+                    Text(
+                        text = stringResource(
+                            MR.strings.white_temperature_kelvin.resourceId,
+                            item.temperatureKelvin,
+                        ),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                    )
+                }
+            }
+            if (selected) {
+                Text(
+                    text = stringResource(MR.strings.selected_color_checkmark.resourceId),
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold,
+                )
+            }
         }
     }
 }
