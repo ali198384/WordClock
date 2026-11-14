@@ -75,6 +75,7 @@ private val DarkColorScheme = darkColorScheme(
 @Composable
 fun WordClockTheme(
     themeMode: ThemeMode = ThemeMode.SYSTEM,
+    languageCode: String = "en",
     content: @Composable () -> Unit,
 ) {
     val useDarkTheme = when (themeMode) {
@@ -85,7 +86,7 @@ fun WordClockTheme(
 
     MaterialTheme(
         colorScheme = if (useDarkTheme) DarkColorScheme else LightColorScheme,
-        typography = WordClockTypography,
+        typography = wordClockTypography(isPersian = languageCode == "fa"),
         content = content,
     )
 }

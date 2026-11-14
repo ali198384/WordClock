@@ -12,6 +12,7 @@ final class AppModel: ObservableObject {
     @Published private(set) var control: ControlSnapshot?
     @Published private(set) var controlRevision = 0
     @Published private(set) var themeMode = "system"
+    @Published private(set) var languageCode = "en"
     @Published private(set) var isLoadingDevices = false
     @Published private(set) var isAddingDevice = false
     @Published private(set) var isLoadingControl = false
@@ -25,6 +26,16 @@ final class AppModel: ObservableObject {
     private var pendingColorByDeviceID: [String: Color] = [:]
 
     init() {
+        let savedLanguage = UserDefaults.standard.string(forKey: "wordClock.language")
+        let systemLanguage = Locale.preferredLanguages.first?.lowercased().hasPrefix("fa") == true
+            ? "fa"
+            : "en"
+        if let savedLanguage, savedLanguage == "fa" || savedLanguage == "en" {
+            languageCode = savedLanguage
+        } else {
+            languageCode = systemLanguage
+        }
+        sdk.setAppLanguage(languageCode: languageCode)
         loadThemeMode()
     }
 
@@ -211,6 +222,14 @@ final class AppModel: ObservableObject {
                 }
             }
         })
+    }
+
+    func setLanguageCode(_ value: String) {
+        let language = value == "fa" ? "fa" : "en"
+        guard languageCode != language else { return }
+        sdk.setAppLanguage(languageCode: language)
+        UserDefaults.standard.set(language, forKey: "wordClock.language")
+        languageCode = language
     }
 
     func clearNotices() {

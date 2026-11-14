@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <plural name="device_count">
+        <item quantity="one">%1$d ساعت</item>
+        <item quantity="other">%1$d ساعت</item>
+    </plural>
+    <plural name="connected_device_count">
+        <item quantity="one">%1$d دستگاه وصل‌شده</item>
+        <item quantity="other">%1$d دستگاه وصل‌شده</item>
+    </plural>
+</resources>

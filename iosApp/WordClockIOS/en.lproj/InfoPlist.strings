@@ -1,0 +1,2 @@
+"CFBundleDisplayName" = "Word Clock";
+"NSLocalNetworkUsageDescription" = "Word Clock uses your local network to find and control your ESP32 clock.";

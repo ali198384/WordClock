@@ -8,7 +8,15 @@ struct WordClockIOSApp: App {
     var body: some Scene {
         WindowGroup {
             DevicesView(model: model, wifi: wifiMonitor)
-                .environment(\.layoutDirection, .leftToRight)
+                .environment(\.layoutDirection, model.languageCode == "fa" ? .rightToLeft : .leftToRight)
+                .environment(\.locale, Locale(identifier: model.languageCode))
+                .environment(\.wordClockLanguage, model.languageCode)
+                .environment(
+                    \.font,
+                    model.languageCode == "fa"
+                        ? Font.custom("Vazirmatn-Regular", size: 17, relativeTo: .body)
+                        : .body
+                )
                 .preferredColorScheme(colorScheme)
                 .tint(ClockPalette.primary(colorScheme ?? .light))
         }

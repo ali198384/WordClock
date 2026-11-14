@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="local_network_permission_required">برای اتصال به Word Clock، اجازهٔ دسترسی به
+        شبکهٔ محلی را بدهید.
+    </string>
+    <string name="screen_title">WordClock</string>
+    <string name="app_logo_description">نشان WordClock</string>
+    <string name="screen_tagline">Ghazarian Luxury Art</string>
+    <string name="screen_description">ساعت‌ها را از طریق Wi-Fi وصل کنید و نور آن‌ها را از یک جا
+        کنترل کنید.
+    </string>
+    <string name="add_device_title">افزودن ساعت</string>
+    <string name="add_device_description">نشانی IP محلی نمایش‌داده‌شده در تنظیمات ساعت را وارد
+        کنید.
+    </string>
+    <string name="ip_address_label">نشانی IP</string>
+    <string name="ip_address_placeholder">192.168.1.100</string>
+    <string name="device_name_optional">نام (اختیاری)</string>
+    <string name="device_name_placeholder">پذیرایی</string>
+    <string name="add_device">افزودن دستگاه</string>
+    <string name="connecting_device">در حال اتصال…</string>
+    <string name="device_list_title">ساعت‌های شما</string>
+    <string name="no_devices_count">هنوز ساعتی وصل نشده است</string>
+    <string name="refreshing">در حال تازه‌سازی…</string>
+    <string name="refresh_devices_description">تازه‌سازی فهرست دستگاه‌ها</string>
+    <string name="theme_switch_to_dark">تغییر به پوستهٔ تیره</string>
+    <string name="theme_switch_to_light">تغییر به پوستهٔ روشن</string>
+    <string name="open_settings">باز کردن تنظیمات</string>
+    <string name="settings_title">تنظیمات</string>
+    <string name="settings_description">WordClock را مطابق سلیقهٔ خود تنظیم کنید.</string>
+    <string name="appearance">ظاهر</string>
+    <string name="language">زبان</string>
+    <string name="language_english">English</string>
+    <string name="language_persian">فارسی</string>
+    <string name="contact_us">تماس با ما</string>
+    <string name="contact_brand">Ghazarian Luxury Art</string>
+    <string name="contact_title">ارتباط با Ghazarian Luxury Art</string>
+    <string name="contact_description">پرسشی دربارهٔ Word Clock دارید؟ از یکی از راه‌های زیر با ما
+        در ارتباط باشید.
+    </string>
+    <string name="contact_phone_label">تلفن</string>
+    <string name="contact_phone_number">+989127051609</string>
+    <string name="contact_instagram_label">اینستاگرام</string>
+    <string name="contact_instagram_handle">@ghazarian_luxury_art</string>
+    <string name="contact_call_hint">باز کردن شماره‌گیر تلفن</string>
+    <string name="contact_instagram_hint">باز کردن صفحهٔ اینستاگرام Ghazarian Luxury Art</string>
+    <string name="app_version">نسخهٔ %1$s</string>
+    <string name="light_theme">روشن</string>
+    <string name="dark_theme">تیره</string>
+    <string name="more_options_glyph">⋮</string>
+    <string name="device_ip">IP: %1$s</string>
+    <string name="device_firmware">Firmware %1$s</string>
+    <string name="device_led_count">%1$d LED</string>
+    <string name="device_online">آنلاین</string>
+    <string name="device_offline">آفلاین</string>
+    <string name="device_checking">در حال بررسی</string>
+    <string name="power_status_on">روشن</string>
+    <string name="power_status_off">خاموش</string>
+    <string name="manage_device">مدیریت %1$s</string>
+    <string name="power_updating">در حال به‌روزرسانی وضعیت %1$s</string>
+    <string name="power_unavailable">کنترل روشنایی %1$s در دسترس نیست</string>
+    <string name="power_toggle">تغییر وضعیت روشنایی %1$s</string>
+    <string name="device_power_turn_off">خاموش کردن %1$s</string>
+    <string name="device_power_turn_on">روشن کردن %1$s</string>
+    <string name="rename_device">تغییر نام</string>
+    <string name="remove_device">حذف دستگاه</string>
+    <string name="loading_devices">در حال بارگذاری ساعت‌ها…</string>
+    <string name="empty_devices_title">شروع یک تجربهٔ نوری تازه</string>
+    <string name="empty_devices_description">برای کنترل LEDها، با نشانی IP محلی ساعت آن را اضافه
+        کنید.
+    </string>
+    <string name="retry">تلاش دوباره</string>
+    <string name="rename_dialog_title">تغییر نام ساعت</string>
+    <string name="device_name_label">نام ساعت</string>
+    <string name="saving">در حال ذخیره…</string>
+    <string name="save">ذخیره</string>
+    <string name="cancel">لغو</string>
+    <string name="remove_dialog_title">این ساعت حذف شود؟</string>
+    <string name="remove_dialog_message">«%1$s» از این برنامه حذف می‌شود.</string>
+    <string name="removing">در حال حذف…</string>
+    <string name="remove_action">حذف</string>
+    <string name="device_added">%1$s آمادهٔ کنترل است.</string>
+    <string name="device_added_state_unavailable">ساعت اضافه شد، اما خواندن وضعیت روشنایی آن ممکن
+        نبود.
+    </string>
+    <string name="devices_load_error">بارگذاری فهرست ساعت‌ها ممکن نبود.</string>
+    <string name="device_name_required">نامی برای این ساعت وارد کنید.</string>
+    <string name="device_renamed">نام ساعت به‌روز شد.</string>
+    <string name="device_removed">ساعت از این برنامه حذف شد.</string>
+    <string name="device_already_added">این ساعت از قبل در فهرست شماست.</string>
+    <string name="invalid_word_clock_response">این IP پاسخی از Word Clock دریافت نکرد. نشانی IP و
+        اتصال دستگاه را بررسی کنید.
+    </string>
+    <string name="device_connection_error">اتصال برقرار نشد. مطمئن شوید تلفن و ساعت به یک شبکهٔ
+        Wi-Fi وصل هستند.
+    </string>
+    <string name="device_not_found">ساعت پیدا نشد. فهرست را تازه‌سازی و دوباره تلاش کنید.</string>
+    <string name="generic_device_error">انجام این کار ممکن نبود. جزئیات دستگاه و اتصال شبکه را بررسی
+        کنید.
+    </string>
+    <string name="invalid_private_ip">یک IP خصوصی معتبر وارد کنید؛ برای نمونه 192.168.1.100.
+    </string>
+    <string name="control_title">کنترل ساعت</string>
+    <string name="back_to_devices_description">بازگشت به دستگاه‌ها</string>
+    <string name="refresh_clock_description">تازه‌سازی وضعیت ساعت</string>
+    <string name="wifi_not_connected">Wi-Fi وصل نیست.</string>
+    <string name="syncing">در حال همگام‌سازی ساعت…</string>
+    <string name="device_unavailable">ساعت در دسترس نیست.</string>
+    <string name="clock_on_summary">روشن · روشنایی %1$d%%</string>
+    <string name="control_power_turn_off">خاموش کردن</string>
+    <string name="control_power_turn_on">روشن کردن</string>
+    <string name="brightness_title">روشنایی</string>
+    <string name="brightness_description">شدت نور LED</string>
+    <string name="brightness_percent">%1$d%%</string>
+    <string name="brightness_slider_description">روشنایی از صفر تا ۲۵۵</string>
+    <string name="color_title">رنگ LED</string>
+    <string name="choose_color">انتخاب رنگ</string>
+    <string name="device_info_title">جزئیات ساعت</string>
+    <string name="physical_led_count">تعداد LEDها</string>
+    <string name="active_segment_led_count">LEDهای بخش فعال</string>
+    <string name="segment_count">بخش‌ها</string>
+    <string name="firmware">Firmware</string>
+    <string name="devices_title">ساعت‌های شما</string>
+    <string name="no_devices">هنوز ساعتی اضافه نشده است.</string>
+    <string name="selected_color">رنگ انتخاب‌شده · &#x2066;%1$s&#x2069;</string>
+    <string name="colors_tab">رنگ‌ها</string>
+    <string name="whites_tab">سفیدها</string>
+    <string name="color_wheel_description">برای انتخاب رنگ، روی چرخه بکشید.</string>
+    <string name="white_mix_description">طیف‌های سفید با مقادیر RGB تنظیم می‌شوند.</string>
+    <string name="color_wheel_content_description">چرخهٔ رنگ RGB</string>
+    <string name="color_red">قرمز</string>
+    <string name="color_orange">نارنجی</string>
+    <string name="color_yellow">زرد</string>
+    <string name="color_green">سبز</string>
+    <string name="color_cyan">فیروزه‌ای</string>
+    <string name="color_blue">آبی</string>
+    <string name="color_purple">بنفش</string>
+    <string name="color_white">سفید</string>
+    <string name="color_warm_white">گرم</string>
+    <string name="color_soft_white">ملایم</string>
+    <string name="color_natural_white">طبیعی</string>
+    <string name="color_day_light">روز</string>
+    <string name="color_cool_white">سرد</string>
+    <string name="color_blue_sky">آسمانی</string>
+    <string name="selected_color_checkmark">✓</string>
+    <string name="loading_device_state">در حال دریافت وضعیت ساعت…</string>
+    <string name="connection_failed">اتصال ناموفق بود</string>
+    <string name="no_device_selected">ساعتی انتخاب نشده است.</string>
+    <string name="device_id_missing">شناسهٔ ساعت در دسترس نیست.</string>
+    <string name="wifi_reconnect_message">Wi-Fi در دسترس نیست. پس از وصل شدن، ساعت به‌طور خودکار
+        بررسی می‌شود.
+    </string>
+    <string name="wifi_lost_message">اتصال Wi-Fi قطع شد. کنترل ساعت تا زمان اتصال دوباره متوقف
+        است.
+    </string>
+    <string name="control_device_connection_error">ارتباط با Word Clock برقرار نشد. Wi-Fi و نشانی IP
+        ساعت را بررسی کنید.
+    </string>
+    <string name="invalid_device_response">پاسخ ساعت معتبر نیست. وضعیت آن را تازه‌سازی و دوباره تلاش
+        کنید.
+    </string>
+    <string name="control_device_not_found">ساعت پیدا نشد. فهرست ساعت‌ها را تازه‌سازی و دوباره تلاش
+        کنید.
+    </string>
+    <string name="generic_control_error">انجام این کار ممکن نبود. دوباره تلاش کنید.</string>
+    <string name="ios_devices_title">دستگاه‌ها</string>
+    <string name="ios_wifi_unavailable">Wi-Fi در دسترس نیست. کنترل دستگاه‌ها متوقف است.</string>
+    <string name="error_title">مشکلی پیش آمد</string>
+    <string name="ok">باشه</string>
+    <string name="error_fallback">دوباره تلاش کنید.</string>
+    <string name="ios_add_device_title">افزودن Word Clock</string>
+    <string name="ios_add_device_description">نشانی IP محلی ساعت را وارد کنید.</string>
+    <string name="ios_ip_address_placeholder">نشانی IP (مثلاً 192.168.1.100)</string>
+    <string name="ios_add_device_button">افزودن ساعت</string>
+    <string name="ios_empty_devices_title">شروع یک تجربهٔ نوری تازه</string>
+    <string name="ios_empty_devices_description">برای کنترل LEDها، با نشانی IP محلی ساعت آن را اضافه
+        کنید.
+    </string>
+    <string name="ios_connected_to_clock">به ساعت وصل هستید</string>
+    <string name="ios_clock_on">ساعت روشن است</string>
+    <string name="ios_clock_off">ساعت خاموش است</string>
+    <string name="ios_power_off_summary">LEDها خاموش هستند</string>
+    <string name="ios_color_mode">حالت رنگ</string>
+    <string name="unknown">نامشخص</string>
+    <string name="ios_unavailable_check_ip">نشانی IP محلی ساعت را بررسی و دوباره تلاش کنید.</string>
+    <string name="ios_wifi_reconnect_short">پس از وصل شدن Wi-Fi، ساعت به‌طور خودکار بررسی می‌شود.
+    </string>
+    <string name="empty_response">پاسخی از ساعت دریافت نشد.</string>
+    <string name="ios_device_firmware">· Firmware %1$s</string>
+</resources>

@@ -1,5 +1,6 @@
 package com.ghazarian.wordclock.feature.devices.presentation
 
+import android.content.Intent
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -19,56 +20,74 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.NavigationDrawerItem
+import androidx.compose.material3.NavigationDrawerItemDefaults
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberDrawerState
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -82,6 +101,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.coerceAtLeast
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ghazarian.wordclock.core.designsystem.text.UiText
 import com.ghazarian.wordclock.core.designsystem.text.asString
@@ -94,8 +114,21 @@ import com.ghazarian.wordclock.resources.add_device
 import com.ghazarian.wordclock.resources.add_device_description
 import com.ghazarian.wordclock.resources.add_device_title
 import com.ghazarian.wordclock.resources.app_logo_description
+import com.ghazarian.wordclock.resources.app_version
+import com.ghazarian.wordclock.resources.appearance
 import com.ghazarian.wordclock.resources.cancel
 import com.ghazarian.wordclock.resources.connecting_device
+import com.ghazarian.wordclock.resources.contact_brand
+import com.ghazarian.wordclock.resources.contact_call_hint
+import com.ghazarian.wordclock.resources.contact_description
+import com.ghazarian.wordclock.resources.contact_instagram_handle
+import com.ghazarian.wordclock.resources.contact_instagram_hint
+import com.ghazarian.wordclock.resources.contact_instagram_label
+import com.ghazarian.wordclock.resources.contact_phone_label
+import com.ghazarian.wordclock.resources.contact_phone_number
+import com.ghazarian.wordclock.resources.contact_title
+import com.ghazarian.wordclock.resources.contact_us
+import com.ghazarian.wordclock.resources.dark_theme
 import com.ghazarian.wordclock.resources.device_checking
 import com.ghazarian.wordclock.resources.device_count
 import com.ghazarian.wordclock.resources.device_firmware
@@ -113,10 +146,15 @@ import com.ghazarian.wordclock.resources.empty_devices_description
 import com.ghazarian.wordclock.resources.empty_devices_title
 import com.ghazarian.wordclock.resources.ip_address_label
 import com.ghazarian.wordclock.resources.ip_address_placeholder
+import com.ghazarian.wordclock.resources.language
+import com.ghazarian.wordclock.resources.language_english
+import com.ghazarian.wordclock.resources.language_persian
+import com.ghazarian.wordclock.resources.light_theme
 import com.ghazarian.wordclock.resources.loading_devices
 import com.ghazarian.wordclock.resources.manage_device
 import com.ghazarian.wordclock.resources.more_options_glyph
 import com.ghazarian.wordclock.resources.no_devices_count
+import com.ghazarian.wordclock.resources.open_settings
 import com.ghazarian.wordclock.resources.power_status_off
 import com.ghazarian.wordclock.resources.power_status_on
 import com.ghazarian.wordclock.resources.power_toggle
@@ -137,16 +175,20 @@ import com.ghazarian.wordclock.resources.saving
 import com.ghazarian.wordclock.resources.screen_description
 import com.ghazarian.wordclock.resources.screen_tagline
 import com.ghazarian.wordclock.resources.screen_title
-import com.ghazarian.wordclock.resources.theme_switch_to_dark
-import com.ghazarian.wordclock.resources.theme_switch_to_light
+import com.ghazarian.wordclock.resources.settings_description
+import com.ghazarian.wordclock.resources.settings_title
+import kotlinx.coroutines.launch
 import com.ghazarian.wordclock.core.designsystem.R as DesignSystemR
 
 @Composable
 fun DevicesRoute(
     viewModel: DevicesViewModel,
     permissionMessage: UiText?,
+    appVersion: String,
     themeMode: ThemeMode,
+    languageCode: String,
     onThemeModeChanged: (ThemeMode) -> Unit,
+    onLanguageChanged: (String) -> Unit,
     onAddDevice: () -> Unit,
     onIpAddressChanged: (String) -> Unit,
     onDeviceSelected: (String) -> Unit,
@@ -157,8 +199,11 @@ fun DevicesRoute(
         onIpAddressChanged = onIpAddressChanged,
         onDeviceNameChanged = viewModel::onDeviceNameChanged,
         permissionMessage = permissionMessage,
+        appVersion = appVersion,
         themeMode = themeMode,
+        languageCode = languageCode,
         onThemeModeChanged = onThemeModeChanged,
+        onLanguageChanged = onLanguageChanged,
         onAddDevice = onAddDevice,
         onRefresh = viewModel::refresh,
         onDeviceSelected = onDeviceSelected,
@@ -178,8 +223,11 @@ fun DevicesRoute(
 private fun DevicesScreen(
     state: DevicesUiState,
     permissionMessage: UiText?,
+    appVersion: String,
     themeMode: ThemeMode,
+    languageCode: String,
     onThemeModeChanged: (ThemeMode) -> Unit,
+    onLanguageChanged: (String) -> Unit,
     onIpAddressChanged: (String) -> Unit,
     onDeviceNameChanged: (String) -> Unit,
     onAddDevice: () -> Unit,
@@ -194,50 +242,89 @@ private fun DevicesScreen(
     onRemoveConfirmed: () -> Unit,
     onRemoveDismissed: () -> Unit,
 ) {
-    Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
-        topBar = {
-            BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
-                val logoWidth = 78.dp
-                val titleMaxWidth = ((maxWidth - logoWidth - 32.dp) / 2).coerceAtLeast(40.dp)
-                val topInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
-                Box(modifier = Modifier.fillMaxWidth()) {
-                    TopAppBar(
-                        title = {
-                            Text(
-                                text = stringResource(MR.strings.screen_title.resourceId),
-                                modifier = Modifier.widthIn(max = titleMaxWidth),
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                                style = MaterialTheme.typography.titleLarge,
-                            )
-                        },
-                        actions = {
-                            ThemeToggleButton(
-                                themeMode = themeMode,
-                                onThemeModeChanged = onThemeModeChanged,
-                            )
-                        },
-                    )
-                    Image(
-                        painter = painterResource(DesignSystemR.drawable.word_clock_logo),
-                        contentDescription = stringResource(MR.strings.app_logo_description.resourceId),
-                        modifier = Modifier
-                            .align(Alignment.Center)
-                            .offset(y = topInset / 2)
-                            .size(width = logoWidth, height = 46.dp),
-                        contentScale = ContentScale.Fit,
-                    )
-                }
-            }
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val coroutineScope = rememberCoroutineScope()
+    var isContactSheetVisible by remember { mutableStateOf(false) }
+    val openSettingsDescription = stringResource(MR.strings.open_settings.resourceId)
+
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        drawerContent = {
+            SettingsDrawer(
+                themeMode = themeMode,
+                languageCode = languageCode,
+                appVersion = appVersion,
+                onThemeModeChanged = { newMode ->
+                    onThemeModeChanged(newMode)
+                    coroutineScope.launch { drawerState.close() }
+                },
+                onLanguageChanged = { newLanguage ->
+                    coroutineScope.launch {
+                        drawerState.close()
+                        onLanguageChanged(newLanguage)
+                    }
+                },
+                onContactUs = {
+                    coroutineScope.launch {
+                        drawerState.close()
+                        isContactSheetVisible = true
+                    }
+                },
+            )
         },
-    ) { contentPadding ->
-        BoxWithConstraints(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(contentPadding),
-            contentAlignment = Alignment.TopCenter,
-        ) {
+    ) {
+        Scaffold(
+            containerColor = MaterialTheme.colorScheme.background,
+            topBar = {
+                BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+                    val logoWidth = 78.dp
+                    val titleMaxWidth = ((maxWidth - logoWidth - 32.dp) / 2).coerceAtLeast(40.dp)
+                    val topInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        TopAppBar(
+                            title = {
+                                Text(
+                                    text = stringResource(MR.strings.screen_title.resourceId),
+                                    modifier = Modifier.widthIn(max = titleMaxWidth),
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    style = MaterialTheme.typography.titleLarge,
+                                )
+                            },
+                            actions = {
+                                IconButton(
+                                    onClick = { coroutineScope.launch { drawerState.open() } },
+                                    modifier = Modifier.semantics {
+                                        contentDescription = openSettingsDescription
+                                    },
+                                ) {
+                                    Icon(
+                                        painter = painterResource(DesignSystemR.drawable.menu_24),
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary,
+                                    )
+                                }
+                            },
+                        )
+                        Image(
+                            painter = painterResource(DesignSystemR.drawable.word_clock_logo),
+                            contentDescription = stringResource(MR.strings.app_logo_description.resourceId),
+                            modifier = Modifier
+                                .align(Alignment.Center)
+                                .offset(y = topInset / 2)
+                                .size(width = logoWidth, height = 46.dp),
+                            contentScale = ContentScale.Fit,
+                        )
+                    }
+                }
+            },
+        ) { contentPadding ->
+            BoxWithConstraints(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(contentPadding),
+                contentAlignment = Alignment.TopCenter,
+            ) {
                 val compactLayout = maxWidth < 640.dp
                 LazyVerticalGrid(
                     columns = GridCells.Adaptive(minSize = 320.dp),
@@ -320,6 +407,17 @@ private fun DevicesScreen(
                 }
             }
         }
+    }
+    if (isContactSheetVisible) {
+        ModalBottomSheet(
+            onDismissRequest = { isContactSheetVisible = false },
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+            shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+            containerColor = MaterialTheme.colorScheme.surface,
+        ) {
+            ContactUsSheetContent()
+        }
+    }
     val editingDevice = state.devices.firstOrNull { it.id == state.editingDeviceId }
     if (editingDevice != null) {
         RenameDeviceDialog(
@@ -344,35 +442,352 @@ private fun DevicesScreen(
 }
 
 @Composable
-private fun ThemeToggleButton(
+private fun SettingsDrawer(
     themeMode: ThemeMode,
+    languageCode: String,
+    appVersion: String,
     onThemeModeChanged: (ThemeMode) -> Unit,
+    onLanguageChanged: (String) -> Unit,
+    onContactUs: () -> Unit,
 ) {
+    var languageOptionsExpanded by remember { mutableStateOf(false) }
     val systemIsDark = isSystemInDarkTheme()
     val currentlyDark = when (themeMode) {
         ThemeMode.SYSTEM -> systemIsDark
         ThemeMode.LIGHT -> false
         ThemeMode.DARK -> true
     }
-    val toggleDescription = stringResource(
-        if (currentlyDark) MR.strings.theme_switch_to_light.resourceId else MR.strings.theme_switch_to_dark.resourceId,
+    val currentThemeLabel = stringResource(
+        if (currentlyDark) MR.strings.dark_theme.resourceId else MR.strings.light_theme.resourceId,
     )
-    IconButton(
-        onClick = {
-            onThemeModeChanged(if (currentlyDark) ThemeMode.LIGHT else ThemeMode.DARK)
-        },
-        modifier = Modifier.semantics {
-            contentDescription = toggleDescription
-        },
+
+    BoxWithConstraints {
+        Surface(
+            modifier = Modifier
+                .width(maxWidth * 0.8f)
+                .fillMaxHeight(),
+            shape = RoundedCornerShape(topEnd = 28.dp, bottomEnd = 28.dp),
+            color = MaterialTheme.colorScheme.surface,
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(
+                        top = WindowInsets.statusBars.asPaddingValues()
+                            .calculateTopPadding() + 24.dp,
+                        bottom = WindowInsets.navigationBars.asPaddingValues()
+                            .calculateBottomPadding() + 16.dp,
+                    ),
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 18.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(14.dp),
+                ) {
+                    Surface(
+                        modifier = Modifier.size(50.dp),
+                        shape = RoundedCornerShape(16.dp),
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                    ) {
+                        Image(
+                            painter = painterResource(DesignSystemR.drawable.word_clock_logo),
+                            contentDescription = null,
+                            modifier = Modifier.padding(7.dp),
+                            contentScale = ContentScale.Fit,
+                        )
+                    }
+                    Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                        Text(
+                            text = stringResource(MR.strings.settings_title.resourceId),
+                            style = MaterialTheme.typography.titleLarge,
+                        )
+                        Text(
+                            text = stringResource(MR.strings.settings_description.resourceId),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+                HorizontalDivider(
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f),
+                )
+                NavigationDrawerItem(
+                    label = { Text(stringResource(MR.strings.appearance.resourceId)) },
+                    selected = false,
+                    onClick = {
+                        onThemeModeChanged(if (currentlyDark) ThemeMode.LIGHT else ThemeMode.DARK)
+                    },
+                    icon = {
+                        Icon(
+                            painter = painterResource(
+                                if (currentlyDark) DesignSystemR.drawable.sunny_24
+                                else DesignSystemR.drawable.dark_mode_24,
+                            ),
+                            contentDescription = null,
+                        )
+                    },
+                    badge = {
+                        Text(
+                            text = currentThemeLabel,
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    },
+                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding),
+                    shape = RoundedCornerShape(16.dp),
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                NavigationDrawerItem(
+                    label = { Text(stringResource(MR.strings.language.resourceId)) },
+                    selected = false,
+                    onClick = { languageOptionsExpanded = !languageOptionsExpanded },
+                    icon = {
+                        Icon(
+                            painter = painterResource(DesignSystemR.drawable.language_24),
+                            contentDescription = null,
+                        )
+                    },
+                    badge = {
+                        Text(
+                            text = stringResource(
+                                if (languageCode == "fa") {
+                                    MR.strings.language_persian.resourceId
+                                } else {
+                                    MR.strings.language_english.resourceId
+                                },
+                            ),
+                            style = MaterialTheme.typography.labelMedium,
+                        )
+                    },
+                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding),
+                    shape = RoundedCornerShape(16.dp),
+                )
+                if (languageOptionsExpanded) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        LanguageOption(
+                            label = stringResource(MR.strings.language_english.resourceId),
+                            selected = languageCode == "en",
+                            onClick = { onLanguageChanged("en") },
+                            modifier = Modifier.weight(1f),
+                        )
+                        LanguageOption(
+                            label = stringResource(MR.strings.language_persian.resourceId),
+                            selected = languageCode == "fa",
+                            onClick = { onLanguageChanged("fa") },
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(12.dp))
+                NavigationDrawerItem(
+                    label = { Text(stringResource(MR.strings.contact_us.resourceId)) },
+                    selected = false,
+                    onClick = onContactUs,
+                    icon = {
+                        Icon(
+                            painter = painterResource(DesignSystemR.drawable.call_24),
+                            contentDescription = null,
+                        )
+                    },
+                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding),
+                    shape = RoundedCornerShape(16.dp),
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                HorizontalDivider(
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f),
+                )
+                Text(
+                    text = stringResource(MR.strings.app_version.resourceId, appVersion),
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun LanguageOption(
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val containerColor = if (selected) {
+        MaterialTheme.colorScheme.primaryContainer
+    } else {
+        MaterialTheme.colorScheme.surfaceVariant
+    }
+    val contentColor = if (selected) {
+        MaterialTheme.colorScheme.onPrimaryContainer
+    } else {
+        MaterialTheme.colorScheme.onSurfaceVariant
+    }
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(14.dp),
+        color = containerColor,
+        contentColor = contentColor,
+        border = BorderStroke(
+            width = 1.dp,
+            color = if (selected) MaterialTheme.colorScheme.primary
+            else MaterialTheme.colorScheme.outline,
+        ),
     ) {
-        Icon(
-            painter = painterResource(
-                if (currentlyDark) DesignSystemR.drawable.sunny_24
-                else DesignSystemR.drawable.dark_mode_24,
-            ),
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.primary,
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(role = Role.RadioButton, onClick = onClick)
+                .padding(horizontal = 8.dp, vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
+        ) {
+            RadioButton(selected = selected, onClick = null)
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelLarge,
+                maxLines = 1,
+            )
+        }
+    }
+}
+
+@Composable
+private fun ContactUsSheetContent() {
+    val context = LocalContext.current
+    val phoneNumber = stringResource(MR.strings.contact_phone_number.resourceId)
+    val instagramHandle = stringResource(MR.strings.contact_instagram_handle.resourceId)
+    val instagramUrl = "https://www.instagram.com/${instagramHandle.removePrefix("@").trim()}/"
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .widthIn(max = 560.dp)
+            .heightIn(max = 600.dp)
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 24.dp)
+            .padding(top = 8.dp, bottom = 20.dp),
+        verticalArrangement = Arrangement.spacedBy(18.dp),
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
+        ) {
+            Surface(
+                modifier = Modifier.size(58.dp),
+                shape = RoundedCornerShape(18.dp),
+                color = MaterialTheme.colorScheme.primaryContainer,
+            ) {
+                Image(
+                    painter = painterResource(DesignSystemR.drawable.word_clock_logo),
+                    contentDescription = null,
+                    modifier = Modifier.padding(8.dp),
+                    contentScale = ContentScale.Fit,
+                )
+            }
+            Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                Text(
+                    text = stringResource(MR.strings.contact_brand.resourceId),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+                Text(
+                    text = stringResource(MR.strings.contact_title.resourceId),
+                    style = MaterialTheme.typography.titleLarge,
+                )
+            }
+        }
+        Text(
+            text = stringResource(MR.strings.contact_description.resourceId),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
+        ContactActionCard(
+            icon = DesignSystemR.drawable.call_24,
+            label = stringResource(MR.strings.contact_phone_label.resourceId),
+            detail = phoneNumber,
+            onClick = {
+                context.startActivity(Intent(Intent.ACTION_DIAL, "tel:$phoneNumber".toUri()))
+            },
+        )
+        ContactActionCard(
+            icon = DesignSystemR.drawable.photo_camera_24,
+            label = stringResource(MR.strings.contact_instagram_label.resourceId),
+            detail = instagramHandle,
+            onClick = {
+                context.startActivity(Intent(Intent.ACTION_VIEW, instagramUrl.toUri()))
+            },
+        )
+    }
+}
+
+@Composable
+private fun ContactActionCard(
+    icon: Int,
+    label: String,
+    detail: String,
+    onClick: () -> Unit,
+) {
+    val description = when (icon) {
+        DesignSystemR.drawable.call_24 -> stringResource(MR.strings.contact_call_hint.resourceId)
+        else -> stringResource(MR.strings.contact_instagram_hint.resourceId)
+    }
+    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onClick)
+                .semantics {
+                    role = Role.Button
+                    contentDescription = "$label. $detail. $description"
+                },
+            shape = RoundedCornerShape(18.dp),
+            color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.55f),
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 14.dp, vertical = 13.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Icon(
+                    painter = painterResource(icon),
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(24.dp),
+                )
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(3.dp)
+                ) {
+                    Text(
+                        label,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        detail,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+                Icon(
+                    painter = painterResource(DesignSystemR.drawable.open_in_new_24),
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(18.dp),
+                )
+            }
+        }
     }
 }
 
@@ -407,10 +822,14 @@ private fun ScreenHeading() {
         }
     }
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        Text(
-            text = rainbowTagline,
-            style = MaterialTheme.typography.headlineMedium,
-        )
+        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+            Text(
+                text = rainbowTagline,
+                modifier = Modifier.fillMaxWidth(),
+                style = MaterialTheme.typography.headlineMedium,
+                textAlign = TextAlign.Start,
+            )
+        }
         Text(
             text = stringResource(MR.strings.screen_description.resourceId),
             style = MaterialTheme.typography.bodyLarge,

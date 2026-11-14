@@ -19,6 +19,7 @@ import com.ghazarian.wordclock.core.model.LedColor
 import com.ghazarian.wordclock.core.model.WordClockDevice
 import com.ghazarian.wordclock.core.model.WordClockState
 import com.ghazarian.wordclock.core.storage.ThemeModeStorage
+import dev.icerock.moko.resources.desc.StringDesc
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -145,6 +146,11 @@ class WordClockSdk internal constructor(
         val mode = value.takeIf { it in setOf("system", "light", "dark") } ?: "system"
         themeModeStorage.setThemeModeValue(mode)
         WordClockSdkResult(themeMode = mode)
+    }
+
+    fun setAppLanguage(languageCode: String) {
+        val locale = if (languageCode == "fa") "fa" else "en"
+        StringDesc.localeType = StringDesc.LocaleType.Custom(locale)
     }
 
     private suspend fun controlSnapshot(deviceId: String): WordClockControlSnapshot {

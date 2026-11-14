@@ -14,6 +14,11 @@
 		A10000000000000000000006 /* ControlView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000006 /* ControlView.swift */; };
 		A10000000000000000000007 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000007 /* Assets.xcassets */; };
 		A10000000000000000000009 /* Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000011 /* Localization.swift */; };
+		A10000000000000000000010 /* vazirmatn_regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000012 /* vazirmatn_regular.ttf */; };
+		A10000000000000000000013 /* vazirmatn_medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000013 /* vazirmatn_medium.ttf */; };
+		A10000000000000000000014 /* vazirmatn_semibold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000014 /* vazirmatn_semibold.ttf */; };
+		A10000000000000000000015 /* vazirmatn_bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000015 /* vazirmatn_bold.ttf */; };
+		A10000000000000000000016 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = A41000000000000000000001 /* InfoPlist.strings */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -27,6 +32,12 @@
 		A20000000000000000000008 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A20000000000000000000009 /* WordClockIOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WordClockIOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A20000000000000000000011 /* Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Localization.swift; sourceTree = "<group>"; };
+		A20000000000000000000012 /* vazirmatn_regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Fonts/vazirmatn_regular.ttf; sourceTree = "<group>"; };
+		A20000000000000000000013 /* vazirmatn_medium.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Fonts/vazirmatn_medium.ttf; sourceTree = "<group>"; };
+		A20000000000000000000014 /* vazirmatn_semibold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Fonts/vazirmatn_semibold.ttf; sourceTree = "<group>"; };
+		A20000000000000000000015 /* vazirmatn_bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Fonts/vazirmatn_bold.ttf; sourceTree = "<group>"; };
+		A20000000000000000000016 /* en InfoPlist.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		A20000000000000000000017 /* fa InfoPlist.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fa; path = fa.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -56,6 +67,11 @@
 				A20000000000000000000007 /* Assets.xcassets */,
 				A20000000000000000000008 /* Info.plist */,
 				A20000000000000000000011 /* Localization.swift */,
+				A20000000000000000000012 /* vazirmatn_regular.ttf */,
+				A20000000000000000000013 /* vazirmatn_medium.ttf */,
+				A20000000000000000000014 /* vazirmatn_semibold.ttf */,
+				A20000000000000000000015 /* vazirmatn_bold.ttf */,
+				A41000000000000000000001 /* InfoPlist.strings */,
 			);
 		};
 		A40000000000000000000003 /* Products */ = {
@@ -63,6 +79,15 @@
 			name = Products;
 			sourceTree = "<group>";
 			children = (A20000000000000000000009 /* WordClockIOS.app */,);
+		};
+		A41000000000000000000001 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				A20000000000000000000016 /* en */,
+				A20000000000000000000017 /* fa */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
@@ -99,7 +124,7 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXResourcesBuildPhase section */
-		A70000000000000000000003 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (A10000000000000000000007 /* Assets.xcassets in Resources */,); runOnlyForDeploymentPostprocessing = 0; };
+		A70000000000000000000003 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (A10000000000000000000007 /* Assets.xcassets in Resources */, A10000000000000000000010 /* vazirmatn_regular.ttf in Resources */, A10000000000000000000013 /* vazirmatn_medium.ttf in Resources */, A10000000000000000000014 /* vazirmatn_semibold.ttf in Resources */, A10000000000000000000015 /* vazirmatn_bold.ttf in Resources */, A10000000000000000000016 /* InfoPlist.strings in Resources */,); runOnlyForDeploymentPostprocessing = 0; };
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
@@ -133,7 +158,7 @@
 			compatibilityVersion = "Xcode 15.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
-			knownRegions = (en, Base,);
+			knownRegions = (en, fa, Base,);
 			mainGroup = A40000000000000000000001;
 			productRefGroup = A40000000000000000000003 /* Products */;
 			projectDirPath = "";

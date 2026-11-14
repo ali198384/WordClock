@@ -1,6 +1,7 @@
 package com.ghazarian.wordclock.navigation
 
 import android.Manifest
+import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -32,10 +33,13 @@ import com.ghazarian.wordclock.resources.local_network_permission_required
 @Composable
 fun AppNavHost(
     themeMode: ThemeMode,
+    languageCode: String,
     onThemeModeChanged: (ThemeMode) -> Unit,
+    onLanguageChanged: (String) -> Unit,
 ) {
     val navController = rememberNavController()
     val context = LocalContext.current
+    val appVersion = remember(context) { installedAppVersion(context) }
 
     NavHost(
         navController = navController,
@@ -59,8 +63,11 @@ fun AppNavHost(
             DevicesRoute(
                 viewModel = viewModel,
                 permissionMessage = permissionMessage,
+                appVersion = appVersion,
                 themeMode = themeMode,
+                languageCode = languageCode,
                 onThemeModeChanged = onThemeModeChanged,
+                onLanguageChanged = onLanguageChanged,
                 onAddDevice = {
                     if (viewModel.validateIpAddress()) {
                         val needsLocalNetworkPermission =
@@ -104,4 +111,17 @@ fun AppNavHost(
             )
         }
     }
+}
+
+@Suppress("DEPRECATION")
+private fun installedAppVersion(context: Context): String {
+    val packageInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        context.packageManager.getPackageInfo(
+            context.packageName,
+            PackageManager.PackageInfoFlags.of(0),
+        )
+    } else {
+        context.packageManager.getPackageInfo(context.packageName, 0)
+    }
+    return packageInfo.versionName.orEmpty()
 }

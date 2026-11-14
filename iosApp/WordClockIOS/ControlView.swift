@@ -96,7 +96,7 @@ struct ControlView: View {
             .accessibilityLabel(L10n.backToDevicesDescription)
             VStack(spacing: 2) {
                 Text(snapshot?.device.name ?? L10n.controlTitle)
-                    .font(.system(size: 17, weight: .semibold))
+                    .wordClockFont(size: 17, weight: .semibold)
                     .lineLimit(1)
                 Text(snapshot?.device.ipAddress ?? "")
                     .font(.system(size: 12, design: .monospaced))
@@ -125,7 +125,7 @@ struct ControlView: View {
         return HStack(spacing: 10) {
             Image(systemName: online ? "wifi" : "wifi.slash")
             Text(online ? L10n.connectedToClock : (wifi.isAvailable ? L10n.deviceUnavailable : L10n.wifiNotConnected))
-                .font(.system(size: 14, weight: .medium))
+                .wordClockFont(size: 14, weight: .medium)
             Spacer()
             Circle().fill(online ? ClockPalette.powerOn : ClockPalette.error).frame(width: 8, height: 8)
         }
@@ -138,9 +138,9 @@ struct ControlView: View {
         HStack(spacing: 16) {
             VStack(alignment: .leading, spacing: 5) {
                 Text(value.state.isOn ? L10n.clockOn : L10n.clockOff)
-                    .font(.system(size: 21, weight: .semibold))
+                    .wordClockFont(size: 21, weight: .semibold)
                 Text(value.state.isOn ? L10n.clockOnSummary(Int(value.state.brightness * 100 / 255)) : L10n.powerOffSummary)
-                    .font(.system(size: 14))
+                    .wordClockFont(size: 14)
                     .foregroundStyle(ClockPalette.secondaryText(colorScheme))
             }
             Spacer()
@@ -161,12 +161,16 @@ struct ControlView: View {
     private func brightnessCard(_ value: ControlSnapshot) -> some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack {
-                Label(L10n.brightnessTitle, systemImage: "sun.max.fill")
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundStyle(ClockPalette.tertiary(colorScheme))
+                HStack(spacing: 8) {
+                    Image(systemName: "sun.max.fill")
+                        .font(.system(size: 18, weight: .semibold))
+                    Text(L10n.brightnessTitle)
+                        .wordClockFont(size: 18, weight: .semibold)
+                }
+                .foregroundStyle(ClockPalette.tertiary(colorScheme))
                 Spacer()
                 Text(L10n.brightnessPercent(Int(brightnessDraft.rounded()) * 100 / 255))
-                    .font(.system(size: 16, weight: .semibold, design: .rounded))
+                    .wordClockFont(size: 16, weight: .semibold, design: .rounded)
                     .foregroundStyle(ClockPalette.primary(colorScheme))
             }
             Slider(value: $brightnessDraft, in: 0...255, step: 1)
@@ -175,7 +179,7 @@ struct ControlView: View {
                 .accessibilityLabel(L10n.brightnessSliderDescription)
             HStack {
                 Text(L10n.brightnessDescription)
-                    .font(.system(size: 13))
+                    .wordClockFont(size: 13)
                     .foregroundStyle(ClockPalette.secondaryText(colorScheme))
             }
         }
@@ -188,15 +192,15 @@ struct ControlView: View {
             HStack(spacing: 10) {
                 Image(systemName: "paintpalette.fill")
                     .foregroundStyle(ClockPalette.secondary(colorScheme))
-                Text(L10n.colorTitle).font(.system(size: 18, weight: .semibold))
+                Text(L10n.colorTitle).wordClockFont(size: 18, weight: .semibold)
                 Spacer()
                 Circle().fill(colorDraft).frame(width: 26, height: 26)
                     .padding(4)
                     .overlay(Circle().stroke(colorDraft, lineWidth: 2))
             }
             Picker(L10n.colorMode, selection: $selectedTab) {
-                Text(L10n.colorsTab).tag(0)
-                Text(L10n.whitesTab).tag(1)
+                Text(L10n.colorsTab).wordClockFont(size: 14, weight: .medium).tag(0)
+                Text(L10n.whitesTab).wordClockFont(size: 14, weight: .medium).tag(1)
             }
             .pickerStyle(.segmented)
             if selectedTab == 0 {
@@ -206,14 +210,14 @@ struct ControlView: View {
                         .disabled(!canControl)
                     VStack(alignment: .leading, spacing: 11) {
                         Text(L10n.chooseColor)
-                            .font(.system(size: 15, weight: .semibold))
+                            .wordClockFont(size: 15, weight: .semibold)
                         ForEach(ColorPreset.colors, id: \.name) { preset in
                             Button {
                                 colorDraft = preset.color
                             } label: {
                                 HStack(spacing: 8) {
                                     Circle().fill(preset.color).frame(width: 17, height: 17)
-                                    Text(preset.name).font(.system(size: 13))
+                                    Text(preset.name).wordClockFont(size: 13)
                                     Spacer(minLength: 0)
                                     if UIColor(colorDraft).isApproximatelyEqual(to: UIColor(preset.color)) {
                                         Image(systemName: "checkmark").font(.system(size: 11, weight: .bold))
@@ -228,11 +232,11 @@ struct ControlView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 Text(L10n.colorWheelDescription)
-                    .font(.system(size: 13))
+                    .wordClockFont(size: 13)
                     .foregroundStyle(ClockPalette.secondaryText(colorScheme))
             } else {
                 Text(L10n.whiteMixDescription)
-                    .font(.system(size: 13))
+                    .wordClockFont(size: 13)
                     .foregroundStyle(ClockPalette.secondaryText(colorScheme))
                 HStack(spacing: 10) {
                     ForEach(ColorPreset.whites, id: \.name) { preset in
@@ -244,7 +248,7 @@ struct ControlView: View {
                                     .frame(width: 43, height: 43)
                                     .overlay(Circle().stroke(ClockPalette.secondaryText(colorScheme).opacity(0.3), lineWidth: 1))
                                 Text(preset.name)
-                                    .font(.system(size: 11, weight: .medium))
+                                    .wordClockFont(size: 11, weight: .medium)
                                     .lineLimit(1)
                                     .minimumScaleFactor(0.8)
                             }
@@ -259,7 +263,7 @@ struct ControlView: View {
             }
             HStack {
                 Text(selectedColorDescription)
-                    .font(.system(size: 13, weight: .medium, design: .monospaced))
+                    .wordClockFont(size: 13, weight: .medium)
                     .foregroundStyle(ClockPalette.secondaryText(colorScheme))
             }
         }
@@ -278,9 +282,13 @@ struct ControlView: View {
 
     private func detailsCard(_ value: ControlSnapshot) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            Label(L10n.deviceInfoTitle, systemImage: "info.circle.fill")
-                .font(.system(size: 18, weight: .semibold))
-                .foregroundStyle(ClockPalette.secondary(colorScheme))
+            HStack(spacing: 8) {
+                Image(systemName: "info.circle.fill")
+                    .font(.system(size: 18, weight: .semibold))
+                Text(L10n.deviceInfoTitle)
+                    .wordClockFont(size: 18, weight: .semibold)
+            }
+            .foregroundStyle(ClockPalette.secondary(colorScheme))
             detailRow(L10n.firmware, value.device.firmwareVersion ?? L10n.unknown)
             detailRow(L10n.physicalLedCount, value.device.physicalLedCount ?? L10n.unknown)
             detailRow(L10n.activeSegmentLedCount, value.state.physicalLedCount ?? L10n.unknown)
@@ -295,11 +303,11 @@ struct ControlView: View {
             Image(systemName: "wifi.slash").font(.system(size: 30)).foregroundStyle(ClockPalette.error)
             Text(L10n.deviceUnavailable)
             Text(wifi.isAvailable ? L10n.unavailableCheckIp : L10n.wifiReconnectShort)
-                .font(.system(size: 14))
+                .wordClockFont(size: 14)
                 .multilineTextAlignment(.center)
                 .foregroundStyle(ClockPalette.secondaryText(colorScheme))
             Button(L10n.retry) { model.loadControl(for: deviceID) }
-                .font(.system(size: 15, weight: .semibold))
+                .wordClockFont(size: 15, weight: .semibold)
                 .disabled(!wifi.isAvailable)
         }
         .frame(maxWidth: .infinity)
@@ -309,11 +317,13 @@ struct ControlView: View {
 
     private func detailRow(_ title: String, _ value: String) -> some View {
         HStack {
-            Text(title).foregroundStyle(ClockPalette.secondaryText(colorScheme))
+            Text(title)
+                .wordClockFont(size: 14)
+                .foregroundStyle(ClockPalette.secondaryText(colorScheme))
             Spacer()
-            Text(value).fontWeight(.medium)
+            Text(value)
+                .wordClockFont(size: 14, weight: .medium)
         }
-        .font(.system(size: 14))
     }
 
     private var errorPresented: Binding<Bool> {

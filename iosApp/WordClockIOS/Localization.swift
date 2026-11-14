@@ -1,3 +1,4 @@
+import Foundation
 import WordClockShared
 
 enum L10n {
@@ -63,6 +64,30 @@ enum L10n {
     static var colorWheelContentDescription: String { MR.strings().color_wheel_content_description.desc().localized() }
     static var themeSwitchToDark: String { MR.strings().theme_switch_to_dark.desc().localized() }
     static var themeSwitchToLight: String { MR.strings().theme_switch_to_light.desc().localized() }
+    static var openSettings: String { MR.strings().open_settings.desc().localized() }
+    static var settingsTitle: String { MR.strings().settings_title.desc().localized() }
+    static var settingsDescription: String { MR.strings().settings_description.desc().localized() }
+    static var appearance: String { MR.strings().appearance.desc().localized() }
+    static var language: String { MR.strings().language.desc().localized() }
+    static var languageEnglish: String { MR.strings().language_english.desc().localized() }
+    static var languagePersian: String { MR.strings().language_persian.desc().localized() }
+    static var contactUs: String { MR.strings().contact_us.desc().localized() }
+    static var contactBrand: String { MR.strings().contact_brand.desc().localized() }
+    static var contactTitle: String { MR.strings().contact_title.desc().localized() }
+    static var contactDescription: String { MR.strings().contact_description.desc().localized() }
+    static var contactPhoneLabel: String { MR.strings().contact_phone_label.desc().localized() }
+    static var contactPhoneNumber: String { MR.strings().contact_phone_number.desc().localized() }
+    static var contactInstagramLabel: String { MR.strings().contact_instagram_label.desc().localized() }
+    static var contactInstagramHandle: String { MR.strings().contact_instagram_handle.desc().localized() }
+    static var contactCallHint: String { MR.strings().contact_call_hint.desc().localized() }
+    static var contactInstagramHint: String { MR.strings().contact_instagram_hint.desc().localized() }
+    static var lightTheme: String { MR.strings().light_theme.desc().localized() }
+    static var darkTheme: String { MR.strings().dark_theme.desc().localized() }
+
+    static func appVersion(_ version: String) -> String {
+        MR.strings().app_version.desc().localized()
+            .replacingOccurrences(of: "%1$s", with: version)
+    }
 
     static func connectedDeviceCount(_ count: Int) -> String {
         WordClockStrings.shared.connectedDeviceCount(count: Int32(count)).localized()

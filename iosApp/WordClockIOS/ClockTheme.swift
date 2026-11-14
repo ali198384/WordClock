@@ -2,6 +2,44 @@ import SwiftUI
 import UIKit
 import WordClockShared
 
+private struct WordClockLanguageKey: EnvironmentKey {
+    static let defaultValue = "en"
+}
+
+extension EnvironmentValues {
+    var wordClockLanguage: String {
+        get { self[WordClockLanguageKey.self] }
+        set { self[WordClockLanguageKey.self] = newValue }
+    }
+}
+
+private struct WordClockFontModifier: ViewModifier {
+    @Environment(\.wordClockLanguage) private var language
+    let size: CGFloat
+    let weight: Font.Weight
+    let design: Font.Design
+
+    func body(content: Content) -> some View {
+        let font: Font
+        if language == "fa" {
+            let name: String
+            if weight == .bold || weight == .heavy || weight == .black {
+                name = "Vazirmatn-Bold"
+            } else if weight == .semibold {
+                name = "Vazirmatn-SemiBold"
+            } else if weight == .medium {
+                name = "Vazirmatn-Medium"
+            } else {
+                name = "Vazirmatn-Regular"
+            }
+            font = .custom(name, size: size, relativeTo: .body)
+        } else {
+            font = .system(size: size, weight: weight, design: design)
+        }
+        return content.font(font)
+    }
+}
+
 enum ClockPalette {
     private static func token(_ rgb: Int32) -> Color {
         Color(hex: UInt32(rgb))
@@ -73,6 +111,14 @@ extension Color {
 }
 
 extension View {
+    func wordClockFont(
+        size: CGFloat,
+        weight: Font.Weight = .regular,
+        design: Font.Design = .default
+    ) -> some View {
+        modifier(WordClockFontModifier(size: size, weight: weight, design: design))
+    }
+
     func clockCard(_ scheme: ColorScheme, tint: Color? = nil) -> some View {
         background(
             RoundedRectangle(cornerRadius: 26, style: .continuous)

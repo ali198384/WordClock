@@ -4,7 +4,11 @@ struct DevicesView: View {
     @ObservedObject var model: AppModel
     @ObservedObject var wifi: WifiMonitor
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.openURL) private var openURL
     @State private var path: [String] = []
+    @State private var isDrawerPresented = false
+    @State private var isLanguageOptionsExpanded = false
+    @State private var isContactPresented = false
     @State private var ipAddress = ""
     @State private var deviceName = ""
     @State private var renameTarget: ClockDevice?
@@ -57,6 +61,32 @@ struct DevicesView: View {
                 .frame(maxWidth: .infinity)
             }
             .background(ClockPalette.background(colorScheme).ignoresSafeArea())
+            .overlay {
+                if isDrawerPresented {
+                    GeometryReader { proxy in
+                        ZStack(alignment: .leading) {
+                            Color.black.opacity(0.38)
+                                .ignoresSafeArea()
+                                .onTapGesture(perform: closeDrawer)
+
+                            settingsDrawer(
+                                topInset: max(proxy.safeAreaInsets.top, 20),
+                                bottomInset: max(proxy.safeAreaInsets.bottom, 16)
+                            )
+                            .frame(width: proxy.size.width * 0.8)
+                            .frame(maxHeight: .infinity)
+                            .background(ClockPalette.surface(colorScheme))
+                            .clipShape(RoundedRectangle(cornerRadius: 26, style: .continuous))
+                            .shadow(color: .black.opacity(0.2), radius: 24, x: 8, y: 0)
+                            .transition(.move(edge: .leading))
+                        }
+                        .ignoresSafeArea()
+                    }
+                    .transition(.opacity)
+                    .zIndex(2)
+                }
+            }
+            .animation(.spring(response: 0.34, dampingFraction: 0.88), value: isDrawerPresented)
             .navigationDestination(for: String.self) { deviceID in
                 ControlView(deviceID: deviceID, model: model, wifi: wifi)
             }
@@ -70,8 +100,12 @@ struct DevicesView: View {
             } message: {
                 Text(model.errorMessage ?? L10n.errorFallback)
             }
-            .sheet(isPresented: renameSheetPresented) {
-                if let device = renameTarget {
+            .sheet(isPresented: activeSheetPresented) {
+                if isContactPresented {
+                    contactUsSheet
+                        .presentationDetents([.medium, .large])
+                        .presentationDragIndicator(.visible)
+                } else if let device = renameTarget {
                     renameSheet(for: device)
                         .presentationDetents([.height(260)])
                         .presentationDragIndicator(.visible)
@@ -95,19 +129,22 @@ struct DevicesView: View {
         ZStack {
             HStack(spacing: 8) {
                 Text(L10n.devicesTitle)
-                    .font(.system(size: 20, weight: .semibold))
+                    .wordClockFont(size: 20, weight: .semibold)
                     .lineLimit(1)
                 Spacer(minLength: 80)
                 Button {
-                    model.setThemeMode(model.themeMode == "dark" ? "light" : "dark")
+                    withAnimation(.spring(response: 0.34, dampingFraction: 0.88)) {
+                        isDrawerPresented = true
+                    }
                 } label: {
-                    Image(systemName: colorScheme == .dark ? "sun.max.fill" : "moon.fill")
+                    Image(systemName: "line.3.horizontal")
                         .font(.system(size: 18, weight: .semibold))
                         .foregroundStyle(ClockPalette.primary(colorScheme))
                         .frame(width: 42, height: 42)
+                        .background(ClockPalette.surfaceVariant(colorScheme).opacity(0.72), in: Circle())
                         .contentShape(Rectangle())
                 }
-                .accessibilityLabel(colorScheme == .dark ? L10n.themeSwitchToLight : L10n.themeSwitchToDark)
+                .accessibilityLabel(L10n.openSettings)
             }
             Image("word_clock_logo")
                 .resizable()
@@ -118,10 +155,310 @@ struct DevicesView: View {
         .frame(height: 54)
     }
 
+    private func settingsDrawer(topInset: CGFloat, bottomInset: CGFloat) -> some View {
+        VStack(alignment: .leading, spacing: 22) {
+            HStack(spacing: 13) {
+                Image("word_clock_logo")
+                    .resizable()
+                    .scaledToFit()
+                    .padding(8)
+                    .frame(width: 48, height: 48)
+                    .background(ClockPalette.primary(colorScheme).opacity(0.12), in: RoundedRectangle(cornerRadius: 16))
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(L10n.settingsTitle)
+                        .wordClockFont(size: 21, weight: .semibold)
+                    Text(L10n.settingsDescription)
+                        .wordClockFont(size: 13)
+                        .foregroundStyle(ClockPalette.secondaryText(colorScheme))
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+
+            Rectangle()
+                .fill(ClockPalette.secondaryText(colorScheme).opacity(0.16))
+                .frame(height: 1)
+
+            Button {
+                model.setThemeMode(colorScheme == .dark ? "light" : "dark")
+                closeDrawer()
+            } label: {
+                settingsDrawerRow(
+                    symbol: colorScheme == .dark ? "sun.max.fill" : "moon.fill",
+                    title: L10n.appearance,
+                    detail: colorScheme == .dark ? L10n.darkTheme : L10n.lightTheme,
+                    enabled: true
+                )
+            }
+            .buttonStyle(.plain)
+
+            Button {
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.86)) {
+                    isLanguageOptionsExpanded.toggle()
+                }
+            } label: {
+                settingsDrawerRow(
+                    symbol: "globe",
+                    title: L10n.language,
+                    detail: model.languageCode == "fa" ? L10n.languagePersian : L10n.languageEnglish,
+                    enabled: true
+                )
+            }
+            .buttonStyle(.plain)
+            if isLanguageOptionsExpanded {
+                HStack(spacing: 8) {
+                    languageOption(title: L10n.languageEnglish, code: "en")
+                    languageOption(title: L10n.languagePersian, code: "fa")
+                }
+                .padding(.leading, 55)
+                .transition(.opacity.combined(with: .move(edge: .top)))
+            }
+
+            Button {
+                withAnimation(.spring(response: 0.34, dampingFraction: 0.88)) {
+                    isDrawerPresented = false
+                    isContactPresented = true
+                }
+            } label: {
+                settingsDrawerRow(
+                    symbol: "bubble.left.and.bubble.right.fill",
+                    title: L10n.contactUs,
+                    enabled: true
+                )
+            }
+            .buttonStyle(.plain)
+
+            Spacer(minLength: 0)
+
+            Rectangle()
+                .fill(ClockPalette.secondaryText(colorScheme).opacity(0.16))
+                .frame(height: 1)
+
+            HStack(spacing: 8) {
+                Image(systemName: "info.circle")
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(ClockPalette.primary(colorScheme))
+                Text(L10n.appVersion(appVersion))
+                    .wordClockFont(size: 12, weight: .medium)
+                    .foregroundStyle(ClockPalette.secondaryText(colorScheme))
+                Spacer(minLength: 0)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
+            .background(ClockPalette.surfaceVariant(colorScheme).opacity(0.6), in: RoundedRectangle(cornerRadius: 14))
+        }
+        .padding(.horizontal, 18)
+        .padding(.top, topInset + 28)
+        .padding(.bottom, bottomInset + 16)
+        .frame(maxHeight: .infinity, alignment: .topLeading)
+    }
+
+    private var contactUsSheet: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                HStack(alignment: .top, spacing: 14) {
+                    Image("word_clock_logo")
+                        .resizable()
+                        .scaledToFit()
+                        .padding(8)
+                        .frame(width: 58, height: 58)
+                        .background(ClockPalette.primary(colorScheme).opacity(0.12), in: RoundedRectangle(cornerRadius: 18))
+
+                    VStack(alignment: .leading, spacing: 5) {
+                        Text(L10n.contactBrand)
+                            .wordClockFont(size: 13, weight: .semibold)
+                            .foregroundStyle(ClockPalette.primary(colorScheme))
+                        Text(L10n.contactTitle)
+                            .wordClockFont(size: 20, weight: .bold, design: .rounded)
+                            .foregroundStyle(ClockPalette.onSurface(colorScheme))
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+
+                    Spacer(minLength: 0)
+
+                }
+
+                Text(L10n.contactDescription)
+                    .wordClockFont(size: 15)
+                    .foregroundStyle(ClockPalette.secondaryText(colorScheme))
+                    .fixedSize(horizontal: false, vertical: true)
+
+                VStack(spacing: 12) {
+                    contactActionRow(
+                        symbol: "phone.fill",
+                        title: L10n.contactPhoneLabel,
+                        detail: L10n.contactPhoneNumber,
+                        hint: L10n.contactCallHint
+                    ) {
+                        let phoneNumber = L10n.contactPhoneNumber
+                            .replacingOccurrences(of: " ", with: "")
+                        openExternalLink("tel:\(phoneNumber)")
+                    }
+
+                    contactActionRow(
+                        symbol: "camera.fill",
+                        title: L10n.contactInstagramLabel,
+                        detail: L10n.contactInstagramHandle,
+                        hint: L10n.contactInstagramHint
+                    ) {
+                        let handle = L10n.contactInstagramHandle
+                            .trimmingCharacters(in: CharacterSet(charactersIn: "@"))
+                        openExternalLink("https://www.instagram.com/\(handle)/")
+                    }
+                }
+            }
+            .padding(.horizontal, 24)
+            .padding(.top, 20)
+            .padding(.bottom, 32)
+            .frame(maxWidth: 560)
+            .frame(maxWidth: .infinity)
+        }
+        .background(ClockPalette.surface(colorScheme).ignoresSafeArea())
+    }
+
+    private func contactActionRow(
+        symbol: String,
+        title: String,
+        detail: String,
+        hint: String,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            HStack(spacing: 12) {
+                Image(systemName: symbol)
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundStyle(ClockPalette.primary(colorScheme))
+                    .frame(width: 42, height: 42)
+                    .background(ClockPalette.primary(colorScheme).opacity(0.11), in: RoundedRectangle(cornerRadius: 14))
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(title)
+                        .wordClockFont(size: 12, weight: .medium)
+                        .foregroundStyle(ClockPalette.secondaryText(colorScheme))
+                    Text(detail)
+                        .wordClockFont(size: 14, weight: .semibold)
+                        .foregroundStyle(ClockPalette.onSurface(colorScheme))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.72)
+                }
+                Spacer(minLength: 0)
+                Image(systemName: "arrow.up.right")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(ClockPalette.primary(colorScheme))
+            }
+            .padding(11)
+            .background(ClockPalette.surfaceVariant(colorScheme).opacity(0.72), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .accessibilityHint(hint)
+        .environment(\.layoutDirection, .leftToRight)
+    }
+
+    private var appVersion: String {
+        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? L10n.unknown
+    }
+
+    private func openExternalLink(_ value: String) {
+        guard let url = URL(string: value) else { return }
+        openURL(url)
+    }
+
+    private func settingsDrawerRow(
+        symbol: String,
+        title: String,
+        detail: String? = nil,
+        enabled: Bool
+    ) -> some View {
+        HStack(spacing: 13) {
+            Image(systemName: symbol)
+                .font(.system(size: 17, weight: .semibold))
+                .foregroundStyle(ClockPalette.primary(colorScheme))
+                .frame(width: 42, height: 42)
+                .background(ClockPalette.primary(colorScheme).opacity(0.11), in: RoundedRectangle(cornerRadius: 14))
+            Text(title)
+                .wordClockFont(size: 16, weight: .medium)
+                .foregroundStyle(ClockPalette.onSurface(colorScheme))
+                .lineLimit(1)
+            Spacer(minLength: 6)
+            if let detail {
+                Text(detail)
+                    .wordClockFont(size: 11, weight: .medium)
+                    .foregroundStyle(ClockPalette.secondaryText(colorScheme))
+                    .lineLimit(1)
+                    .padding(.horizontal, 9)
+                    .padding(.vertical, 6)
+                    .background(ClockPalette.surfaceVariant(colorScheme), in: Capsule())
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 9)
+        .background(ClockPalette.surfaceVariant(colorScheme).opacity(enabled ? 0.72 : 0.42), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .opacity(enabled ? 1 : 0.58)
+        .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+    }
+
+    private func languageOption(title: String, code: String) -> some View {
+        let isSelected = model.languageCode == code
+        return Button {
+            model.setLanguageCode(code)
+            closeDrawer()
+        } label: {
+            HStack(spacing: 5) {
+                ZStack {
+                    Circle()
+                        .strokeBorder(
+                            isSelected
+                                ? ClockPalette.primary(colorScheme)
+                                : ClockPalette.secondaryText(colorScheme).opacity(0.78),
+                            lineWidth: 1.5
+                        )
+                    if isSelected {
+                        Circle()
+                            .fill(ClockPalette.primary(colorScheme))
+                            .padding(4)
+                    }
+                }
+                .frame(width: 16, height: 16)
+                Text(title)
+                    .wordClockFont(size: 12, weight: .semibold)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+            }
+            .foregroundStyle(
+                isSelected
+                    ? ClockPalette.primary(colorScheme)
+                    : ClockPalette.onSurface(colorScheme)
+            )
+            .frame(maxWidth: .infinity, minHeight: 44)
+            .background(
+                isSelected
+                    ? ClockPalette.primary(colorScheme).opacity(0.16)
+                    : ClockPalette.surfaceVariant(colorScheme),
+                in: RoundedRectangle(cornerRadius: 14, style: .continuous)
+            )
+            .overlay {
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .strokeBorder(
+                        isSelected
+                            ? ClockPalette.primary(colorScheme).opacity(0.5)
+                            : ClockPalette.secondaryText(colorScheme).opacity(0.5),
+                        lineWidth: 1
+                    )
+            }
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func closeDrawer() {
+        withAnimation(.spring(response: 0.34, dampingFraction: 0.88)) {
+            isDrawerPresented = false
+        }
+    }
+
     private var heading: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(L10n.screenTagline)
-                .font(.system(size: 28, weight: .bold, design: .rounded))
+                .wordClockFont(size: 28, weight: .bold, design: .rounded)
                 .foregroundStyle(
                     LinearGradient(
                         colors: [ClockPalette.primary(colorScheme), ClockPalette.secondary(colorScheme), ClockPalette.tertiary(colorScheme)],
@@ -130,8 +467,10 @@ struct DevicesView: View {
                     )
                 )
                 .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .environment(\.layoutDirection, .leftToRight)
             Text(L10n.screenDescription)
-                .font(.system(size: 16))
+                .wordClockFont(size: 16)
                 .foregroundStyle(ClockPalette.secondaryText(colorScheme))
         }
         .padding(.top, 6)
@@ -147,9 +486,9 @@ struct DevicesView: View {
                     .frame(width: 46, height: 46)
                     .background(ClockPalette.tertiary(colorScheme).opacity(0.14), in: Circle())
                 VStack(alignment: .leading, spacing: 3) {
-                    Text(L10n.addDeviceTitle).font(.system(size: 20, weight: .semibold))
+                    Text(L10n.addDeviceTitle).wordClockFont(size: 20, weight: .semibold)
                     Text(L10n.addDeviceDescription)
-                        .font(.system(size: 14))
+                        .wordClockFont(size: 14)
                         .foregroundStyle(ClockPalette.secondaryText(colorScheme))
                 }
             }
@@ -164,6 +503,7 @@ struct DevicesView: View {
                     if model.isAddingDevice { ProgressView().tint(.white) }
                     else { Image(systemName: "plus.circle.fill") }
                     Text(model.isAddingDevice ? L10n.connectingDevice : L10n.addDeviceButton)
+                        .wordClockFont(size: 16, weight: .semibold)
                 }
                 .font(.system(size: 16, weight: .semibold))
                 .frame(maxWidth: .infinity, minHeight: 52)
@@ -203,9 +543,9 @@ struct DevicesView: View {
     private var deviceListHeading: some View {
         HStack {
             VStack(alignment: .leading, spacing: 3) {
-                Text(L10n.deviceListTitle).font(.system(size: 21, weight: .semibold))
+                Text(L10n.deviceListTitle).wordClockFont(size: 21, weight: .semibold)
                 Text(L10n.connectedDeviceCount(model.devices.count))
-                    .font(.system(size: 13))
+                    .wordClockFont(size: 13)
                     .foregroundStyle(ClockPalette.secondaryText(colorScheme))
             }
             Spacer()
@@ -230,9 +570,9 @@ struct DevicesView: View {
                 .padding(12)
                 .background(ClockPalette.tertiary(colorScheme).opacity(0.12), in: Circle())
             Text(L10n.emptyDevicesTitle)
-                .font(.system(size: 18, weight: .semibold))
+                .wordClockFont(size: 18, weight: .semibold)
             Text(L10n.emptyDevicesDescription)
-                .font(.system(size: 14))
+                .wordClockFont(size: 14)
                 .multilineTextAlignment(.center)
                 .foregroundStyle(ClockPalette.secondaryText(colorScheme))
         }
@@ -244,7 +584,7 @@ struct DevicesView: View {
     private func notice(_ message: String, symbol: String, warning: Bool) -> some View {
         HStack(spacing: 10) {
             Image(systemName: symbol)
-            Text(message).font(.system(size: 14, weight: .medium))
+            Text(message).wordClockFont(size: 14, weight: .medium)
             Spacer(minLength: 0)
         }
         .foregroundStyle(warning ? ClockPalette.error : ClockPalette.powerOn)
@@ -270,15 +610,22 @@ struct DevicesView: View {
                 }
             }
         }
-        .environment(\.layoutDirection, .leftToRight)
     }
 
     private var errorPresented: Binding<Bool> {
         Binding(get: { model.errorMessage != nil }, set: { if !$0 { model.clearNotices() } })
     }
 
-    private var renameSheetPresented: Binding<Bool> {
-        Binding(get: { renameTarget != nil }, set: { if !$0 { renameTarget = nil } })
+    private var activeSheetPresented: Binding<Bool> {
+        Binding(
+            get: { isContactPresented || renameTarget != nil },
+            set: { isPresented in
+                if !isPresented {
+                    isContactPresented = false
+                    renameTarget = nil
+                }
+            }
+        )
     }
 
     private var removePresented: Binding<Bool> {
@@ -310,7 +657,7 @@ private struct DeviceCardView: View {
                             .background(ClockPalette.secondary(colorScheme).opacity(0.12), in: Circle())
                         VStack(alignment: .leading, spacing: 3) {
                             Text(device.name)
-                                .font(.system(size: 17, weight: .semibold))
+                                .wordClockFont(size: 17, weight: .semibold)
                                 .lineLimit(1)
                             Text(device.ipAddress)
                                 .font(.system(size: 13, design: .monospaced))
@@ -322,11 +669,11 @@ private struct DeviceCardView: View {
                     HStack(spacing: 6) {
                         Circle().fill(online ? ClockPalette.powerOn : ClockPalette.error).frame(width: 7, height: 7)
                         Text(online ? L10n.deviceOnline : L10n.deviceOffline)
-                            .font(.system(size: 12, weight: .semibold))
+                            .wordClockFont(size: 12, weight: .semibold)
                             .foregroundStyle(online ? ClockPalette.powerOn : ClockPalette.error)
                         if let firmware = device.firmwareVersion {
                             Text(L10n.deviceFirmware(firmware))
-                                .font(.system(size: 12))
+                                .wordClockFont(size: 12)
                                 .foregroundStyle(ClockPalette.secondaryText(colorScheme))
                                 .lineLimit(1)
                         }
@@ -339,9 +686,13 @@ private struct DeviceCardView: View {
 
             VStack(spacing: 10) {
                 Menu {
-                    Button(action: onRename) { Label(L10n.renameDevice, systemImage: "pencil") }
+                    Button(action: onRename) {
+                        Label(L10n.renameDevice, systemImage: "pencil")
+                            .wordClockFont(size: 15, weight: .medium)
+                    }
                     Button(role: .destructive, action: onRemove) {
                         Label(L10n.removeDevice, systemImage: "trash")
+                            .wordClockFont(size: 15, weight: .medium)
                     }
                 } label: {
                     Image(systemName: "ellipsis")
