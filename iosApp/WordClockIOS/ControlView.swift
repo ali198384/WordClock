@@ -26,7 +26,9 @@ struct ControlView: View {
     }
 
     private var canControl: Bool {
-        wifi.isAvailable && snapshot != nil && snapshot?.device.isOnline != false
+        guard let snapshot else { return false }
+        if model.isSimulatorDemo(deviceID) { return true }
+        return wifi.isAvailable && snapshot.device.isOnline
     }
 
     var body: some View {
@@ -119,7 +121,7 @@ struct ControlView: View {
                         .frame(width: 42, height: 42)
                 }
             }
-            .disabled(model.isLoadingControl || !wifi.isAvailable)
+            .disabled(model.isLoadingControl || (!model.isSimulatorDemo(deviceID) && !wifi.isAvailable))
             .accessibilityLabel(L10n.refreshClockDescription)
         }
         .foregroundStyle(ClockPalette.primary(colorScheme))

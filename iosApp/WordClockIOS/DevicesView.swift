@@ -41,6 +41,7 @@ struct DevicesView: View {
                                 DeviceCardView(
                                     device: device,
                                     wifiAvailable: wifi.isAvailable,
+                                    isSimulatorDemo: model.isSimulatorDemo(device.id),
                                     isWorking: model.workingDeviceIDs.contains(device.id),
                                     onSelect: { path.append(device.id) },
                                     onPower: { model.togglePower(for: device) },
@@ -669,6 +670,7 @@ struct DevicesView: View {
 private struct DeviceCardView: View {
     let device: ClockDevice
     let wifiAvailable: Bool
+    let isSimulatorDemo: Bool
     let isWorking: Bool
     let onSelect: () -> Void
     let onPower: () -> Void
@@ -715,24 +717,26 @@ private struct DeviceCardView: View {
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .disabled(!online)
+            .disabled(!online && !isSimulatorDemo)
 
             VStack(spacing: 10) {
-                Menu {
-                    Button(action: onRename) {
-                        Label(L10n.renameDevice, systemImage: "pencil")
-                            .wordClockFont(size: 15, weight: .medium)
+                if !isSimulatorDemo {
+                    Menu {
+                        Button(action: onRename) {
+                            Label(L10n.renameDevice, systemImage: "pencil")
+                                .wordClockFont(size: 15, weight: .medium)
+                        }
+                        Button(role: .destructive, action: onRemove) {
+                            Label(L10n.removeDevice, systemImage: "trash")
+                                .wordClockFont(size: 15, weight: .medium)
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis")
+                            .font(.system(size: 16, weight: .bold))
+                            .foregroundStyle(ClockPalette.secondaryText(colorScheme))
+                            .frame(width: 34, height: 30)
+                            .contentShape(Rectangle())
                     }
-                    Button(role: .destructive, action: onRemove) {
-                        Label(L10n.removeDevice, systemImage: "trash")
-                            .wordClockFont(size: 15, weight: .medium)
-                    }
-                } label: {
-                    Image(systemName: "ellipsis")
-                        .font(.system(size: 16, weight: .bold))
-                        .foregroundStyle(ClockPalette.secondaryText(colorScheme))
-                        .frame(width: 34, height: 30)
-                        .contentShape(Rectangle())
                 }
                 Button(action: onPower) {
                     if isWorking {
@@ -745,7 +749,7 @@ private struct DeviceCardView: View {
                             .background((device.isOn ? ClockPalette.powerOn : ClockPalette.powerOff).opacity(0.12), in: Circle())
                     }
                 }
-                .disabled(!online || isWorking)
+                .disabled((!online && !isSimulatorDemo) || isWorking)
                 .accessibilityLabel(L10n.devicePowerLabel(isOn: device.isOn, deviceName: device.name))
             }
         }

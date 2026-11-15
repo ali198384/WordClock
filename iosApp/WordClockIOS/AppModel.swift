@@ -8,6 +8,9 @@ typealias ControlSnapshot = WordClockControlSnapshot
 
 @MainActor
 final class AppModel: ObservableObject {
+    // The simulator-only clock is an in-memory target for exercising the control screen.
+    private static let simulatorDemoDeviceID = "ios-simulator-demo"
+
     @Published private(set) var devices: [ClockDevice] = []
     @Published private(set) var control: ControlSnapshot?
     @Published private(set) var controlRevision = 0
@@ -26,6 +29,9 @@ final class AppModel: ObservableObject {
     private var pendingColorByDeviceID: [String: Color] = [:]
 
     init() {
+#if targetEnvironment(simulator)
+        devices = [Self.makeSimulatorDemoDevice()]
+#endif
         let savedLanguage = UserDefaults.standard.string(forKey: "wordClock.language")
         let systemLanguage = Locale.preferredLanguages.first?.lowercased().hasPrefix("fa") == true
             ? "fa"
@@ -37,6 +43,14 @@ final class AppModel: ObservableObject {
         }
         sdk.setAppLanguage(languageCode: languageCode)
         loadThemeMode()
+    }
+
+    func isSimulatorDemo(_ deviceID: String) -> Bool {
+#if targetEnvironment(simulator)
+        deviceID == Self.simulatorDemoDeviceID
+#else
+        false
+#endif
     }
 
     func loadDevices() {
@@ -51,7 +65,15 @@ final class AppModel: ObservableObject {
                 guard let self else { return }
                 self.isLoadingDevices = false
                 do {
-                    self.devices = try self.require(result.devices, from: result)
+                    let loadedDevices = try self.require(result.devices, from: result)
+#if targetEnvironment(simulator)
+                    let isOn = self.devices.first(where: { $0.id == Self.simulatorDemoDeviceID })?.isOn ?? true
+                    self.devices = [Self.makeSimulatorDemoDevice(isOn: isOn)] + loadedDevices.filter {
+                        $0.id != Self.simulatorDemoDeviceID
+                    }
+#else
+                    self.devices = loadedDevices
+#endif
                 } catch {
                     self.errorMessage = error.localizedDescription
                 }
@@ -107,6 +129,10 @@ final class AppModel: ObservableObject {
     }
 
     func togglePower(for device: ClockDevice) {
+        if isSimulatorDemo(device.id) {
+            updateSimulatorControl(isOn: !device.isOn)
+            return
+        }
         guard device.isOnline else { return }
         performDeviceAction(device.id, operation: { [weak self] completion in
             guard let self else { return }
@@ -119,6 +145,18 @@ final class AppModel: ObservableObject {
     }
 
     func loadControl(for deviceID: String) {
+        if isSimulatorDemo(deviceID) {
+            isLoadingControl = false
+            errorMessage = nil
+            if let current = control, current.device.id == deviceID {
+                let device = Self.makeSimulatorDemoDevice(isOn: current.state.isOn)
+                updateControl(ControlSnapshot(device: device, state: current.state))
+            } else {
+                updateControl(Self.makeSimulatorDemoControlSnapshot())
+            }
+            return
+        }
+
         isLoadingControl = true
         errorMessage = nil
         sdk.loadControl(deviceId: deviceID, onResult: { [weak self] result in
@@ -138,6 +176,10 @@ final class AppModel: ObservableObject {
 
     func setControlPower() {
         guard let current = control else { return }
+        if isSimulatorDemo(current.device.id) {
+            updateSimulatorControl(isOn: !current.state.isOn)
+            return
+        }
         performDeviceAction(current.device.id, operation: { [weak self] completion in
             guard let self else { return }
             self.sdk.setPower(
@@ -153,6 +195,10 @@ final class AppModel: ObservableObject {
     func setBrightness(_ value: Int) {
         guard let current = control else { return }
         let deviceID = current.device.id
+        if isSimulatorDemo(deviceID) {
+            updateSimulatorControl(brightness: value)
+            return
+        }
         guard !workingDeviceIDs.contains(deviceID) else {
             pendingBrightnessByDeviceID[deviceID] = value
             return
@@ -168,6 +214,10 @@ final class AppModel: ObservableObject {
     func setColor(_ color: Color) {
         guard let current = control else { return }
         let deviceID = current.device.id
+        if isSimulatorDemo(deviceID) {
+            updateSimulatorControl(color: color)
+            return
+        }
         guard !workingDeviceIDs.contains(deviceID) else {
             pendingColorByDeviceID[deviceID] = color
             return
@@ -235,6 +285,78 @@ final class AppModel: ObservableObject {
     func clearNotices() {
         errorMessage = nil
         successMessage = nil
+    }
+
+    private func updateSimulatorControl(
+        isOn: Bool? = nil,
+        brightness: Int? = nil,
+        color: Color? = nil
+    ) {
+        guard isSimulatorDemo(Self.simulatorDemoDeviceID) else { return }
+        let current: ControlSnapshot
+        if let loaded = control, loaded.device.id == Self.simulatorDemoDeviceID {
+            current = loaded
+        } else {
+            current = Self.makeSimulatorDemoControlSnapshot()
+        }
+
+        let colorComponents = color.map { UIColor($0).rgbComponents }
+        let nextIsOn = isOn ?? current.state.isOn
+        let nextBrightness = Double(brightness ?? Int(current.state.brightness))
+        let nextRed = colorComponents.map { Double($0.red) } ?? current.state.red
+        let nextGreen = colorComponents.map { Double($0.green) } ?? current.state.green
+        let nextBlue = colorComponents.map { Double($0.blue) } ?? current.state.blue
+        guard nextIsOn != current.state.isOn ||
+            nextBrightness != current.state.brightness ||
+            nextRed != current.state.red ||
+            nextGreen != current.state.green ||
+            nextBlue != current.state.blue else { return }
+
+        let state = WordClockControlStateSnapshot(
+            isOn: nextIsOn,
+            brightness: nextBrightness,
+            red: nextRed,
+            green: nextGreen,
+            blue: nextBlue,
+            physicalLedCount: current.state.physicalLedCount,
+            segmentCount: current.state.segmentCount
+        )
+        let device = Self.makeSimulatorDemoDevice(isOn: nextIsOn)
+        let snapshot = ControlSnapshot(device: device, state: state)
+        updateControl(snapshot)
+
+        if let index = devices.firstIndex(where: { $0.id == Self.simulatorDemoDeviceID }) {
+            devices[index] = device
+        } else {
+            devices.insert(device, at: 0)
+        }
+    }
+
+    private static func makeSimulatorDemoDevice(isOn: Bool = true) -> ClockDevice {
+        ClockDevice(
+            id: simulatorDemoDeviceID,
+            name: "iOS Simulator Word Clock",
+            ipAddress: "192.0.2.1",
+            firmwareVersion: "0.16.0",
+            physicalLedCount: nil,
+            segmentCount: "1",
+            isOnline: false,
+            isOn: isOn
+        )
+    }
+
+    private static func makeSimulatorDemoControlSnapshot() -> ControlSnapshot {
+        let device = makeSimulatorDemoDevice()
+        let state = WordClockControlStateSnapshot(
+            isOn: true,
+            brightness: 185,
+            red: 255,
+            green: 184,
+            blue: 96,
+            physicalLedCount: nil,
+            segmentCount: "1"
+        )
+        return ControlSnapshot(device: device, state: state)
     }
 
     private func loadThemeMode() {
