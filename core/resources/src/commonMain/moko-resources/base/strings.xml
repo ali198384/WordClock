@@ -3,7 +3,6 @@
     <string name="local_network_permission_required">Allow local network access to connect to your
         Word Clock.
     </string>
-    <string name="screen_title">WordClock</string>
     <string name="app_logo_description">WordClock logo</string>
     <string name="screen_tagline">Ghazarian Luxury Art</string>
     <string name="screen_description">Connect your clocks over Wi-Fi and control their light from
@@ -166,7 +165,6 @@
     </string>
     <string name="generic_control_error">The action could not be completed. Please try again.
     </string>
-    <string name="ios_devices_title">Devices</string>
     <string name="ios_wifi_unavailable">Wi-Fi is unavailable. Device controls are paused.</string>
     <string name="error_title">Something went wrong</string>
     <string name="ok">OK</string>
