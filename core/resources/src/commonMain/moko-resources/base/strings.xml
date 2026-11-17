@@ -166,7 +166,6 @@
     </string>
     <string name="generic_control_error">The action could not be completed. Please try again.
     </string>
-    <string name="ios_devices_title">Devices</string>
     <string name="ios_wifi_unavailable">Wi-Fi is unavailable. Device controls are paused.</string>
     <string name="error_title">Something went wrong</string>
     <string name="ok">OK</string>
