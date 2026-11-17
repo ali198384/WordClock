@@ -5,8 +5,7 @@
 می‌کند.
 
 منطق مدل، دامنه، شبکه، ذخیره‌سازی و عملیات دستگاه تا حد امکان با Kotlin Multiplatform مشترک است.
-رابط Android با Jetpack Compose و رابط iOS به‌صورت native با SwiftUI پیاده‌سازی شده‌اند؛ پروژه از
-Compose Multiplatform استفاده نمی‌کند.
+رابط Android با Jetpack Compose و رابط iOS به‌صورت native با SwiftUI پیاده‌سازی شده‌اند.
 
 ## امکانات
 
