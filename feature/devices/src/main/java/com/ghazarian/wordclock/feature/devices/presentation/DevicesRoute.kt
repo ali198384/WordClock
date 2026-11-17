@@ -54,8 +54,8 @@ import com.ghazarian.wordclock.core.designsystem.theme.ThemeMode
 import com.ghazarian.wordclock.core.model.WordClockDevice
 import com.ghazarian.wordclock.resources.MR
 import com.ghazarian.wordclock.resources.app_logo_description
-import com.ghazarian.wordclock.resources.app_name
 import com.ghazarian.wordclock.resources.open_settings
+import com.ghazarian.wordclock.resources.screen_title
 import kotlinx.coroutines.launch
 import com.ghazarian.wordclock.core.designsystem.R as DesignSystemR
 
@@ -163,7 +163,7 @@ private fun DevicesScreen(
                         TopAppBar(
                             title = {
                                 Text(
-                                    text = stringResource(MR.strings.app_name.resourceId),
+                                    text = stringResource(MR.strings.screen_title.resourceId),
                                     modifier = Modifier.widthIn(max = titleMaxWidth),
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis,

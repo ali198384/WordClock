@@ -2,7 +2,7 @@ import Foundation
 import WordClockShared
 
 enum L10n {
-    static var devicesTitle: String { MR.strings().app_name.desc().localized() }
+    static var devicesTitle: String { MR.strings().screen_title.desc().localized() }
     static var devicesWifiUnavailable: String { MR.strings().ios_wifi_unavailable.desc().localized() }
     static var errorTitle: String { MR.strings().error_title.desc().localized() }
     static var ok: String { MR.strings().ok.desc().localized() }

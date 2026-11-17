@@ -3,6 +3,7 @@
     <string name="local_network_permission_required">برای اتصال به Word Clock، اجازهٔ دسترسی به
         شبکهٔ محلی را بدهید.
     </string>
+    <string name="screen_title">WordClock</string>
     <string name="app_logo_description">نشان WordClock</string>
     <string name="screen_tagline">Ghazarian Luxury Art</string>
     <string name="screen_description">ساعت‌ها را از طریق Wi-Fi وصل کنید و نور آن‌ها را از یک جا
