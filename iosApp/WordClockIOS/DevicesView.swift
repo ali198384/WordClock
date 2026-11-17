@@ -17,48 +17,55 @@ struct DevicesView: View {
 
     var body: some View {
         NavigationStack(path: $path) {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 18) {
-                    topBar
-                    heading
-                    addDeviceCard
-                    deviceListHeading
-                    if !wifi.isAvailable {
-                        notice(L10n.devicesWifiUnavailable, symbol: "wifi.slash", warning: true)
-                    }
-                    if let success = model.successMessage {
-                        notice(success, symbol: "checkmark.circle.fill", warning: false)
-                    }
-                    if model.isLoadingDevices && model.devices.isEmpty {
-                        ProgressView(L10n.loadingDevices)
-                            .frame(maxWidth: .infinity)
-                            .padding(28)
-                    } else if model.devices.isEmpty {
-                        emptyState
-                    } else {
-                        LazyVGrid(columns: [GridItem(.adaptive(minimum: 305), spacing: 14)], spacing: 14) {
-                            ForEach(model.devices, id: \.id) { device in
-                                DeviceCardView(
-                                    device: device,
-                                    wifiAvailable: wifi.isAvailable,
-                                    isWorking: model.workingDeviceIDs.contains(device.id),
-                                    onSelect: { path.append(device.id) },
-                                    onPower: { model.togglePower(for: device) },
-                                    onRename: {
-                                        renameValue = device.name
-                                        renameTarget = device
-                                    },
-                                    onRemove: { removeTarget = device }
-                                )
+            VStack(spacing: 0) {
+                topBar
+                    .padding(.horizontal, 18)
+                    .padding(.top, 10)
+                    .frame(maxWidth: 960)
+                    .frame(maxWidth: .infinity)
+
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 18) {
+                        heading
+                        addDeviceCard
+                        deviceListHeading
+                        if !wifi.isAvailable {
+                            notice(L10n.devicesWifiUnavailable, symbol: "wifi.slash", warning: true)
+                        }
+                        if let success = model.successMessage {
+                            notice(success, symbol: "checkmark.circle.fill", warning: false)
+                        }
+                        if model.isLoadingDevices && model.devices.isEmpty {
+                            ProgressView(L10n.loadingDevices)
+                                .frame(maxWidth: .infinity)
+                                .padding(28)
+                        } else if model.devices.isEmpty {
+                            emptyState
+                        } else {
+                            LazyVGrid(columns: [GridItem(.adaptive(minimum: 305), spacing: 14)], spacing: 14) {
+                                ForEach(model.devices, id: \.id) { device in
+                                    DeviceCardView(
+                                        device: device,
+                                        wifiAvailable: wifi.isAvailable,
+                                        isWorking: model.workingDeviceIDs.contains(device.id),
+                                        onSelect: { path.append(device.id) },
+                                        onPower: { model.togglePower(for: device) },
+                                        onRename: {
+                                            renameValue = device.name
+                                            renameTarget = device
+                                        },
+                                        onRemove: { removeTarget = device }
+                                    )
+                                }
                             }
                         }
                     }
+                    .padding(.horizontal, 18)
+                    .padding(.top, 18)
+                    .padding(.bottom, 28)
+                    .frame(maxWidth: 960)
+                    .frame(maxWidth: .infinity)
                 }
-                .padding(.horizontal, 18)
-                .padding(.top, 10)
-                .padding(.bottom, 28)
-                .frame(maxWidth: 960)
-                .frame(maxWidth: .infinity)
             }
             .background(ClockPalette.background(colorScheme).ignoresSafeArea())
             .overlay {

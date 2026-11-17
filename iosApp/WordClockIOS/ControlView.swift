@@ -6,6 +6,7 @@ private let whitePresetGridColumns = Array(
     repeating: GridItem(.flexible(), spacing: 10),
     count: 2
 )
+private let brightnessPresets = [25, 50, 75, 100]
 
 struct ControlView: View {
     let deviceID: String
@@ -17,6 +18,7 @@ struct ControlView: View {
     @State private var colorDraft = Color.white
     @State private var whiteTemperatureKelvin = 4500
     @State private var selectedTab = 0
+    @State private var isColorPickerPresented = false
     @State private var draftsLoaded = false
     @State private var confirmedBrightness: Int?
     @State private var confirmedColor: Color?
@@ -30,27 +32,34 @@ struct ControlView: View {
     }
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 16) {
-                topBar
-                if model.isLoadingControl && snapshot == nil {
-                    ProgressView(L10n.loadingDeviceState)
-                        .frame(maxWidth: .infinity, minHeight: 180)
-                } else if let snapshot {
-                    connectionBanner
-                    powerCard(snapshot)
-                    brightnessCard(snapshot)
-                    colorCard(snapshot)
-                    detailsCard(snapshot)
-                } else {
-                    unavailableCard
+        VStack(spacing: 0) {
+            topBar
+                .padding(.horizontal, 18)
+                .padding(.top, 10)
+                .frame(maxWidth: 760)
+                .frame(maxWidth: .infinity)
+
+            ScrollView {
+                VStack(spacing: 16) {
+                    if model.isLoadingControl && snapshot == nil {
+                        ProgressView(L10n.loadingDeviceState)
+                            .frame(maxWidth: .infinity, minHeight: 180)
+                    } else if let snapshot {
+                        connectionBanner
+                        powerCard(snapshot)
+                        brightnessCard(snapshot)
+                        colorCard(snapshot)
+                        detailsCard(snapshot)
+                    } else {
+                        unavailableCard
+                    }
                 }
+                .padding(.horizontal, 18)
+                .padding(.top, 16)
+                .padding(.bottom, 30)
+                .frame(maxWidth: 760)
+                .frame(maxWidth: .infinity)
             }
-            .padding(.horizontal, 18)
-            .padding(.top, 10)
-            .padding(.bottom, 30)
-            .frame(maxWidth: 760)
-            .frame(maxWidth: .infinity)
         }
         .background(ClockPalette.background(colorScheme).ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
@@ -88,6 +97,11 @@ struct ControlView: View {
             Button(L10n.ok, role: .cancel) { model.clearNotices() }
         } message: {
             Text(model.errorMessage ?? L10n.errorFallback)
+        }
+        .sheet(isPresented: $isColorPickerPresented) {
+            colorPickerSheet
+                .presentationDetents([.height(560), .large])
+                .presentationDragIndicator(.visible)
         }
     }
 
@@ -175,7 +189,7 @@ struct ControlView: View {
                 }
                 .foregroundStyle(ClockPalette.tertiary(colorScheme))
                 Spacer()
-                Text(L10n.brightnessPercent(Int(brightnessDraft.rounded()) * 100 / 255))
+                Text(L10n.brightnessPercent(Int((brightnessDraft * 100 / 255).rounded())))
                     .wordClockFont(size: 16, weight: .semibold, design: .rounded)
                     .foregroundStyle(ClockPalette.primary(colorScheme))
             }
@@ -183,6 +197,43 @@ struct ControlView: View {
                 .tint(ClockPalette.tertiary(colorScheme))
                 .disabled(!canControl)
                 .accessibilityLabel(L10n.brightnessSliderDescription)
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    ForEach(brightnessPresets, id: \.self) { percent in
+                        let presetValue = percent * 255 / 100
+                        let isSelected = abs(Int(brightnessDraft.rounded()) - presetValue) <= 1
+                        Button {
+                            brightnessDraft = Double(presetValue)
+                        } label: {
+                            Text(L10n.brightnessPercent(percent))
+                                .wordClockFont(size: 13, weight: .semibold)
+                                .foregroundStyle(
+                                    isSelected
+                                        ? ClockPalette.primary(colorScheme)
+                                        : ClockPalette.onSurface(colorScheme)
+                                )
+                                .frame(minWidth: 58, minHeight: 40)
+                                .padding(.horizontal, 5)
+                                .background(
+                                    isSelected
+                                        ? ClockPalette.primary(colorScheme).opacity(0.16)
+                                        : ClockPalette.surfaceVariant(colorScheme).opacity(0.7),
+                                    in: Capsule()
+                                )
+                                .overlay {
+                                    Capsule().strokeBorder(
+                                        isSelected
+                                            ? ClockPalette.primary(colorScheme).opacity(0.65)
+                                            : ClockPalette.secondaryText(colorScheme).opacity(0.24),
+                                        lineWidth: 1
+                                    )
+                                }
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(!canControl)
+                    }
+                }
+            }
             HStack {
                 Text(L10n.brightnessDescription)
                     .wordClockFont(size: 13)
@@ -195,93 +246,44 @@ struct ControlView: View {
 
     private func colorCard(_ value: ControlSnapshot) -> some View {
         VStack(alignment: .leading, spacing: 15) {
-            HStack(spacing: 10) {
-                Image(systemName: "paintpalette.fill")
-                    .foregroundStyle(ClockPalette.secondary(colorScheme))
-                Text(L10n.colorTitle).wordClockFont(size: 18, weight: .semibold)
-                Spacer()
-                Circle().fill(colorDraft).frame(width: 26, height: 26)
-                    .padding(4)
-                    .overlay(Circle().stroke(colorDraft, lineWidth: 2))
-            }
-            colorModeTabs
-            Group {
-                if selectedTab == 0 {
-                    VStack(spacing: 16) {
-                        HStack(spacing: 18) {
-                            LedColorWheel(color: $colorDraft)
-                                .frame(width: 190, height: 190)
-                                .disabled(!canControl)
-                            VStack(alignment: .leading, spacing: 11) {
-                                Text(L10n.chooseColor)
-                                    .wordClockFont(size: 15, weight: .semibold)
-                                ForEach(ColorPreset.colors, id: \.name) { preset in
-                                    Button {
-                                        colorDraft = preset.color
-                                    } label: {
-                                        HStack(spacing: 8) {
-                                            Circle().fill(preset.color).frame(width: 17, height: 17)
-                                            Text(preset.name).wordClockFont(size: 13)
-                                            Spacer(minLength: 0)
-                                            if UIColor(colorDraft).isApproximatelyEqual(to: UIColor(preset.color)) {
-                                                Image(systemName: "checkmark").font(.system(size: 11, weight: .bold))
-                                            }
-                                        }
-                                        .foregroundStyle(ClockPalette.onSurface(colorScheme))
-                                    }
-                                    .buttonStyle(.plain)
-                                    .disabled(!canControl)
-                                }
-                            }
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                        }
-                        Text(L10n.colorWheelDescription)
-                            .wordClockFont(size: 13)
+            HStack(spacing: 12) {
+                HStack(spacing: 9) {
+                    Image(systemName: "paintpalette.fill")
+                        .font(.system(size: 19, weight: .semibold))
+                        .foregroundStyle(ClockPalette.secondary(colorScheme))
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(L10n.colorTitle).wordClockFont(size: 18, weight: .semibold)
+                        Text(selectedColorHex)
+                            .font(.system(size: 13, weight: .medium, design: .monospaced))
                             .foregroundStyle(ClockPalette.secondaryText(colorScheme))
-                    }
-                } else {
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text(L10n.whiteMixDescription)
-                            .wordClockFont(size: 13)
-                            .foregroundStyle(ClockPalette.secondaryText(colorScheme))
-                        HStack {
-                            Text(L10n.whiteTemperatureTitle)
-                                .wordClockFont(size: 15, weight: .semibold)
-                            Spacer()
-                            Text(L10n.whiteTemperatureValue(whiteTemperatureKelvin))
-                                .wordClockFont(size: 13, weight: .medium, design: .rounded)
-                                .foregroundStyle(ClockPalette.secondaryText(colorScheme))
-                        }
-                        Slider(
-                            value: Binding(
-                                get: { Double(whiteTemperatureKelvin) },
-                                set: { value in
-                                    whiteTemperatureKelvin = Int(value.rounded())
-                                    colorDraft = WordClockColorPresets.shared
-                                        .whiteColorAtTemperature(kelvin: Int32(whiteTemperatureKelvin))
-                                        .swiftUIColor
-                                }
-                            ),
-                            in: 2700...8000,
-                            step: 10
-                        )
-                        .tint(ClockPalette.primary(colorScheme))
-                        Text(L10n.whitePresetsTitle)
-                            .wordClockFont(size: 15, weight: .semibold)
-                        LazyVGrid(columns: whitePresetGridColumns, spacing: 10) {
-                            ForEach(ColorPreset.whites, id: \.name) { preset in
-                                whitePresetButton(preset)
-                            }
-                        }
                     }
                 }
+                Spacer(minLength: 4)
+                Button {
+                    isColorPickerPresented = true
+                } label: {
+                    HStack(spacing: 7) {
+                        Image(systemName: "eyedropper")
+                            .font(.system(size: 15, weight: .semibold))
+                        Text(L10n.chooseColor)
+                            .wordClockFont(size: 14, weight: .semibold)
+                            .lineLimit(1)
+                    }
+                    .foregroundStyle(ClockPalette.primary(colorScheme))
+                    .padding(.horizontal, 13)
+                    .frame(minHeight: 42)
+                    .background(ClockPalette.primary(colorScheme).opacity(0.1), in: Capsule())
+                    .overlay(Capsule().strokeBorder(ClockPalette.primary(colorScheme).opacity(0.45)))
+                }
+                .buttonStyle(.plain)
+                .disabled(!canControl)
             }
-            .frame(maxWidth: .infinity, alignment: .topLeading)
-            .frame(height: 380, alignment: .center)
-            HStack {
-                Text(selectedColorDescription)
-                    .wordClockFont(size: 13, weight: .medium)
-                    .foregroundStyle(ClockPalette.secondaryText(colorScheme))
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 12) {
+                    ForEach(ColorPreset.colors, id: \.name) { preset in
+                        quickColorSwatch(preset)
+                    }
+                }
             }
         }
         .padding(20)
@@ -289,6 +291,123 @@ struct ControlView: View {
         .onAppear {
             if !draftsLoaded { colorDraft = value.state.color }
         }
+    }
+
+    private func quickColorSwatch(_ preset: ColorPreset) -> some View {
+        let isSelected = UIColor(colorDraft).isApproximatelyEqual(to: UIColor(preset.color))
+        let brightness = UIColor(preset.color).rgbComponents
+        let checkmarkColor: Color = brightness.red + brightness.green + brightness.blue > 420
+            ? ClockPalette.onSurface(colorScheme)
+            : ClockPalette.surface(colorScheme)
+
+        return Button {
+            colorDraft = preset.color
+        } label: {
+            ZStack {
+                if isSelected {
+                    Circle()
+                        .fill(ClockPalette.surface(colorScheme))
+                        .frame(width: 50, height: 50)
+                        .overlay(Circle().strokeBorder(ClockPalette.onSurface(colorScheme), lineWidth: 2))
+                }
+                Circle()
+                    .fill(preset.color)
+                    .frame(width: 42, height: 42)
+                    .overlay(Circle().strokeBorder(ClockPalette.secondaryText(colorScheme).opacity(0.35), lineWidth: 1))
+                if isSelected {
+                    Image(systemName: "checkmark")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundStyle(checkmarkColor)
+                }
+            }
+            .frame(width: 50, height: 50)
+            .contentShape(Circle())
+        }
+        .buttonStyle(.plain)
+        .disabled(!canControl)
+        .accessibilityLabel(preset.name)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
+    }
+
+    private var colorPickerSheet: some View {
+        VStack(spacing: 15) {
+            HStack(spacing: 9) {
+                Circle()
+                    .fill(colorDraft)
+                    .frame(width: 18, height: 18)
+                    .overlay(Circle().strokeBorder(ClockPalette.secondaryText(colorScheme).opacity(0.35)))
+                Text(selectedColorDescription)
+                    .wordClockFont(size: 16, weight: .semibold)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .padding(.horizontal, 20)
+
+            colorModeTabs
+                .padding(.horizontal, 20)
+
+            ScrollView {
+                Group {
+                    if selectedTab == 0 {
+                        VStack(spacing: 15) {
+                            GeometryReader { proxy in
+                                let size = min(min(proxy.size.width, proxy.size.height), 320)
+                                LedColorWheel(color: $colorDraft)
+                                    .frame(width: size, height: size)
+                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                    .disabled(!canControl)
+                            }
+                            .frame(height: 300)
+                            Text(L10n.colorWheelDescription)
+                                .wordClockFont(size: 13)
+                                .foregroundStyle(ClockPalette.secondaryText(colorScheme))
+                                .multilineTextAlignment(.center)
+                        }
+                    } else {
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text(L10n.whiteMixDescription)
+                                .wordClockFont(size: 13)
+                                .foregroundStyle(ClockPalette.secondaryText(colorScheme))
+                            HStack {
+                                Text(L10n.whiteTemperatureTitle)
+                                    .wordClockFont(size: 15, weight: .semibold)
+                                Spacer()
+                                Text(L10n.whiteTemperatureValue(whiteTemperatureKelvin))
+                                    .wordClockFont(size: 13, weight: .medium, design: .rounded)
+                                    .foregroundStyle(ClockPalette.secondaryText(colorScheme))
+                            }
+                            Slider(
+                                value: Binding(
+                                    get: { Double(whiteTemperatureKelvin) },
+                                    set: { value in
+                                        whiteTemperatureKelvin = Int(value.rounded())
+                                        colorDraft = WordClockColorPresets.shared
+                                            .whiteColorAtTemperature(kelvin: Int32(whiteTemperatureKelvin))
+                                            .swiftUIColor
+                                    }
+                                ),
+                                in: 2700...8000,
+                                step: 10
+                            )
+                            .tint(ClockPalette.primary(colorScheme))
+                            .disabled(!canControl)
+                            Text(L10n.whitePresetsTitle)
+                                .wordClockFont(size: 15, weight: .semibold)
+                            LazyVGrid(columns: whitePresetGridColumns, spacing: 10) {
+                                ForEach(ColorPreset.whites, id: \.name) { preset in
+                                    whitePresetButton(preset)
+                                }
+                            }
+                        }
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .topLeading)
+                .frame(minHeight: 340)
+                .padding(.horizontal, 20)
+                .padding(.bottom, 24)
+            }
+        }
+        .padding(.top, 20)
+        .background(ClockPalette.sheetSurface(colorScheme).ignoresSafeArea())
     }
 
     private func whitePresetButton(_ preset: ColorPreset) -> some View {
@@ -391,9 +510,12 @@ struct ControlView: View {
     }
 
     private var selectedColorDescription: String {
+        L10n.selectedColor(selectedColorHex)
+    }
+
+    private var selectedColorHex: String {
         let components = UIColor(colorDraft).rgbComponents
-        let hex = String(format: "#%02X%02X%02X", components.red, components.green, components.blue)
-        return L10n.selectedColor(hex)
+        return String(format: "#%02X%02X%02X", components.red, components.green, components.blue)
     }
 
     private func detailsCard(_ value: ControlSnapshot) -> some View {
