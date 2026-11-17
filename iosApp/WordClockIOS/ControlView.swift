@@ -641,12 +641,16 @@ private struct ColorPreset {
     let color: Color
     let temperatureKelvin: Int32
 
-    static var colors: [ColorPreset] = WordClockColorPresets.shared.quickColors.map {
-        ColorPreset(name: displayName(for: $0.id), color: $0.color.swiftUIColor, temperatureKelvin: $0.temperatureKelvin)
+    static var colors: [ColorPreset] {
+        WordClockColorPresets.shared.quickColors.map {
+            ColorPreset(name: displayName(for: $0.id), color: $0.color.swiftUIColor, temperatureKelvin: $0.temperatureKelvin)
+        }
     }
 
-    static var whites: [ColorPreset] = WordClockColorPresets.shared.whiteColors.map {
-        ColorPreset(name: displayName(for: $0.id), color: $0.color.swiftUIColor, temperatureKelvin: $0.temperatureKelvin)
+    static var whites: [ColorPreset] {
+        WordClockColorPresets.shared.whiteColors.map {
+            ColorPreset(name: displayName(for: $0.id), color: $0.color.swiftUIColor, temperatureKelvin: $0.temperatureKelvin)
+        }
     }
 
     private static func displayName(for id: String) -> String {
